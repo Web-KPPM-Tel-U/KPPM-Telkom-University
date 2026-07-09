@@ -1,45 +1,31 @@
+import 'dotenv/config';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { Request, Response } from 'express';
+import pool from '../config/db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'kppm-telkom-secret-dev-2024';
-const JWT_EXPIRES_IN = '24h';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
-// ─── Mock Data (akan diganti koneksi DB di tahap berikutnya) ──────────────────
-const MOCK_STUDENTS = [
-  {
-    student_id: 1,
-    nim: '12345678',
-    student_name: 'Budi Santoso',
-    class: 'IF-45-01',
-    email: 'budi.santoso@student.telkomuniversity.ac.id',
-    // password: "password123" (bcrypt hash — untuk mock kita cek plain)
-    password: 'password123',
-  },
-  {
-    student_id: 2,
-    nim: '23456789',
-    student_name: 'Siti Rahayu',
-    class: 'IF-45-02',
-    email: 'siti.rahayu@student.telkomuniversity.ac.id',
-    password: 'password123',
-  },
-];
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface StudentRow {
+  student_id: number;
+  nim: string;
+  student_name: string;
+  class: string;
+  email: string;
+  password: string;
+}
 
-const MOCK_LECTURERS = [
-  {
-    lecturer_id: 1,
-    nip: '19800101001',
-    lecturer_name: 'Dr. Ahmad Fauzi, M.T.',
-    // password: "dosen123"
-    password: 'dosen123',
-  },
-];
-
-// OTP store sementara di memory (untuk production pakai Redis)
-const otpStore: Record<string, { otp: string; expiresAt: number }> = {};
+interface LecturerRow {
+  lecturer_id: number;
+  nip: string;
+  lecturer_name: string;
+  password: string;
+}
 
 // ─── Student Login ────────────────────────────────────────────────────────────
-export const studentLogin = (req: Request, res: Response): void => {
+export const studentLogin = async (req: Request, res: Response): Promise<void> => {
   const { nim, password } = req.body;
 
   if (!nim || !password) {
@@ -47,43 +33,66 @@ export const studentLogin = (req: Request, res: Response): void => {
     return;
   }
 
-  const student = MOCK_STUDENTS.find(
-    (s) => s.nim === nim && s.password === password
-  );
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT student_id, nim, student_name, class, email, password FROM students WHERE nim = ?',
+      [nim]
+    );
 
-  if (!student) {
-    res.status(401).json({ success: false, message: 'NIM atau password salah' });
-    return;
-  }
+    if (!rows || rows.length === 0) {
+      res.status(401).json({ success: false, message: 'NIM atau password salah' });
+      return;
+    }
 
-  const payload = {
-    sub: student.student_id,
-    nim: student.nim,
-    name: student.student_name,
-    role: 'student',
-  };
+    const student = rows[0] as StudentRow;
 
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    // Cek password — support bcrypt hash dan plain text (untuk seed data awal)
+    let passwordValid = false;
+    if (student.password.startsWith('$2')) {
+      // Bcrypt hash
+      passwordValid = await bcrypt.compare(password, student.password);
+    } else {
+      // Plain text (fallback untuk dev — akan dihapus setelah semua di-hash)
+      passwordValid = student.password === password;
+    }
 
-  res.status(200).json({
-    success: true,
-    message: 'Login berhasil',
-    data: {
-      token,
-      user: {
-        id: student.student_id,
-        nim: student.nim,
-        name: student.student_name,
-        class: student.class,
-        email: student.email,
-        role: 'student',
+    if (!passwordValid) {
+      res.status(401).json({ success: false, message: 'NIM atau password salah' });
+      return;
+    }
+
+    const payload = {
+      sub: student.student_id,
+      nim: student.nim,
+      name: student.student_name,
+      role: 'student',
+    };
+
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as any);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login berhasil',
+      data: {
+        token,
+        user: {
+          id: student.student_id,
+          nim: student.nim,
+          name: student.student_name,
+          class: student.class,
+          email: student.email,
+          role: 'student',
+        },
       },
-    },
-  });
+    });
+  } catch (err: any) {
+    console.error('[Auth Service] studentLogin error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server. Silakan coba lagi.' });
+  }
 };
 
 // ─── Lecturer Login ───────────────────────────────────────────────────────────
-export const lecturerLogin = (req: Request, res: Response): void => {
+export const lecturerLogin = async (req: Request, res: Response): Promise<void> => {
   const { nip, password } = req.body;
 
   if (!nip || !password) {
@@ -91,41 +100,61 @@ export const lecturerLogin = (req: Request, res: Response): void => {
     return;
   }
 
-  const lecturer = MOCK_LECTURERS.find(
-    (l) => l.nip === nip && l.password === password
-  );
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT lecturer_id, nip, lecturer_name, password FROM lecturers WHERE nip = ?',
+      [nip]
+    );
 
-  if (!lecturer) {
-    res.status(401).json({ success: false, message: 'NIP atau password salah' });
-    return;
-  }
+    if (!rows || rows.length === 0) {
+      res.status(401).json({ success: false, message: 'NIP atau password salah' });
+      return;
+    }
 
-  const payload = {
-    sub: lecturer.lecturer_id,
-    nip: lecturer.nip,
-    name: lecturer.lecturer_name,
-    role: 'lecturer',
-  };
+    const lecturer = rows[0] as LecturerRow;
 
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    let passwordValid = false;
+    if (lecturer.password.startsWith('$2')) {
+      passwordValid = await bcrypt.compare(password, lecturer.password);
+    } else {
+      passwordValid = lecturer.password === password;
+    }
 
-  res.status(200).json({
-    success: true,
-    message: 'Login berhasil',
-    data: {
-      token,
-      user: {
-        id: lecturer.lecturer_id,
-        nip: lecturer.nip,
-        name: lecturer.lecturer_name,
-        role: 'lecturer',
+    if (!passwordValid) {
+      res.status(401).json({ success: false, message: 'NIP atau password salah' });
+      return;
+    }
+
+    const payload = {
+      sub: lecturer.lecturer_id,
+      nip: lecturer.nip,
+      name: lecturer.lecturer_name,
+      role: 'lecturer',
+    };
+
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as any);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login berhasil',
+      data: {
+        token,
+        user: {
+          id: lecturer.lecturer_id,
+          nip: lecturer.nip,
+          name: lecturer.lecturer_name,
+          role: 'lecturer',
+        },
       },
-    },
-  });
+    });
+  } catch (err: any) {
+    console.error('[Auth Service] lecturerLogin error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server. Silakan coba lagi.' });
+  }
 };
 
 // ─── Mentor: Send OTP ─────────────────────────────────────────────────────────
-export const mentorSendOtp = (req: Request, res: Response): void => {
+export const mentorSendOtp = async (req: Request, res: Response): Promise<void> => {
   const { email } = req.body;
 
   if (!email) {
@@ -133,26 +162,49 @@ export const mentorSendOtp = (req: Request, res: Response): void => {
     return;
   }
 
-  // Generate OTP 6 digit
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 menit
+  try {
+    // Cek apakah email mentor valid di registrasi
+    const [rows] = await pool.execute<any[]>(
+      'SELECT registration_id FROM internship_registrations WHERE mentor_email = ? AND status = ?',
+      [email, 'approved']
+    );
 
-  otpStore[email] = { otp, expiresAt };
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Email mentor tidak ditemukan atau belum disetujui' });
+      return;
+    }
 
-  console.log(`[Auth Service] OTP untuk ${email}: ${otp}`); // Untuk dev/testing
+    const registrationId = rows[0].registration_id;
 
-  // Di production: kirim email via SMTP/SendGrid
-  // Untuk sekarang: return OTP di response (DEV MODE ONLY)
-  res.status(200).json({
-    success: true,
-    message: `OTP telah dikirim ke ${email}`,
-    // DEV ONLY: hapus field ini di production
-    dev_otp: otp,
-  });
+    // Generate OTP 6 digit
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiredAt = new Date(Date.now() + 5 * 60 * 1000); // 5 menit
+
+    // Simpan OTP ke database (hapus OTP lama dulu)
+    await pool.execute(
+      'DELETE FROM mentor_otps WHERE registration_id = ?',
+      [registrationId]
+    );
+    await pool.execute(
+      'INSERT INTO mentor_otps (registration_id, otp_code, expired_at) VALUES (?, ?, ?)',
+      [registrationId, otp, expiredAt]
+    );
+
+    console.log(`[Auth Service] OTP untuk ${email}: ${otp}`);
+
+    res.status(200).json({
+      success: true,
+      message: `OTP telah dikirim ke ${email}`,
+      dev_otp: otp, // DEV ONLY
+    });
+  } catch (err: any) {
+    console.error('[Auth Service] mentorSendOtp error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
 };
 
 // ─── Mentor: Verify OTP ───────────────────────────────────────────────────────
-export const mentorVerifyOtp = (req: Request, res: Response): void => {
+export const mentorVerifyOtp = async (req: Request, res: Response): Promise<void> => {
   const { email, otp } = req.body;
 
   if (!email || !otp) {
@@ -160,53 +212,56 @@ export const mentorVerifyOtp = (req: Request, res: Response): void => {
     return;
   }
 
-  const stored = otpStore[email];
+  try {
+    // Cari OTP valid berdasarkan email mentor
+    const [rows] = await pool.execute<any[]>(
+      `SELECT mo.otp_id, mo.registration_id, mo.otp_code, mo.expired_at
+       FROM mentor_otps mo
+       JOIN internship_registrations ir ON mo.registration_id = ir.registration_id
+       WHERE ir.mentor_email = ? AND mo.otp_code = ?
+       ORDER BY mo.created_at DESC LIMIT 1`,
+      [email, otp]
+    );
 
-  if (!stored) {
-    res.status(401).json({ success: false, message: 'OTP tidak ditemukan. Kirim OTP terlebih dahulu' });
-    return;
-  }
+    if (!rows || rows.length === 0) {
+      res.status(401).json({ success: false, message: 'OTP salah atau tidak ditemukan' });
+      return;
+    }
 
-  if (Date.now() > stored.expiresAt) {
-    delete otpStore[email];
-    res.status(401).json({ success: false, message: 'OTP sudah kadaluarsa. Kirim OTP baru' });
-    return;
-  }
+    const otpRow = rows[0];
+    if (new Date() > new Date(otpRow.expired_at)) {
+      await pool.execute('DELETE FROM mentor_otps WHERE otp_id = ?', [otpRow.otp_id]);
+      res.status(401).json({ success: false, message: 'OTP sudah kadaluarsa. Kirim OTP baru.' });
+      return;
+    }
 
-  if (stored.otp !== otp) {
-    res.status(401).json({ success: false, message: 'OTP salah' });
-    return;
-  }
+    // Hapus OTP setelah dipakai
+    await pool.execute('DELETE FROM mentor_otps WHERE otp_id = ?', [otpRow.otp_id]);
 
-  // OTP valid — hapus dari store
-  delete otpStore[email];
+    // Buat session token
+    const sessionToken = jwt.sign({ email, role: 'mentor', registration_id: otpRow.registration_id }, JWT_SECRET, { expiresIn: '8h' } as any);
+    const sessionExpiredAt = new Date(Date.now() + 8 * 60 * 60 * 1000);
 
-  const payload = {
-    email,
-    role: 'mentor',
-  };
+    await pool.execute(
+      'INSERT INTO mentor_sessions (registration_id, session_token, session_expired_at) VALUES (?, ?, ?)',
+      [otpRow.registration_id, sessionToken, sessionExpiredAt]
+    );
 
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
-
-  res.status(200).json({
-    success: true,
-    message: 'Verifikasi OTP berhasil',
-    data: {
-      token,
-      user: {
-        email,
-        role: 'mentor',
+    res.status(200).json({
+      success: true,
+      message: 'Verifikasi OTP berhasil',
+      data: {
+        token: sessionToken,
+        user: { email, role: 'mentor' },
       },
-    },
-  });
+    });
+  } catch (err: any) {
+    console.error('[Auth Service] mentorVerifyOtp error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
 };
 
 // ─── Logout ───────────────────────────────────────────────────────────────────
 export const logout = (_req: Request, res: Response): void => {
-  // JWT adalah stateless; client yang menghapus token dari storage
-  // Di tahap berikutnya bisa implementasi token blacklist dengan Redis
-  res.status(200).json({
-    success: true,
-    message: 'Logout berhasil',
-  });
+  res.status(200).json({ success: true, message: 'Logout berhasil' });
 };

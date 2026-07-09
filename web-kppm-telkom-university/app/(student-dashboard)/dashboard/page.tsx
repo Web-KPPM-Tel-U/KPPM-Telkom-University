@@ -96,13 +96,12 @@ const ProgressStepper = ({ steps, currentStep }: { steps: KppmStep[]; currentSte
         return (
           <div key={step.step} className="flex flex-col items-center gap-2 flex-1">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all text-sm font-bold ${
-                isDone
-                  ? 'bg-[#CC0000] border-[#CC0000] text-white'
-                  : isCurrent
+              className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all text-sm font-bold ${isDone
+                ? 'bg-[#CC0000] border-[#CC0000] text-white'
+                : isCurrent
                   ? 'bg-white border-[#CC0000] text-[#CC0000]'
                   : 'bg-white border-gray-300 text-gray-400'
-              }`}
+                }`}
             >
               {isDone ? <CheckIcon /> : step.step}
             </div>
@@ -240,9 +239,8 @@ export default function DashboardPage() {
             {kppm?.next_steps?.map((step, idx) => (
               <div key={idx} className="flex items-start gap-3">
                 <div
-                  className={`w-5 h-5 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center ${
-                    step.completed ? 'bg-green-500' : 'bg-gray-200'
-                  }`}
+                  className={`w-5 h-5 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center ${step.completed ? 'bg-green-500' : 'bg-gray-200'
+                    }`}
                 >
                   {step.completed && <CheckIcon />}
                 </div>
