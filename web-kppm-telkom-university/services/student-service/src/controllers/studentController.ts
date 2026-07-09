@@ -1,66 +1,21 @@
+import 'dotenv/config';
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
+import pool from '../config/db';
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const MOCK_STUDENT_DATA: Record<number, object> = {
-  1: {
-    student_id: 1,
-    nim: '12345678',
-    name: 'Budi Santoso',
-    class: 'IF-45-01',
-    email: 'budi.santoso@student.telkomuniversity.ac.id',
-    prodi: 'S1 Informatika',
-    fakultas: 'Fakultas Informatika',
-    semester: 6,
-    angkatan: 2022,
-    ipk: 3.72,
-    foto_url: null,
-  },
-  2: {
-    student_id: 2,
-    nim: '23456789',
-    name: 'Siti Rahayu',
-    class: 'IF-45-02',
-    email: 'siti.rahayu@student.telkomuniversity.ac.id',
-    prodi: 'S1 Informatika',
-    fakultas: 'Fakultas Informatika',
-    semester: 6,
-    angkatan: 2022,
-    ipk: 3.85,
-    foto_url: null,
-  },
-};
-
-const MOCK_KPPM_STATUS: Record<number, object> = {
-  1: {
-    registration_id: null,
-    status: 'belum_daftar',
-    current_step: 0,
-    steps: [
-      { step: 1, label: 'Pengisian Data', completed: false, date: null },
-      { step: 2, label: 'Verifikasi Dosen', completed: false, date: null },
-      { step: 3, label: 'Persetujuan Perusahaan', completed: false, date: null },
-      { step: 4, label: 'Selesai', completed: false, date: null },
-    ],
-    notifications: [
-      {
-        id: 1,
-        message: 'Selamat datang di Sistem Manajemen KPPM! Silakan mulai mengisi data pendaftaran KPPM Anda.',
-        type: 'info',
-        created_at: new Date().toISOString(),
-        is_read: false,
-      },
-    ],
-    next_steps: [
-      { label: 'Pengisian Data etagran KPPM', completed: false },
-      { label: 'Verifikasi Dosen pendaftaran KPPM', completed: false },
-      { label: 'Persetujuan Perusahaan kangalturan KPPM', completed: false },
-    ],
-  },
-};
+// ─── Helper: derive prodi from class code ─────────────────────────────────────
+function getProdiFromClass(classCode: string): string {
+  const code = classCode?.toUpperCase() || '';
+  if (code.startsWith('IF'))   return 'S1 Informatika';
+  if (code.startsWith('SI'))   return 'S1 Sistem Informasi';
+  if (code.startsWith('IK'))   return 'S1 Ilmu Komputasi';
+  if (code.startsWith('TI'))   return 'D3 Teknologi Informasi';
+  if (code.startsWith('RPL'))  return 'D3 Rekayasa Perangkat Lunak';
+  return 'Program Studi Lainnya';
+}
 
 // ─── Get Profile ──────────────────────────────────────────────────────────────
-export const getProfile = (req: AuthenticatedRequest, res: Response): void => {
+export const getProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const userId = req.user?.sub;
 
   if (!userId) {
@@ -68,21 +23,39 @@ export const getProfile = (req: AuthenticatedRequest, res: Response): void => {
     return;
   }
 
-  const profile = MOCK_STUDENT_DATA[userId];
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT student_id, nim, student_name, class, email FROM students WHERE student_id = ?',
+      [userId]
+    );
 
-  if (!profile) {
-    res.status(404).json({ success: false, message: 'Data mahasiswa tidak ditemukan' });
-    return;
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Data mahasiswa tidak ditemukan' });
+      return;
+    }
+
+    const s = rows[0];
+    res.status(200).json({
+      success: true,
+      data: {
+        student_id: s.student_id,
+        nim: s.nim,
+        name: s.student_name,
+        class: s.class,
+        email: s.email,
+        prodi: getProdiFromClass(s.class),
+        fakultas: 'Fakultas Informatika',
+        foto_url: null,
+      },
+    });
+  } catch (err: any) {
+    console.error('[Student Service] getProfile error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
-
-  res.status(200).json({
-    success: true,
-    data: profile,
-  });
 };
 
 // ─── Get Dashboard ────────────────────────────────────────────────────────────
-export const getDashboard = (req: AuthenticatedRequest, res: Response): void => {
+export const getDashboard = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const userId = req.user?.sub;
 
   if (!userId) {
@@ -90,14 +63,93 @@ export const getDashboard = (req: AuthenticatedRequest, res: Response): void => 
     return;
   }
 
-  const profile = MOCK_STUDENT_DATA[userId];
-  const kppmStatus = MOCK_KPPM_STATUS[userId] || MOCK_KPPM_STATUS[1]; // fallback ke data default
+  try {
+    // 1. Profil mahasiswa
+    const [studentRows] = await pool.execute<any[]>(
+      'SELECT student_id, nim, student_name, class, email FROM students WHERE student_id = ?',
+      [userId]
+    );
 
-  res.status(200).json({
-    success: true,
-    data: {
-      profile,
-      kppm_status: kppmStatus,
-    },
-  });
+    if (!studentRows || studentRows.length === 0) {
+      res.status(404).json({ success: false, message: 'Data mahasiswa tidak ditemukan' });
+      return;
+    }
+
+    const s = studentRows[0];
+    const profile = {
+      student_id: s.student_id,
+      nim: s.nim,
+      name: s.student_name,
+      class: s.class,
+      email: s.email,
+      prodi: getProdiFromClass(s.class),
+      fakultas: 'Fakultas Informatika',
+      foto_url: null,
+    };
+
+    // 2. Status pendaftaran KPPM
+    const [regRows] = await pool.execute<any[]>(
+      `SELECT registration_id, status, company_name, internship_start, internship_end,
+              submitted_at, approved_at
+       FROM internship_registrations
+       WHERE student_id = ?
+       ORDER BY created_at DESC LIMIT 1`,
+      [userId]
+    );
+
+    let kppmStatus;
+    if (!regRows || regRows.length === 0) {
+      // Belum pernah daftar
+      kppmStatus = {
+        registration_id: null,
+        status: 'belum_daftar',
+        current_step: 0,
+        steps: [
+          { step: 1, label: 'Pengisian Data', completed: false, date: null },
+          { step: 2, label: 'Verifikasi Dosen', completed: false, date: null },
+          { step: 3, label: 'Persetujuan Perusahaan', completed: false, date: null },
+          { step: 4, label: 'Selesai', completed: false, date: null },
+        ],
+        next_steps: [
+          { label: 'Isi data pendaftaran KPPM', completed: false },
+          { label: 'Verifikasi oleh Dosen Pembimbing', completed: false },
+          { label: 'Persetujuan Perusahaan', completed: false },
+        ],
+      };
+    } else {
+      const reg = regRows[0];
+      const isPending  = reg.status === 'pending_approval';
+      const isApproved = reg.status === 'approved';
+
+      kppmStatus = {
+        registration_id: reg.registration_id,
+        status: reg.status,
+        company_name: reg.company_name,
+        internship_start: reg.internship_start,
+        internship_end: reg.internship_end,
+        submitted_at: reg.submitted_at,
+        approved_at: reg.approved_at,
+        current_step: isApproved ? 4 : 1,
+        steps: [
+          { step: 1, label: 'Pengisian Data',       completed: true,       date: reg.submitted_at },
+          { step: 2, label: 'Verifikasi Dosen',      completed: isPending || isApproved, date: isPending ? reg.submitted_at : null },
+          { step: 3, label: 'Persetujuan Perusahaan',completed: isApproved, date: reg.approved_at },
+          { step: 4, label: 'Selesai',               completed: isApproved, date: reg.approved_at },
+        ],
+        next_steps: [
+          { label: 'Isi data pendaftaran KPPM',    completed: true },
+          { label: 'Verifikasi Dosen',             completed: isPending || isApproved },
+          { label: 'Persetujuan Perusahaan',        completed: isApproved },
+        ],
+      };
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { profile, kppm_status: kppmStatus },
+    });
+  } catch (err: any) {
+    console.error('[Student Service] getDashboard error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
 };
