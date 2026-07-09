@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { getUser, logout, getToken } from '@/lib/api';
@@ -9,7 +9,7 @@ import { getUser, logout, getToken } from '@/lib/api';
 
 type Lang = 'id' | 'en';
 
-const LANG_LABELS: Record<Lang, { label: string; flag: JSX.Element }> = {
+const LANG_LABELS: Record<Lang, { label: string; flag: React.ReactNode }> = {
   id: {
     label: 'Indonesia',
     flag: (
@@ -203,7 +203,7 @@ export default function StudentDashboardLayout({ children }: { children: React.R
       {/* ══════════════════════════════════
           TOPBAR — Merah Solid
           ══════════════════════════════════ */}
-      <header className="bg-[#CC0000] h-16 flex items-center px-4 gap-3 shadow-md z-30 flex-shrink-0">
+      <header className="bg-[#CC0000] h-16 flex items-center px-4 gap-3 z-30 flex-shrink-0" style={{ boxShadow: '0 2px 16px rgba(180,0,0,0.22), 0 1px 0 rgba(0,0,0,0.08)' }}>
 
         {/* Toggle Sidebar */}
         <button
@@ -274,7 +274,7 @@ export default function StudentDashboardLayout({ children }: { children: React.R
             onClick={() => { setUserMenuOpen((v) => !v); setLangMenuOpen(false); }}
             className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl hover:bg-white/10 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#CC0000] font-bold text-sm shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#CC0000] font-bold text-sm" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.15)' }}>
               {user ? getInitials(user.name) : '?'}
             </div>
             <div className="hidden md:block text-left">
@@ -317,12 +317,12 @@ export default function StudentDashboardLayout({ children }: { children: React.R
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Sidebar ── */}
-        <aside className={`bg-white border-r border-gray-100 flex-shrink-0 transition-all duration-300 overflow-hidden z-20 ${sidebarOpen ? 'w-56' : 'w-0'}`}>
+        <aside className={`bg-white flex-shrink-0 transition-all duration-300 overflow-hidden z-20 ${sidebarOpen ? 'w-56' : 'w-0'}`} style={{ borderRight: '1px solid #ebebeb', boxShadow: '2px 0 12px rgba(0,0,0,0.05)' }}>
           <div className="w-56 overflow-y-auto h-full flex flex-col">
             {/* Profile Card */}
-            <div className="p-4 border-b border-gray-100 bg-red-50">
+            <div className="p-4 border-b border-gray-100 bg-white">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#CC0000] flex items-center justify-center text-white font-bold text-sm shadow-sm flex-shrink-0">
+                <div className="w-9 h-9 rounded-full bg-[#CC0000] flex items-center justify-center text-white font-bold text-sm flex-shrink-0" style={{ boxShadow: '0 2px 6px rgba(180,0,0,0.3)' }}>
                   {user ? getInitials(user.name) : '?'}
                 </div>
                 <div className="min-w-0">
@@ -345,9 +345,10 @@ export default function StudentDashboardLayout({ children }: { children: React.R
                     key={item.href}
                     href={item.href}
                     id={`nav-${item.href.replace('/', '')}`}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150 ${
-                      isActive ? 'bg-[#CC0000] text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150 ${
+                      isActive ? 'bg-[#CC0000] text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
+                    style={isActive ? { boxShadow: '0 2px 8px rgba(180,0,0,0.2)' } : undefined}
                   >
                     <span className={isActive ? 'text-white' : 'text-gray-400'}>{item.icon}</span>
                     {item.label}
