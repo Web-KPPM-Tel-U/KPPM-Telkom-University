@@ -170,6 +170,18 @@ export const getStudentDashboard = async (): Promise<ApiResponse<unknown>> => {
   return res.json();
 };
 
+export const changeStudentPassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<ApiResponse<null>> => {
+  const res = await fetch(`${API_BASE_URL}/student/change-password`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  return res.json();
+};
+
 // ─── KPPM Registration API ────────────────────────────────────────────────────
 
 export interface KppmRegistration {

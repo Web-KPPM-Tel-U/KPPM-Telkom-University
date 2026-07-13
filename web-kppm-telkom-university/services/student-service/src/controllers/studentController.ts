@@ -50,7 +50,11 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response): Prom
     });
   } catch (err: any) {
     console.error('[Student Service] getProfile error:', err.message);
-    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+    if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+      res.status(503).json({ success: false, message: 'Koneksi ke database terputus. Pastikan service database berjalan.' });
+    } else {
+      res.status(500).json({ success: false, message: 'Terjadi kesalahan internal pada server.' });
+    }
   }
 };
 
@@ -150,6 +154,84 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
     });
   } catch (err: any) {
     console.error('[Student Service] getDashboard error:', err.message);
-    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+    if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+      res.status(503).json({ success: false, message: 'Koneksi ke database terputus. Pastikan service database berjalan.' });
+    } else {
+      res.status(500).json({ success: false, message: 'Terjadi kesalahan internal pada server.' });
+    }
   }
 };
+
+// ─── Change Password ──────────────────────────────────────────────────────────
+export const changePassword = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const userId = req.user?.sub;
+
+  if (!userId) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+    return;
+  }
+
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ success: false, message: 'Password lama dan password baru wajib diisi' });
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    res.status(400).json({ success: false, message: 'Password baru minimal 8 karakter' });
+    return;
+  }
+
+  if (currentPassword === newPassword) {
+    res.status(400).json({ success: false, message: 'Password baru tidak boleh sama dengan password lama' });
+    return;
+  }
+
+  try {
+    const bcrypt = await import('bcryptjs');
+
+    // Ambil password saat ini dari database
+    const [rows] = await pool.execute<any[]>(
+      'SELECT password FROM students WHERE student_id = ?',
+      [userId]
+    );
+
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Data mahasiswa tidak ditemukan' });
+      return;
+    }
+
+    const storedPassword = rows[0].password;
+
+    // Verifikasi password lama
+    let isCurrentPasswordValid = false;
+    if (storedPassword.startsWith('$2')) {
+      isCurrentPasswordValid = await bcrypt.compare(currentPassword, storedPassword);
+    } else {
+      isCurrentPasswordValid = storedPassword === currentPassword;
+    }
+
+    if (!isCurrentPasswordValid) {
+      res.status(400).json({ success: false, message: 'Password lama yang Anda masukkan salah' });
+      return;
+    }
+
+    // Hash password baru dan simpan
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await pool.execute(
+      'UPDATE students SET password = ? WHERE student_id = ?',
+      [hashedNewPassword, userId]
+    );
+
+    res.status(200).json({ success: true, message: 'Password berhasil diubah' });
+  } catch (err: any) {
+    console.error('[Student Service] changePassword error:', err.message);
+    if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+      res.status(503).json({ success: false, message: 'Koneksi ke database terputus.' });
+    } else {
+      res.status(500).json({ success: false, message: 'Terjadi kesalahan internal pada server.' });
+    }
+  }
+};
+

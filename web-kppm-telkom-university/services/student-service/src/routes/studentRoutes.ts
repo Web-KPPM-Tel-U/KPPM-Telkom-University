@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getProfile, getDashboard } from '../controllers/studentController';
+import { getProfile, getDashboard, changePassword } from '../controllers/studentController';
 import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, upload } from '../controllers/kppmController';
 import { verifyToken } from '../middleware/authMiddleware';
 
@@ -8,6 +8,7 @@ const router = Router();
 // ─── Student Routes ───────────────────────────────────────────────────────────
 router.get('/profile',   verifyToken, getProfile);
 router.get('/dashboard', verifyToken, getDashboard);
+router.patch('/change-password', verifyToken, changePassword);
 
 // ─── KPPM Registration Routes ─────────────────────────────────────────────────
 // POST   /student/kppm/register           — submit form pendaftaran KPPM (dengan upload file)
@@ -19,3 +20,4 @@ router.get('/kppm/registrations/:id',   verifyToken, getRegistrationDetail);
 router.get('/lecturers',                verifyToken, getLecturers);
 
 export default router;
+
