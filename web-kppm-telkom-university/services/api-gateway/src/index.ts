@@ -33,6 +33,16 @@ app.get('/health', (_req: Request, res: Response) => {
   });
 });
 
+// ─── Helper: baca raw body sebagai Buffer ─────────────────────────────────────
+function readRawBody(req: Request): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 // ─── Generic Proxy Helper ─────────────────────────────────────────────────────
 async function proxyRequest(
   req: Request,
@@ -40,24 +50,36 @@ async function proxyRequest(
   targetBase: string
 ): Promise<void> {
   const targetUrl = `${targetBase}${req.originalUrl}`;
+  const contentType = req.headers['content-type'] ?? '';
+  const isMultipart = contentType.includes('multipart/form-data');
 
   try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
+
     if (req.headers.authorization) {
       headers['Authorization'] = req.headers.authorization;
+    }
+
+    let fetchBody: Buffer | string | undefined;
+
+    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+      if (isMultipart) {
+        // Multipart: baca raw bytes dan forward dengan Content-Type asli (termasuk boundary)
+        const rawBuffer = await readRawBody(req);
+        headers['Content-Type'] = contentType;
+        fetchBody = rawBuffer;
+      } else if (req.body && Object.keys(req.body).length > 0) {
+        headers['Content-Type'] = 'application/json';
+        fetchBody = JSON.stringify(req.body);
+      }
     }
 
     const fetchOptions: RequestInit = {
       method: req.method,
       headers,
-      signal: AbortSignal.timeout(10000), // 10 detik timeout
+      body: fetchBody as any, // Buffer tidak ada di DOM BodyInit, tapi valid di Node.js fetch
+      signal: AbortSignal.timeout(30000),
     };
-
-    if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.body && Object.keys(req.body).length > 0) {
-      fetchOptions.body = JSON.stringify(req.body);
-    }
 
     const response = await fetch(targetUrl, fetchOptions);
     const data = await response.json();
@@ -84,6 +106,26 @@ app.all('/auth/*', (req: Request, res: Response) => {
 // /student/* → Student Service (port 4002)
 app.all('/student/*', (req: Request, res: Response) => {
   proxyRequest(req, res, STUDENT_SERVICE);
+});
+
+// /uploads/* → Student Service (port 4002) — binary-safe proxy untuk file statik
+app.all('/uploads/*', async (req: Request, res: Response) => {
+  const targetUrl = `${STUDENT_SERVICE}${req.originalUrl}`;
+  try {
+    const response = await fetch(targetUrl, {
+      signal: AbortSignal.timeout(15000),
+    });
+    const contentType = response.headers.get('content-type') || 'application/octet-stream';
+    const contentLength = response.headers.get('content-length');
+    res.setHeader('Content-Type', contentType);
+    if (contentLength) res.setHeader('Content-Length', contentLength);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    const buffer = await response.arrayBuffer();
+    res.status(response.status).send(Buffer.from(buffer));
+  } catch (err: any) {
+    console.error(`[Gateway] Error fetching file ${targetUrl}:`, err.message);
+    res.status(503).json({ success: false, error: 'File tidak tersedia' });
+  }
 });
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────

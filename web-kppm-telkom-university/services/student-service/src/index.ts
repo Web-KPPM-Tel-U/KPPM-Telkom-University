@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import path from 'path';
 import studentRoutes from './routes/studentRoutes';
 
 const app = express();
@@ -14,6 +15,9 @@ app.use(cors({
 }));
 app.use(morgan('dev'));
 app.use(express.json());
+
+// ─── Static Files (Uploaded Documents) ───────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
@@ -36,6 +40,9 @@ app.use((_req, res) => {
 app.listen(PORT, () => {
   console.log(`\n🎓 Student Service running at http://localhost:${PORT}`);
   console.log(`   Routes:`);
-  console.log(`   GET /student/profile   (requires JWT)`);
-  console.log(`   GET /student/dashboard (requires JWT)\n`);
+  console.log(`   GET  /student/profile                 (requires JWT)`);
+  console.log(`   GET  /student/dashboard               (requires JWT)`);
+  console.log(`   POST /student/kppm/register           (requires JWT, multipart/form-data)`);
+  console.log(`   GET  /student/kppm/registrations      (requires JWT)`);
+  console.log(`   GET  /student/kppm/registrations/:id  (requires JWT)\n`);
 });
