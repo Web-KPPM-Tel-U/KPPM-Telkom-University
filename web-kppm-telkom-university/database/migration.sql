@@ -175,3 +175,19 @@ CREATE TABLE IF NOT EXISTS mentor_scores (
         REFERENCES internship_registrations(registration_id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SEED DATA (menggunakan INSERT IGNORE — aman dijalankan berulang kali)
+-- Password semua akun: password123
+-- Hash: bcrypt cost 10
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Mahasiswa
+INSERT IGNORE INTO students (nim, student_name, class, email, password) VALUES
+    ('12345678', 'Budi Santoso',  'IF-45-01', 'budi.santoso@student.telkomuniversity.ac.id',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy'),
+    ('23456789', 'Siti Rahayu',   'IF-45-02', 'siti.rahayu@student.telkomuniversity.ac.id',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy'),
+    ('34567890', 'Ahmad Fauzan',  'SI-45-01', 'ahmad.fauzan@student.telkomuniversity.ac.id',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy');
+
+-- Dosen (Ditunda karena masih fokus service mahasiswa)
+-- INSERT IGNORE INTO lecturers (nip, lecturer_name, password) VALUES ...
+

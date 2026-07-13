@@ -59,7 +59,7 @@ const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-full min-h-64">
     <div className="text-center">
       <div className="w-10 h-10 border-4 border-[#CC0000] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-      <p className="text-gray-500 text-sm font-medium">Memuat dashboard...</p>
+      <p className="text-gray-500 dark:text-slate-400 text-sm font-medium">Memuat dashboard...</p>
     </div>
   </div>
 );
@@ -68,11 +68,11 @@ const LoadingSpinner = () => (
 
 const StatusBadge = ({ status }: { status: string }) => {
   const labels: Record<string, { label: string; color: string }> = {
-    belum_daftar: { label: 'Belum Mendaftar', color: 'bg-gray-100 text-gray-600' },
-    pending_approval: { label: 'Menunggu Verifikasi', color: 'bg-yellow-100 text-yellow-700' },
-    approved: { label: 'Disetujui', color: 'bg-green-100 text-green-700' },
+    belum_daftar: { label: 'Belum Mendaftar', color: 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-400' },
+    pending_approval: { label: 'Menunggu Verifikasi', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-500' },
+    approved: { label: 'Disetujui', color: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500' },
   };
-  const { label, color } = labels[status] || { label: status, color: 'bg-gray-100 text-gray-600' };
+  const { label, color } = labels[status] || { label: status, color: 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-400' };
   return (
     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${color}`}>
       {label}
@@ -84,7 +84,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 const ProgressStepper = ({ steps, currentStep }: { steps: KppmStep[]; currentStep: number }) => (
   <div className="relative">
-    <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 mx-8 z-0" />
+    <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 dark:bg-slate-700 mx-8 z-0" />
     <div
       className="absolute top-4 left-0 h-0.5 bg-[#CC0000] z-0 transition-all duration-500 mx-8"
       style={{ width: `${Math.min(currentStep / (steps.length - 1), 1) * 100}%` }}
@@ -99,13 +99,13 @@ const ProgressStepper = ({ steps, currentStep }: { steps: KppmStep[]; currentSte
               className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all text-sm font-bold ${isDone
                 ? 'bg-[#CC0000] border-[#CC0000] text-white'
                 : isCurrent
-                  ? 'bg-white border-[#CC0000] text-[#CC0000]'
-                  : 'bg-white border-gray-300 text-gray-400'
+                  ? 'bg-white dark:bg-slate-900 border-[#CC0000] text-[#CC0000]'
+                  : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-400 dark:text-slate-500'
                 }`}
             >
               {isDone ? <CheckIcon /> : step.step}
             </div>
-            <span className={`text-xs text-center font-medium leading-tight ${isDone || isCurrent ? 'text-gray-800' : 'text-gray-400'}`}>
+            <span className={`text-xs text-center font-medium leading-tight ${isDone || isCurrent ? 'text-gray-800 dark:text-slate-200' : 'text-gray-400 dark:text-slate-500'}`}>
               {step.label}
             </span>
           </div>
@@ -118,8 +118,8 @@ const ProgressStepper = ({ steps, currentStep }: { steps: KppmStep[]; currentSte
 // ─── Status Card ──────────────────────────────────────────────────────────────
 
 const StatusCard = ({ label, value, color }: { label: string; value: string; color: string }) => (
-  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{label}</p>
+  <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
+    <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">{label}</p>
     <p className={`text-2xl font-bold ${color}`}>{value}</p>
   </div>
 );
@@ -130,7 +130,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<{title: string; message: string} | null>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -142,10 +142,16 @@ export default function DashboardPage() {
         if (res.success && res.data) {
           setData(res.data as DashboardData);
         } else {
-          setError('Gagal memuat data dashboard.');
+          let title = 'Gagal Memuat Data';
+          if (res.message?.toLowerCase().includes('database') || res.message?.toLowerCase().includes('koneksi')) {
+            title = 'Koneksi Database Bermasalah';
+          } else if (res.message?.toLowerCase().includes('tidak ditemukan')) {
+            title = 'Data Tidak Ditemukan';
+          }
+          setError({ title, message: res.message || 'Terjadi kesalahan saat memuat data dashboard.' });
         }
       } catch {
-        setError('Tidak dapat terhubung ke server. Pastikan backend (Student Service) berjalan.');
+        setError({ title: 'Koneksi Server Bermasalah', message: 'Tidak dapat terhubung ke server API. Pastikan backend berjalan.' });
       } finally {
         setIsLoading(false);
       }
@@ -158,14 +164,14 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+        <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-6 text-center transition-colors">
+          <div className="w-12 h-12 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
-          <p className="text-red-700 font-semibold mb-1">Koneksi Bermasalah</p>
-          <p className="text-red-500 text-sm mb-4">{error}</p>
+          <p className="text-red-700 dark:text-red-400 font-semibold mb-1">{error.title}</p>
+          <p className="text-red-500 dark:text-red-300 text-sm mb-4">{error.message}</p>
           <button
             onClick={() => window.location.reload()}
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#CC0000] text-white rounded-lg text-sm font-medium hover:bg-[#A30000] transition-colors"
@@ -185,26 +191,26 @@ export default function DashboardPage() {
     <div className="p-6 max-w-6xl mx-auto">
       {/* ── Page Header ── */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
           Selamat Datang, {profile?.name}
         </h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">
           NIM: {profile?.nim} &middot; Kelas: {profile?.class}
         </p>
       </div>
 
       {/* ── Status Card ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <StatusCard label="Status KPPM" value="Belum Mendaftar" color="text-gray-700" />
-        <StatusCard label="Program Studi" value={profile?.prodi || '-'} color="text-[#CC0000]" />
+        <StatusCard label="Status KPPM" value="Belum Mendaftar" color="text-gray-700 dark:text-slate-300" />
+        <StatusCard label="Program Studi" value={profile?.prodi || '-'} color="text-[#CC0000] dark:text-red-400" />
       </div>
 
       {/* ── Main Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Status KPPM Card (2/3) ── */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 transition-colors">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+            <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100 uppercase tracking-wider">
               Status Pendaftaran KPPM
             </h2>
             <StatusBadge status={kppm?.status || 'belum_daftar'} />
@@ -223,7 +229,7 @@ export default function DashboardPage() {
             </button>
             <button
               id="btn-cek-syarat"
-              className="px-5 py-2.5 border-2 border-[#CC0000] text-[#CC0000] hover:bg-red-50 text-sm font-semibold rounded-xl transition-all"
+              className="px-5 py-2.5 border-2 border-[#CC0000] dark:border-red-500 text-[#CC0000] dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 text-sm font-semibold rounded-xl transition-all"
             >
               Cek Syarat &amp; Ketentuan
             </button>
@@ -231,20 +237,20 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Langkah Selanjutnya (1/3) ── */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 transition-colors">
+          <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4 uppercase tracking-wider">
             Langkah Selanjutnya
           </h2>
           <div className="space-y-3">
             {kppm?.next_steps?.map((step, idx) => (
               <div key={idx} className="flex items-start gap-3">
                 <div
-                  className={`w-5 h-5 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center ${step.completed ? 'bg-green-500' : 'bg-gray-200'
+                  className={`w-5 h-5 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center ${step.completed ? 'bg-green-500' : 'bg-gray-200 dark:bg-slate-700'
                     }`}
                 >
                   {step.completed && <CheckIcon />}
                 </div>
-                <p className={`text-sm leading-snug ${step.completed ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
+                <p className={`text-sm leading-snug ${step.completed ? 'text-gray-400 dark:text-slate-500 line-through' : 'text-gray-700 dark:text-slate-300'}`}>
                   {step.label}
                 </p>
               </div>

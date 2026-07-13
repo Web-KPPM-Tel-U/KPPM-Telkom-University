@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { getUser, logout, getToken } from '@/lib/api';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 // ─── Language Config ──────────────────────────────────────────────────────────
 
@@ -194,16 +195,15 @@ export default function StudentDashboardLayout({ children }: { children: React.R
     { href: '/isi-data-kppm',   label: t.isiData,   icon: <EditIcon /> },
     { href: '/upload-hasil-kp', label: t.upload,    icon: <UploadIcon /> },
     { href: '/lihat-nilai',     label: t.nilai,     icon: <GradeIcon /> },
-    { href: '/pengaturan',      label: t.pengaturan,icon: <SettingsIcon /> },
   ];
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
 
       {/* ══════════════════════════════════
           TOPBAR — Merah Solid
           ══════════════════════════════════ */}
-      <header className="bg-[#CC0000] h-16 flex items-center px-4 gap-3 z-30 flex-shrink-0" style={{ boxShadow: '0 2px 16px rgba(180,0,0,0.22), 0 1px 0 rgba(0,0,0,0.08)' }}>
+      <header className="bg-[#CC0000] dark:bg-slate-900 h-16 flex items-center px-4 gap-3 z-30 flex-shrink-0 transition-colors duration-300" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.22), 0 1px 0 rgba(0,0,0,0.08)' }}>
 
         {/* Toggle Sidebar */}
         <button
@@ -226,6 +226,11 @@ export default function StudentDashboardLayout({ children }: { children: React.R
         {/* Spacer */}
         <div className="flex-1" />
 
+        {/* ── Theme Toggle ── */}
+        <div className="flex-shrink-0 hidden sm:block mr-2">
+          <ThemeToggle />
+        </div>
+
         {/* ── Language Selector ── */}
         <div className="relative flex-shrink-0" ref={langRef}>
           <button
@@ -241,8 +246,8 @@ export default function StudentDashboardLayout({ children }: { children: React.R
           </button>
 
           {langMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50">
-              <p className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 mb-1">
+            <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-50 transition-colors duration-300">
+              <p className="px-4 py-2 text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700 mb-1">
                 Bahasa / Language
               </p>
               {(['id', 'en'] as Lang[]).map((l) => (
@@ -250,8 +255,8 @@ export default function StudentDashboardLayout({ children }: { children: React.R
                   key={l}
                   id={`lang-${l}`}
                   onClick={() => { setLang(l); setLangMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 ${
-                    lang === l ? 'text-[#CC0000] font-semibold' : 'text-gray-700'
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 ${
+                    lang === l ? 'text-[#CC0000] dark:text-red-400 font-semibold' : 'text-gray-700 dark:text-slate-300'
                   }`}
                 >
                   {LANG_LABELS[l].flag}
@@ -272,9 +277,9 @@ export default function StudentDashboardLayout({ children }: { children: React.R
           <button
             id="btn-user-menu"
             onClick={() => { setUserMenuOpen((v) => !v); setLangMenuOpen(false); }}
-            className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl hover:bg-white/10 transition-colors"
+            className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl hover:bg-white/10 dark:hover:bg-slate-800/50 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#CC0000] font-bold text-sm" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.15)' }}>
+            <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-[#CC0000] dark:text-red-400 font-bold text-sm" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.15)' }}>
               {user ? getInitials(user.name) : '?'}
             </div>
             <div className="hidden md:block text-left">
@@ -289,23 +294,36 @@ export default function StudentDashboardLayout({ children }: { children: React.R
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50">
-              <div className="px-4 py-3 border-b border-gray-100">
-                <p className="font-semibold text-gray-900 text-sm truncate">{user?.name}</p>
-                <p className="text-gray-400 text-xs mt-0.5">
+            <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-50 transition-colors duration-300">
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700">
+                <p className="font-semibold text-gray-900 dark:text-slate-100 text-sm truncate">{user?.name}</p>
+                <p className="text-gray-400 dark:text-slate-400 text-xs mt-0.5">
                   {t.nim}: {user?.nim}
                 </p>
-                {user?.prodi && <p className="text-gray-400 text-xs mt-0.5">Kelas: {user.prodi}</p>}
+                {user?.prodi && <p className="text-gray-400 dark:text-slate-400 text-xs mt-0.5">Kelas: {user.prodi}</p>}
               </div>
+              <Link
+                href="/pengaturan"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                onClick={() => setUserMenuOpen(false)}
+              >
+                <SettingsIcon />
+                {t.pengaturan}
+              </Link>
               <button
                 id="btn-logout-dropdown"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60"
               >
                 <LogoutIcon />
                 {isLoggingOut ? t.loggingOut : t.keluar}
               </button>
+              {/* Theme toggle for mobile in user menu */}
+              <div className="sm:hidden px-4 py-2.5 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                <span className="text-sm text-gray-700 dark:text-slate-300">Tema Gelap</span>
+                <ThemeToggle />
+              </div>
             </div>
           )}
         </div>
@@ -317,25 +335,25 @@ export default function StudentDashboardLayout({ children }: { children: React.R
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Sidebar ── */}
-        <aside className={`bg-white flex-shrink-0 transition-all duration-300 overflow-hidden z-20 ${sidebarOpen ? 'w-56' : 'w-0'}`} style={{ borderRight: '1px solid #ebebeb', boxShadow: '2px 0 12px rgba(0,0,0,0.05)' }}>
+        <aside className={`bg-white dark:bg-slate-900 flex-shrink-0 transition-all duration-300 overflow-hidden z-20 ${sidebarOpen ? 'w-56' : 'w-0'}`} style={{ borderRight: '1px solid var(--border-light, #ebebeb)', boxShadow: '2px 0 12px rgba(0,0,0,0.05)' }}>
           <div className="w-56 overflow-y-auto h-full flex flex-col">
             {/* Profile Card */}
-            <div className="p-4 border-b border-gray-100 bg-white">
+            <div className="p-4 border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors duration-300">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#CC0000] flex items-center justify-center text-white font-bold text-sm flex-shrink-0" style={{ boxShadow: '0 2px 6px rgba(180,0,0,0.3)' }}>
+                <div className="w-9 h-9 rounded-full bg-[#CC0000] dark:bg-slate-800 flex items-center justify-center text-white dark:text-red-400 font-bold text-sm flex-shrink-0" style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
                   {user ? getInitials(user.name) : '?'}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 text-sm truncate">{user?.name || '...'}</p>
-                  <p className="text-gray-400 text-xs truncate">{user?.nim}</p>
-                  {user?.prodi && <p className="text-[#CC0000] text-[10px] font-semibold truncate mt-0.5">Kelas: {user.prodi}</p>}
+                  <p className="font-semibold text-gray-900 dark:text-slate-100 text-sm truncate">{user?.name || '...'}</p>
+                  <p className="text-gray-400 dark:text-slate-500 text-xs truncate">{user?.nim}</p>
+                  {user?.prodi && <p className="text-[#CC0000] dark:text-red-400 text-[10px] font-semibold truncate mt-0.5">Kelas: {user.prodi}</p>}
                 </div>
               </div>
             </div>
 
             {/* Navigation */}
             <nav className="p-3 flex-1">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-2 mt-1">
+              <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest px-3 mb-2 mt-1">
                 {t.menuUtama}
               </p>
               {navItems.map((item) => {
@@ -346,11 +364,11 @@ export default function StudentDashboardLayout({ children }: { children: React.R
                     href={item.href}
                     id={`nav-${item.href.replace('/', '')}`}
                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150 ${
-                      isActive ? 'bg-[#CC0000] text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      isActive ? 'bg-[#CC0000] text-white dark:bg-slate-800 dark:text-white' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-white'
                     }`}
-                    style={isActive ? { boxShadow: '0 2px 8px rgba(180,0,0,0.2)' } : undefined}
+                    style={isActive ? { boxShadow: '0 2px 8px rgba(0,0,0,0.2)' } : undefined}
                   >
-                    <span className={isActive ? 'text-white' : 'text-gray-400'}>{item.icon}</span>
+                    <span className={isActive ? 'text-white' : 'text-gray-400 dark:text-slate-500'}>{item.icon}</span>
                     {item.label}
                   </Link>
                 );
@@ -358,12 +376,12 @@ export default function StudentDashboardLayout({ children }: { children: React.R
             </nav>
 
             {/* Logout */}
-            <div className="p-3 border-t border-gray-100">
+            <div className="p-3 border-t border-gray-100 dark:border-slate-800">
               <button
                 id="btn-logout-sidebar"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-60"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60"
               >
                 <LogoutIcon />
                 {isLoggingOut ? t.loggingOut : t.keluar}
