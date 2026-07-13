@@ -169,3 +169,102 @@ export const getStudentDashboard = async (): Promise<ApiResponse<unknown>> => {
   });
   return res.json();
 };
+
+// ─── KPPM Registration API ────────────────────────────────────────────────────
+
+export interface KppmRegistration {
+  registration_id: number;
+  semester_code: string;
+  company_name: string;
+  internship_position: string;
+  internship_start: string;
+  internship_end: string;
+  status: 'pending_approval' | 'approved';
+  submitted_at: string;
+  approved_at: string | null;
+  created_at: string;
+}
+
+export interface KppmRegistrationDetail extends KppmRegistration {
+  whatsapp_number: string;
+  toss_cover_letter_file: string;
+  mentor_name: string;
+  mentor_position: string;
+  mentor_email: string;
+  mentor_phone: string;
+  pembimbing_akademik: string | null;
+  // Data mahasiswa
+  nim: string | null;
+  student_name: string | null;
+  student_class: string | null;
+  student_email: string | null;
+}
+
+// Backend mengembalikan: { success, data: KppmRegistration[], meta: {...} }
+// (data dan meta sebagai sibling, bukan nested)
+export interface KppmListApiResponse {
+  success: boolean;
+  message?: string;
+  data: KppmRegistration[];
+  meta: { total: number; limit: number; offset: number };
+}
+
+/**
+ * Submit form pendaftaran KPPM (multipart/form-data)
+ */
+export const submitKppmRegistration = async (
+  formData: FormData
+): Promise<ApiResponse<{ registration_id: number; status: string; submitted_at: string }>> => {
+  const token = getToken();
+  const res = await fetch(`${API_BASE_URL}/student/kppm/register`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  return res.json();
+};
+
+/**
+ * Ambil riwayat pendaftaran KPPM milik mahasiswa yang login
+ */
+export const getKppmRegistrations = async (
+  limit = 10,
+  offset = 0
+): Promise<KppmListApiResponse> => {
+  const res = await fetch(
+    `${API_BASE_URL}/student/kppm/registrations?limit=${limit}&offset=${offset}`,
+    { headers: authHeaders() }
+  );
+  return res.json();
+};
+
+/**
+ * Ambil detail satu pendaftaran KPPM berdasarkan ID
+ */
+export const getKppmRegistrationDetail = async (
+  id: number
+): Promise<ApiResponse<KppmRegistrationDetail>> => {
+  const res = await fetch(`${API_BASE_URL}/student/kppm/registrations/${id}`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
+
+// ─── Lecturers API ────────────────────────────────────────────────────────────
+
+export interface Lecturer {
+  lecturer_id: number;
+  lecturer_name: string;
+  nip: string;
+}
+
+/**
+ * Ambil daftar dosen pembimbing untuk opsi dropdown
+ */
+export const getLecturersList = async (): Promise<ApiResponse<Lecturer[]>> => {
+  const res = await fetch(`${API_BASE_URL}/student/lecturers`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
+
