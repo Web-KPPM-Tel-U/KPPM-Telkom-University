@@ -186,15 +186,32 @@ const MIGRATIONS = [
           ENUM('pending_approval','approved','cancelled') DEFAULT 'pending_approval';`,
   },
 
-  // ── v3: Hapus constraint uq_student_semester jika ada ────────────────────────
-  // Constraint ini memblokir mahasiswa daftar ulang setelah membatalkan pendaftaran.
-  // Pengecekan duplikat sudah ditangani di level aplikasi (kppmController.ts)
-  // yang dengan benar mengecualikan baris ber-status 'cancelled'.
+  // ── v3: Hapus constraint uq_student_semester ─────────────────────────────────
+  // uq_student_semester = UNIQUE KEY (student_id, semester_code)
+  // MySQL/MariaDB tidak mengizinkan DROP INDEX jika kolom dalam index tersebut
+  // juga dipakai oleh FOREIGN KEY. Urutan yang benar:
+  //   1. Drop FK yang memakai student_id (fk_registration_student)
+  //   2. Drop UNIQUE KEY uq_student_semester
+  //   3. Buat ulang FK fk_registration_student
   {
-    description: 'Drop uq_student_semester constraint (if exists) — allows re-registration after cancellation',
+    description: 'Step 1/3 — Drop fk_registration_student (temp, to unblock unique key drop)',
+    sql: `ALTER TABLE internship_management.internship_registrations
+          DROP FOREIGN KEY fk_registration_student;`,
+    ignoreErrorCode: 1091,
+  },
+  {
+    description: 'Step 2/3 — Drop uq_student_semester (allows re-registration after cancellation)',
     sql: `ALTER TABLE internship_management.internship_registrations
           DROP INDEX uq_student_semester;`,
-    ignoreErrorCode: 1091, // ER_CANT_DROP_FIELD_OR_KEY — index tidak ada, aman
+    ignoreErrorCode: 1091,
+  },
+  {
+    description: 'Step 3/3 — Re-add fk_registration_student',
+    sql: `ALTER TABLE internship_management.internship_registrations
+          ADD CONSTRAINT fk_registration_student
+          FOREIGN KEY (student_id) REFERENCES internship_management.students(student_id)
+          ON DELETE CASCADE;`,
+    ignoreErrorCode: 1826, // ER_DUP_CONSTRAINT_NAME — FK sudah ada (jika step 1 di-skip)
   },
 
 ];
