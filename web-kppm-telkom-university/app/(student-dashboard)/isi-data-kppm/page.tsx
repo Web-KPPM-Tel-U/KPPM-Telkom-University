@@ -106,20 +106,20 @@ interface FieldProps {
 
 const FormField = ({ label, required, readOnly, hint, hasError, children }: FieldProps) => (
   <div className="flex flex-col gap-1.5">
-    <label className={`flex items-center gap-1.5 text-sm font-semibold ${hasError ? 'text-red-600' : 'text-gray-700'}`}>
+    <label className={`flex items-center gap-1.5 text-sm font-semibold ${hasError ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>
       {label}
       {required && <span className="text-[#CC0000]">*</span>}
       {readOnly && (
-        <span className="flex items-center gap-1 text-[10px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full ml-1">
+        <span className="flex items-center gap-1 text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full ml-1">
           <LockIcon /> Auto
         </span>
       )}
       {hasError && (
-        <span className="text-[10px] font-medium text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full ml-1">Wajib diisi</span>
+        <span className="text-[10px] font-medium text-red-500 bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded-full ml-1">Wajib diisi</span>
       )}
     </label>
     {children}
-    {hint && <p className="text-xs text-gray-400">{hint}</p>}
+    {hint && <p className="text-xs text-gray-400 dark:text-gray-500">{hint}</p>}
   </div>
 );
 
@@ -131,18 +131,18 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 const Input = ({ icon, hasError, className = '', ...props }: InputProps) => (
   <div className="relative">
     {icon && (
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
         {icon}
       </span>
     )}
     <input
-      className={`w-full h-10 rounded-lg border text-sm text-gray-900 placeholder-gray-400
+      className={`w-full h-10 rounded-lg border text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500
         focus:outline-none focus:ring-2 transition-all
-        disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
-        read-only:bg-gray-50 read-only:text-gray-600 read-only:cursor-default
+        disabled:bg-gray-50 dark:disabled:bg-gray-700/50 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed
+        read-only:bg-gray-50 dark:read-only:bg-gray-700/50 read-only:text-gray-600 dark:read-only:text-gray-400 read-only:cursor-default
         ${hasError
-          ? 'border-red-400 bg-red-50/40 focus:ring-red-200 focus:border-red-500'
-          : 'border-gray-200 bg-white focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}
+          ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 focus:ring-red-200 focus:border-red-500'
+          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}
         ${icon ? 'pl-9 pr-3' : 'px-3'}
         ${className}`}
       {...props}
@@ -159,15 +159,15 @@ interface SectionProps {
 
 const SectionHeader = ({ title, subtitle }: SectionProps) => (
   <div className="mb-5">
-    <h2 className="text-sm font-bold text-gray-800">{title}</h2>
-    {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+    <h2 className="text-sm font-bold text-gray-800 dark:text-gray-100">{title}</h2>
+    {subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{subtitle}</p>}
   </div>
 );
 
 const DetailField = ({ label, value }: { label: string; value: string | null | undefined }) => (
   <div>
-    <p className="text-xs text-gray-400 font-medium mb-0.5">{label}</p>
-    <p className="text-sm font-semibold text-gray-800">{value || <span className="text-gray-300 font-normal italic">—</span>}</p>
+    <p className="text-xs text-gray-400 dark:text-gray-500 font-medium mb-0.5">{label}</p>
+    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{value || <span className="text-gray-300 dark:text-gray-600 font-normal italic">—</span>}</p>
   </div>
 );
 
@@ -539,15 +539,15 @@ export default function IsiDataKppmPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => { setDetailData(null); setView('list'); }}
-              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
             >
               <ArrowLeftIcon />
               Kembali
             </button>
-            <span className="text-gray-300">|</span>
+            <span className="text-gray-300 dark:text-gray-600">|</span>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Detail Pendaftaran KP / Magang</h1>
-              <p className="text-gray-500 text-sm mt-0.5">Informasi lengkap pengajuan KPPM</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Detail Pendaftaran KP / Magang</h1>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Informasi lengkap pengajuan KPPM</p>
             </div>
           </div>
           {s && (
@@ -574,8 +574,8 @@ export default function IsiDataKppmPage() {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
-              <span className="text-xs text-gray-400">Tanggal Pengajuan:</span>
-              <span className="text-xs font-semibold text-gray-600">
+              <span className="text-xs text-gray-400 dark:text-gray-500">Tanggal Pengajuan:</span>
+              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
                 {new Date(detailData.submitted_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
               </span>
               {detailData.approved_at && (
@@ -593,12 +593,12 @@ export default function IsiDataKppmPage() {
             </div>
 
             {/* DATA MAHASISWA */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-2">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-50 dark:border-gray-700 flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                 </svg>
-                <span className="text-sm font-bold text-gray-800">Data Mahasiswa</span>
+                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">Data Mahasiswa</span>
               </div>
               <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                 <DetailField label="NIM" value={detailData.nim} />
@@ -611,12 +611,12 @@ export default function IsiDataKppmPage() {
             </div>
 
             {/* DATA PERUSAHAAN */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-2">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-50 dark:border-gray-700 flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/><path d="M8 7V5a2 2 0 0 0-4 0v2"/>
                 </svg>
-                <span className="text-sm font-bold text-gray-800">Data Perusahaan</span>
+                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">Data Perusahaan</span>
               </div>
               <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                 <DetailField label="Nama Perusahaan" value={detailData.company_name} />
@@ -641,12 +641,12 @@ export default function IsiDataKppmPage() {
             </div>
 
             {/* DATA MENTOR */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-2">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-50 dark:border-gray-700 flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                 </svg>
-                <span className="text-sm font-bold text-gray-800">Data Mentor Lapangan</span>
+                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">Data Mentor Lapangan</span>
               </div>
               <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                 <DetailField label="Nama Mentor" value={detailData.mentor_name} />
@@ -658,12 +658,12 @@ export default function IsiDataKppmPage() {
 
             {/* PEMBIMBING AKADEMIK */}
             {detailData.pembimbing_akademik && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-2">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-50 dark:border-gray-700 flex items-center gap-2">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
                   </svg>
-                  <span className="text-sm font-bold text-gray-800">Pembimbing Akademik</span>
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-100">Pembimbing Akademik</span>
                 </div>
                 <div className="px-6 py-5">
                   <DetailField label="Nama Dosen Pembimbing" value={detailData.pembimbing_akademik} />
@@ -672,18 +672,18 @@ export default function IsiDataKppmPage() {
             )}
 
             {/* LAMPIRAN DOKUMEN */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-2">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-50 dark:border-gray-700 flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
                 </svg>
-                <span className="text-sm font-bold text-gray-800">Lampiran Dokumen</span>
+                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">Lampiran Dokumen</span>
               </div>
               <div className="px-6 py-5">
                 {fileUrl ? (
                   <button
                     onClick={() => setShowDocModal(true)}
-                    className="inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-red-50 hover:border-[#CC0000]/40 transition-all group w-full sm:w-auto text-left"
+                    className="inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-[#CC0000]/40 transition-all group w-full sm:w-auto text-left"
                   >
                     <div className="w-10 h-10 rounded-lg bg-[#CC0000]/10 flex items-center justify-center shrink-0 group-hover:bg-[#CC0000]/20 transition-colors">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -691,15 +691,15 @@ export default function IsiDataKppmPage() {
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 group-hover:text-[#CC0000] transition-colors">Surat Pengajuan TOSS</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{isPdf ? 'PDF Document' : 'Gambar'} · Klik untuk melihat</p>
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 group-hover:text-[#CC0000] transition-colors">Surat Pengajuan TOSS</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{isPdf ? 'PDF Document' : 'Gambar'} · Klik untuk melihat</p>
                     </div>
-                    <svg className="text-gray-300 group-hover:text-[#CC0000] transition-colors shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="text-gray-300 dark:text-gray-600 group-hover:text-[#CC0000] transition-colors shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                     </svg>
                   </button>
                 ) : (
-                  <p className="text-sm text-gray-400 italic">Tidak ada lampiran.</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500 italic">Tidak ada lampiran.</p>
                 )}
               </div>
             </div>
@@ -721,20 +721,20 @@ export default function IsiDataKppmPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => { resetForm(); setView('list'); }}
-              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
             >
               <ArrowLeftIcon />
               Kembali
             </button>
-            <span className="text-gray-300">|</span>
+            <span className="text-gray-300 dark:text-gray-600">|</span>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Formulir Pendaftaran KP / Magang</h1>
-              <p className="text-gray-500 text-sm mt-0.5">Lengkapi semua data sebelum mengirim</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Formulir Pendaftaran KP / Magang</h1>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Lengkapi semua data sebelum mengirim</p>
             </div>
           </div>
           <div className="flex-shrink-0 flex flex-col items-end gap-1">
-            <span className="text-xs font-semibold text-gray-500">{progress}% lengkap</span>
-            <div className="w-28 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{progress}% lengkap</span>
+            <div className="w-28 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{ width: `${progress}%`, backgroundColor: progress === 100 ? '#16A34A' : '#CC0000' }}
@@ -746,7 +746,7 @@ export default function IsiDataKppmPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
           {/* SECTION 1: Data Mahasiswa */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
             <SectionHeader
               icon={<UserIcon />}
               title="Data Mahasiswa"
@@ -775,7 +775,7 @@ export default function IsiDataKppmPage() {
           </div>
 
           {/* SECTION 2: Data Perusahaan */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
             <SectionHeader
               icon={<BuildingIcon />}
               title="Data Tempat KP / Magang"
@@ -793,16 +793,16 @@ export default function IsiDataKppmPage() {
                 <div className="relative" data-error={fieldErrors['tanggalMulai'] || undefined}>
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><CalendarIcon /></span>
                   <input id="field-tanggal-mulai" type="date" value={form.tanggalMulai} onChange={(e) => { handleChange('tanggalMulai', e.target.value); if(fieldErrors['tanggalMulai']) setFieldErrors(p=>({...p,tanggalMulai:false})); }}
-                    className={`w-full h-10 pl-9 pr-3 rounded-lg border text-sm text-gray-900 focus:outline-none focus:ring-2 transition-all
-                      ${fieldErrors['tanggalMulai'] ? 'border-red-400 bg-red-50/40 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 bg-white focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`} />
+                    className={`w-full h-10 pl-9 pr-3 rounded-lg border text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all
+                      ${fieldErrors['tanggalMulai'] ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`} />
                 </div>
               </FormField>
               <FormField label="Tanggal Berakhir KP" required hasError={fieldErrors['tanggalAkhir']}>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><CalendarIcon /></span>
                   <input id="field-tanggal-akhir" type="date" value={form.tanggalAkhir} min={form.tanggalMulai} onChange={(e) => { handleChange('tanggalAkhir', e.target.value); if(fieldErrors['tanggalAkhir']) setFieldErrors(p=>({...p,tanggalAkhir:false})); }}
-                    className={`w-full h-10 pl-9 pr-3 rounded-lg border text-sm text-gray-900 focus:outline-none focus:ring-2 transition-all
-                      ${fieldErrors['tanggalAkhir'] ? 'border-red-400 bg-red-50/40 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 bg-white focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`} />
+                    className={`w-full h-10 pl-9 pr-3 rounded-lg border text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all
+                      ${fieldErrors['tanggalAkhir'] ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`} />
                 </div>
               </FormField>
             </div>
@@ -815,7 +815,7 @@ export default function IsiDataKppmPage() {
           </div>
 
           {/* SECTION 3: Surat Pengantar TOSS */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
             <SectionHeader
               icon={<FileIcon />}
               title="Surat Pengantar TOSS"
@@ -830,12 +830,12 @@ export default function IsiDataKppmPage() {
                 onDragLeave={() => setIsDragging(false)}
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-all duration-200
-                  ${isDragging ? 'border-[#CC0000] bg-red-50 scale-[1.01]' : 'border-gray-200 bg-gray-50 hover:border-[#CC0000]/50 hover:bg-red-50/40'}`}
+                  ${isDragging ? 'border-[#CC0000] bg-red-50 dark:bg-red-900/20 scale-[1.01]' : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:border-[#CC0000]/50 hover:bg-red-50/40 dark:hover:bg-red-900/10'}`}
               >
                 <div className={`transition-colors ${isDragging ? 'text-[#CC0000]' : 'text-gray-300'}`}><UploadCloudIcon /></div>
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-gray-700">{isDragging ? 'Lepaskan file di sini...' : 'Drag & drop atau klik untuk upload'}</p>
-                  <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG — Maksimal 5 MB</p>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{isDragging ? 'Lepaskan file di sini...' : 'Drag & drop atau klik untuk upload'}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">PDF, JPG, PNG — Maksimal 5 MB</p>
                 </div>
                 <span className="text-xs font-semibold text-[#CC0000] bg-red-50 border border-red-100 px-4 py-1.5 rounded-full">Pilih File</span>
               </div>
@@ -853,7 +853,7 @@ export default function IsiDataKppmPage() {
           </div>
 
           {/* SECTION 4: Pembimbing Lapang */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
             <SectionHeader
               icon={
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -882,7 +882,7 @@ export default function IsiDataKppmPage() {
           </div>
 
           {/* SECTION 5: Pembimbing Akademik */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
             <SectionHeader
               icon={
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -904,8 +904,8 @@ export default function IsiDataKppmPage() {
                     value={selectedLecturerId}
                     onChange={(e) => { setSelectedLecturerId(e.target.value); if(fieldErrors['lecturerId']) setFieldErrors(p=>({...p,lecturerId:false})); }}
                     disabled={isLoadingLecturers}
-                    className={`w-full h-10 pl-9 pr-8 rounded-lg border text-sm text-gray-900 focus:outline-none focus:ring-2 transition-all appearance-none disabled:bg-gray-50 disabled:text-gray-400
-                      ${fieldErrors['lecturerId'] ? 'border-red-400 bg-red-50/40 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 bg-white focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`}
+                    className={`w-full h-10 pl-9 pr-8 rounded-lg border text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all appearance-none disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-400
+                      ${fieldErrors['lecturerId'] ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`}
                   >
                     <option value="">
                       {isLoadingLecturers ? 'Memuat dosen...' : '— Pilih dosen pembimbing —'}
@@ -935,14 +935,14 @@ export default function IsiDataKppmPage() {
           )}
 
           {/* Submit */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-500">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               <span className="text-[#CC0000]">*</span> Wajib diisi — Pastikan semua data sudah benar sebelum mengirim.
             </p>
             <div className="flex items-center gap-3">
               <button type="button" onClick={() => { resetForm(); setView('list'); }}
                 disabled={isSubmitting}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50">
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50">
                 Batal
               </button>
               <button id="btn-submit-form" type="submit" disabled={isSubmitting}
@@ -977,24 +977,24 @@ export default function IsiDataKppmPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-base font-bold text-gray-900">Pendaftaran KP / Magang</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Riwayat pengajuan KPPM Anda</p>
+          <h1 className="text-base font-bold text-gray-900 dark:text-gray-100">Pendaftaran KP / Magang</h1>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Riwayat pengajuan KPPM Anda</p>
         </div>
-        <nav className="text-xs text-gray-400 flex items-center gap-1.5">
-          <span className="text-gray-500">Pendaftaran KP</span>
+        <nav className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+          <span className="text-gray-500 dark:text-gray-400">Pendaftaran KP</span>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300"><polyline points="9,18 15,12 9,6" /></svg>
           <span className="text-[#CC0000] font-semibold">Daftar</span>
         </nav>
       </div>
 
       {/* Card */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
 
         {/* Card Header */}
-        <div className="px-6 py-4 flex items-center justify-between" style={{ background: '#fafafa', borderBottom: '2px solid #ebebeb' }}>
+        <div className="px-6 py-4 flex items-center justify-between bg-[#fafafa] dark:bg-gray-800 border-b-2 border-[#ebebeb] dark:border-gray-700">
           <div className="flex items-center gap-3">
             <div className="w-1 h-5 rounded-full bg-[#CC0000]" />
-            <span className="text-sm font-semibold text-gray-700">Daftar Pengajuan</span>
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Daftar Pengajuan</span>
             {registrations.length > 0 && (
               <span className="text-xs font-semibold text-[#CC0000] bg-red-50 border border-red-100 px-2 py-0.5 rounded-full">
                 {registrations.length}
@@ -1018,16 +1018,16 @@ export default function IsiDataKppmPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr style={{ background: '#f4f4f6', borderBottom: '2px solid #e5e7eb' }}>
-                <th className="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-widest" style={{ borderRight: '1px solid #e5e7eb' }}>Tanggal Pengajuan</th>
-                <th className="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-widest" style={{ borderRight: '1px solid #e5e7eb' }}>Status</th>
+              <tr className="bg-[#f4f4f6] dark:bg-gray-700/50 border-b-2 border-[#e5e7eb] dark:border-gray-600">
+                <th className="text-left px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-r border-[#e5e7eb] dark:border-gray-600">Tanggal Pengajuan</th>
+                <th className="text-left px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-r border-[#e5e7eb] dark:border-gray-600">Status</th>
                 <th className="text-right px-6 py-3">
                   <div className="flex items-center justify-end gap-2">
-                    <span className="text-xs text-gray-400 font-normal">Tampilkan</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">Tampilkan</span>
                     <select
                       value={listEntries}
                       onChange={(e) => setListEntries(Number(e.target.value))}
-                      className="border border-gray-300 rounded px-1.5 py-0.5 text-xs text-gray-600 bg-white focus:outline-none"
+                      className="border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 focus:outline-none"
                     >
                       {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
                     </select>
@@ -1065,15 +1065,14 @@ export default function IsiDataKppmPage() {
                   return (
                     <tr
                       key={reg.registration_id}
-                      className="transition-colors hover:bg-red-50/30"
-                      style={{ background: idx % 2 === 0 ? '#ffffff' : '#fafafa', borderBottom: '1px solid #f0f0f0' }}
+                      className={`transition-colors hover:bg-red-50/30 dark:hover:bg-red-900/10 border-b border-[#f0f0f0] dark:border-gray-700 ${idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-[#fafafa] dark:bg-gray-750'}`}
                     >
-                      <td className="px-6 py-4" style={{ borderRight: '1px solid #f0f0f0' }}>
-                        <span className="text-sm font-medium" style={{ color: '#374151' }}>
+                      <td className="px-6 py-4 border-r border-[#f0f0f0] dark:border-gray-700">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {new Date(reg.submitted_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </span>
                       </td>
-                      <td className="px-6 py-4" style={{ borderRight: '1px solid #f0f0f0' }}>
+                      <td className="px-6 py-4 border-r border-[#f0f0f0] dark:border-gray-700">
                         <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${s.bg} ${s.text_color}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
                           {s.text}
@@ -1082,7 +1081,7 @@ export default function IsiDataKppmPage() {
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => handleViewDetail(reg.registration_id)}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 hover:border-[#CC0000]/50 hover:text-[#CC0000] px-3 py-1.5 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-[#CC0000]/50 hover:text-[#CC0000] dark:hover:text-[#FF4444] px-3 py-1.5 rounded-lg transition-colors"
                           title="Lihat Detail"
                         >
                           <EyeIcon />
@@ -1098,20 +1097,20 @@ export default function IsiDataKppmPage() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 flex items-center justify-between gap-3" style={{ background: '#f4f4f6', borderTop: '2px solid #e5e7eb' }}>
-          <p className="text-xs text-gray-400">
+        <div className="px-6 py-3 flex items-center justify-between gap-3 bg-[#f4f4f6] dark:bg-gray-800 border-t-2 border-[#e5e7eb] dark:border-gray-700">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             {listTotal === 0
               ? 'Tidak ada data'
               : `Menampilkan ${Math.min(listEntries, registrations.length)} dari ${listTotal} data`}
           </p>
           <div className="flex items-center gap-1">
-            <button className="px-3 py-1 text-xs text-gray-400 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 transition-colors" disabled>
+            <button className="px-3 py-1 text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 transition-colors" disabled>
               Sebelumnya
             </button>
             <button className="px-3 py-1 text-xs font-bold bg-[#CC0000] text-white rounded-lg">
               1
             </button>
-            <button className="px-3 py-1 text-xs text-gray-400 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 transition-colors" disabled>
+            <button className="px-3 py-1 text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 transition-colors" disabled>
               Selanjutnya
             </button>
           </div>

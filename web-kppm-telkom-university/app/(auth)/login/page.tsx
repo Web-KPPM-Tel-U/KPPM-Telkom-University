@@ -66,7 +66,7 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<TabRole>('mahasiswa');
 
   // ── Mahasiswa state
-  const [nim, setNim] = useState('');
+  const [mahasiswaEmail, setMahasiswaEmail] = useState('');
   const [mahasiswaPassword, setMahasiswaPassword] = useState('');
   const [showMahasiswaPassword, setShowMahasiswaPassword] = useState(false);
 
@@ -104,17 +104,17 @@ export default function LoginPage() {
   const handleMahasiswaLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
-    if (!nim.trim() || !mahasiswaPassword.trim()) { setError('NIM dan password wajib diisi'); return; }
+    if (!mahasiswaEmail.trim() || !mahasiswaPassword.trim()) { setError('Email dan password wajib diisi'); return; }
     setIsLoading(true);
     try {
-      const res = await loginMahasiswa(nim.trim(), mahasiswaPassword);
+      const res = await loginMahasiswa(mahasiswaEmail.trim(), mahasiswaPassword);
       if (res.success && res.data) {
         setToken(res.data.token);
         setUser(res.data.user);
         setSuccess('Login berhasil. Mengalihkan...');
         setTimeout(() => router.push('/dashboard'), 700);
       } else {
-        setError(res.message || 'NIM atau password salah.');
+        setError(res.message || 'Email atau password salah.');
       }
     } catch {
       setError('Tidak dapat terhubung ke server. Pastikan backend berjalan.');
@@ -198,8 +198,19 @@ export default function LoginPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden bg-white">
+      {/* HD Background Image (Perfect Red & White Pattern Mapping) */}
+      <div className="absolute inset-0 z-0 bg-[#CC0000] overflow-hidden">
+        {/* mix-blend-screen maps the grayscale image perfectly to Red (shadows) and White (highlights).
+            We rotate the image 180deg to move its natural dark shadow to the bottom, where it is completely hidden by the white fade overlay. */}
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=100&w=3000&auto=format&fit=crop')] bg-cover bg-center grayscale contrast-150 mix-blend-screen rotate-180"></div>
+        
+        {/* Uniform white overlay to soften the entire image */}
+        <div className="absolute inset-0 bg-white/30"></div>
+        {/* Smooth white fade covering the bottom half so the form remains clean and highly readable */}
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/70 to-transparent"></div>
+      </div>
+      <div className="w-full max-w-md z-10">
         {/* ── Card ── */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
 
@@ -217,11 +228,10 @@ export default function LoginPage() {
                 key={tab.key}
                 id={`tab-${tab.key}`}
                 onClick={() => { setActiveTab(tab.key); clearMessages(); }}
-                className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 border-b-2 ${
-                  activeTab === tab.key
+                className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 border-b-2 ${activeTab === tab.key
                     ? 'border-[#CC0000] text-[#CC0000] bg-red-50/60'
                     : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>
@@ -248,14 +258,13 @@ export default function LoginPage() {
             {activeTab === 'mahasiswa' && (
               <form id="form-mahasiswa" onSubmit={handleMahasiswaLogin} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">NIM</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Mahasiswa</label>
                   <input
-                    id="input-nim"
-                    type="text"
-                    value={nim}
-                    onChange={(e) => setNim(e.target.value)}
-                    placeholder="Contoh: 12345678"
-                    maxLength={20}
+                    id="input-mahasiswa-email"
+                    type="email"
+                    value={mahasiswaEmail}
+                    onChange={(e) => setMahasiswaEmail(e.target.value)}
+                    placeholder="email@student.telkomuniversity.ac.id"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
                   />
                 </div>
