@@ -227,6 +227,7 @@ export default function IsiDataKppmPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [listSearch, setListSearch] = useState('');
   const [listEntries, setListEntries] = useState(10);
+  const [listPage, setListPage] = useState(1);
 
   useEffect(() => {
     const token = getToken();
@@ -270,7 +271,8 @@ export default function IsiDataKppmPage() {
       if (!token) return;
       setIsLoadingList(true);
       try {
-        const res = await getKppmRegistrations(listEntries, 0);
+        const offset = (listPage - 1) * listEntries;
+        const res = await getKppmRegistrations(listEntries, offset);
         if (res.success && res.data) {
           setRegistrations(res.data ?? []);
           setListTotal(res.meta?.total ?? 0);
@@ -282,7 +284,7 @@ export default function IsiDataKppmPage() {
       }
     };
     fetchRegistrations();
-  }, [listEntries]);
+  }, [listEntries, listPage]);
 
 
 
@@ -376,6 +378,7 @@ export default function IsiDataKppmPage() {
           setRegistrations(listRes.data ?? []);
           setListTotal(listRes.meta?.total ?? 0);
         }
+        setListPage(1);
         setCancelConfirm(null);
       } else {
         setCancelError(res.message || 'Gagal membatalkan pendaftaran.');
@@ -476,6 +479,7 @@ export default function IsiDataKppmPage() {
           setRegistrations(listRes.data ?? []);
           setListTotal(listRes.meta?.total ?? 0);
         }
+        setListPage(1);
         resetForm();
         setView('success');
       } else {
@@ -1293,7 +1297,10 @@ export default function IsiDataKppmPage() {
                     <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">Tampilkan</span>
                     <select
                       value={listEntries}
-                      onChange={(e) => setListEntries(Number(e.target.value))}
+                      onChange={(e) => {
+                        setListEntries(Number(e.target.value));
+                        setListPage(1);
+                      }}
                       className="border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 focus:outline-none"
                     >
                       {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
@@ -1383,16 +1390,24 @@ export default function IsiDataKppmPage() {
           <p className="text-xs text-gray-400 dark:text-gray-500">
             {listTotal === 0
               ? 'Tidak ada data'
-              : `Menampilkan ${Math.min(listEntries, registrations.length)} dari ${listTotal} data`}
+              : `Menampilkan ${(listPage - 1) * listEntries + 1}–${Math.min(listPage * listEntries, listTotal)} dari ${listTotal} data`}
           </p>
           <div className="flex items-center gap-1">
-            <button className="px-3 py-1 text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 transition-colors" disabled>
+            <button
+              onClick={() => setListPage(p => Math.max(1, p - 1))}
+              disabled={listPage === 1}
+              className="px-3 py-1 text-xs text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
               Sebelumnya
             </button>
             <button className="px-3 py-1 text-xs font-bold bg-[#CC0000] text-white rounded-lg">
-              1
+              {listPage}
             </button>
-            <button className="px-3 py-1 text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 transition-colors" disabled>
+            <button
+              onClick={() => setListPage(p => p + 1)}
+              disabled={listPage * listEntries >= listTotal}
+              className="px-3 py-1 text-xs text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
               Selanjutnya
             </button>
           </div>
