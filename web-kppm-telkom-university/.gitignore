@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Upload files
+web-kppm-telkom-university/services/student-service/uploads/
