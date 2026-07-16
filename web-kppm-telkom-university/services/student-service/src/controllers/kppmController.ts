@@ -134,25 +134,63 @@ export const submitRegistration = async (
     return;
   }
 
+  // Validasi No. WhatsApp — hanya angka, panjang 9-15 digit
+  const phoneRegex = /^\d+$/;
+  const whatsappClean = String(whatsapp).trim();
+  if (!phoneRegex.test(whatsappClean)) {
+    res.status(400).json({ success: false, message: 'Nomor WhatsApp hanya boleh berisi angka.' });
+    return;
+  }
+  if (whatsappClean.length < 9) {
+    res.status(400).json({ success: false, message: 'Nomor WhatsApp terlalu pendek (minimal 9 digit).' });
+    return;
+  }
+  if (whatsappClean.length > 15) {
+    res.status(400).json({ success: false, message: 'Nomor WhatsApp tidak boleh melebihi 15 digit.' });
+    return;
+  }
+
+  // Validasi No. Telepon Pembimbing — hanya angka, panjang 9-15 digit
+  const mentorPhoneClean = String(mentor_phone).trim();
+  if (!phoneRegex.test(mentorPhoneClean)) {
+    res.status(400).json({ success: false, message: 'Nomor telepon pembimbing hanya boleh berisi angka.' });
+    return;
+  }
+  if (mentorPhoneClean.length < 9) {
+    res.status(400).json({ success: false, message: 'Nomor telepon pembimbing terlalu pendek (minimal 9 digit).' });
+    return;
+  }
+  if (mentorPhoneClean.length > 15) {
+    res.status(400).json({ success: false, message: 'Nomor telepon pembimbing tidak boleh melebihi 15 digit.' });
+    return;
+  }
+
+  // Validasi Email Pembimbing — harus mengandung @
+  if (!String(mentor_email).trim().includes('@')) {
+    res.status(400).json({ success: false, message: 'Email pembimbing tidak valid. Harus mengandung karakter @.' });
+    return;
+  }
+
   // Path file TOSS yang akan disimpan di DB
   const tossFilePath = `/uploads/toss/${req.file.filename}`;
 
   try {
-    // Cek apakah sudah ada pendaftaran AKTIF di semester yang sama
-    // (pengajuan yang sudah dibatalkan / cancelled tidak dihitung sebagai duplikat)
+    // Cek apakah mahasiswa sudah punya pengajuan AKTIF (status apapun selain 'cancelled')
+    // Validasi berdasarkan keberadaan pengajuan aktif, bukan kode semester
+    // Sehingga 1 mahasiswa hanya boleh punya 1 pengajuan aktif di waktu manapun
     const [existingRows] = await pool.execute<any[]>(
       `SELECT registration_id, status
        FROM internship_registrations
-       WHERE student_id = ? AND semester_code = ? AND status != 'cancelled'
+       WHERE student_id = ? AND status != 'cancelled'
        LIMIT 1`,
-      [userId, kode_semester.trim()]
+      [userId]
     );
 
     if (existingRows && existingRows.length > 0) {
       res.status(409).json({
         success: false,
         message:
-          'Anda sudah memiliki pendaftaran KPPM aktif untuk semester ini. Tidak dapat mengajukan duplikat.',
+          'Anda sudah memiliki pengajuan KPPM yang aktif. Batalkan pengajuan tersebut sebelum mengajukan yang baru.',
       });
       return;
     }

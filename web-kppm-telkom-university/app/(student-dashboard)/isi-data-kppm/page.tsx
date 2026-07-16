@@ -104,7 +104,7 @@ interface FieldProps {
   children: React.ReactNode;
 }
 
-const FormField = ({ label, required, readOnly, hint, hasError, children }: FieldProps) => (
+const FormField = ({ label, required, readOnly, hint, hasError, errorMsg, children }: FieldProps & { errorMsg?: string }) => (
   <div className="flex flex-col gap-1.5">
     <label className={`flex items-center gap-1.5 text-sm font-semibold ${hasError ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>
       {label}
@@ -114,12 +114,20 @@ const FormField = ({ label, required, readOnly, hint, hasError, children }: Fiel
           <LockIcon /> Auto
         </span>
       )}
-      {hasError && (
+      {hasError && (!errorMsg || errorMsg === 'required') && (
         <span className="text-[10px] font-medium text-red-500 bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded-full ml-1">Wajib diisi</span>
       )}
     </label>
     {children}
-    {hint && <p className="text-xs text-gray-400 dark:text-gray-500">{hint}</p>}
+    {hasError && errorMsg && errorMsg !== 'required' && (
+      <p className="text-xs font-medium text-red-500 flex items-center gap-1">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        {errorMsg}
+      </p>
+    )}
+    {hint && !hasError && <p className="text-xs text-gray-400 dark:text-gray-500">{hint}</p>}
   </div>
 );
 
@@ -198,8 +206,8 @@ export default function IsiDataKppmPage() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [showDocModal, setShowDocModal] = useState(false);
 
-  // Field-level validation errors
-  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+  // Field-level validation errors — string = pesan error, '' = tidak ada error
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState({
     kodeSemester: '',
@@ -314,27 +322,30 @@ export default function IsiDataKppmPage() {
   // Clear error on field when user starts typing
   const handleChange = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
-    if (fieldErrors[field]) setFieldErrors(prev => ({ ...prev, [field]: false }));
+    if (fieldErrors[field]) setFieldErrors(prev => ({ ...prev, [field]: '' }));
   };
 
-  // Client-side validation — returns true if all fields valid
-  const validateFields = (): boolean => {
-    const errors: Record<string, boolean> = {};
-    if (!form.kodeSemester.trim())  errors['kodeSemester']   = true;
-    if (!form.whatsapp.trim())      errors['whatsapp']       = true;
-    if (!form.perusahaan.trim())    errors['perusahaan']     = true;
-    if (!form.posisiDivisi.trim())  errors['posisiDivisi']   = true;
-    if (!form.tanggalMulai)         errors['tanggalMulai']   = true;
-    if (!form.tanggalAkhir)         errors['tanggalAkhir']   = true;
-    if (!form.mentorName.trim())    errors['mentorName']     = true;
-    if (!form.mentorPosition.trim())errors['mentorPosition'] = true;
-    if (!form.mentorEmail.trim())   errors['mentorEmail']    = true;
-    if (!form.mentorPhone.trim())   errors['mentorPhone']    = true;
-    if (!selectedLecturerId)        errors['lecturerId']     = true;
-    if (!uploadedFile)              errors['suratToss']      = true;
+  // Hanya cek field wajib tidak boleh kosong sebelum dikirim ke backend.
+  // Semua validasi FORMAT (angka, panjang, email, tanggal, dll) dilakukan oleh backend.
+  const validateRequiredFields = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!form.kodeSemester.trim())   errors['kodeSemester']   = 'required';
+    if (!form.whatsapp.trim())       errors['whatsapp']       = 'required';
+    if (!form.perusahaan.trim())     errors['perusahaan']     = 'required';
+    if (!form.posisiDivisi.trim())   errors['posisiDivisi']   = 'required';
+    if (!form.tanggalMulai)          errors['tanggalMulai']   = 'required';
+    if (!form.tanggalAkhir)          errors['tanggalAkhir']   = 'required';
+    if (!form.mentorName.trim())     errors['mentorName']     = 'required';
+    if (!form.mentorPosition.trim()) errors['mentorPosition'] = 'required';
+    if (!form.mentorEmail.trim())    errors['mentorEmail']    = 'required';
+    if (!form.mentorPhone.trim())    errors['mentorPhone']    = 'required';
+    if (!selectedLecturerId)         errors['lecturerId']     = 'required';
+    if (!uploadedFile)               errors['suratToss']      = 'required';
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
+
 
   const handleViewDetail = async (id: number) => {
     setIsLoadingDetail(true);
@@ -376,15 +387,68 @@ export default function IsiDataKppmPage() {
     }
   };
 
+  // Peta pesan error backend → field yang perlu di-highlight
+  const parseBackendError = (message: string): Record<string, string> => {
+    const errs: Record<string, string> = {};
+    const msg = message.toLowerCase();
+
+    // Nomor WhatsApp
+    if (msg.includes('whatsapp')) {
+      errs['whatsapp'] = message;
+    }
+    // Nomor telepon pembimbing
+    if (msg.includes('telepon pembimbing') || msg.includes('nomor telepon')) {
+      errs['mentorPhone'] = message;
+    }
+    // Email pembimbing
+    if (msg.includes('email pembimbing') || msg.includes('email tidak valid')) {
+      errs['mentorEmail'] = message;
+    }
+    // Tanggal berakhir
+    if (msg.includes('tanggal berakhir') || msg.includes('tanggal akhir') || msg.includes('tanggal selesai')) {
+      errs['tanggalAkhir'] = message;
+    }
+    // Format tanggal tidak valid → highlight keduanya
+    if (msg.includes('format tanggal')) {
+      errs['tanggalMulai'] = message;
+      errs['tanggalAkhir'] = message;
+    }
+    // Surat TOSS
+    if (msg.includes('toss') || msg.includes('surat pengantar')) {
+      errs['suratToss'] = message;
+    }
+    // Field wajib diisi → parse nama field dari pesan backend
+    if (msg.includes('wajib diisi')) {
+      const backendToFrontend: Record<string, string> = {
+        kode_semester:   'kodeSemester',
+        whatsapp:        'whatsapp',
+        perusahaan:      'perusahaan',
+        posisi_divisi:   'posisiDivisi',
+        tanggal_mulai:   'tanggalMulai',
+        tanggal_akhir:   'tanggalAkhir',
+        mentor_name:     'mentorName',
+        mentor_position: 'mentorPosition',
+        mentor_email:    'mentorEmail',
+        mentor_phone:    'mentorPhone',
+        lecturer_id:     'lecturerId',
+      };
+      Object.entries(backendToFrontend).forEach(([backKey, frontKey]) => {
+        if (msg.includes(backKey)) errs[frontKey] = '';
+      });
+    }
+
+    return errs;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError('');
+    setFieldErrors({});
 
-    // Client-side validation first
-    if (!validateFields()) {
-      setSubmitError('Harap lengkapi semua field yang ditandai di bawah ini sebelum mengirim pendaftaran.');
-      const firstErrEl = document.querySelector<HTMLElement>('[data-haserror="true"]');
-      firstErrEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Cek field tidak kosong (hanya empty check, bukan validasi format)
+    // Semua validasi format dilakukan oleh backend
+    if (!validateRequiredFields()) {
+      setSubmitError('Harap lengkapi semua field yang ditandai sebelum mengirim pendaftaran.');
       return;
     }
 
@@ -407,7 +471,6 @@ export default function IsiDataKppmPage() {
 
       const res = await submitKppmRegistration(formData);
       if (res.success) {
-        // Refresh list
         const listRes = await getKppmRegistrations(listEntries, 0);
         if (listRes.success && listRes.data) {
           setRegistrations(listRes.data ?? []);
@@ -416,11 +479,13 @@ export default function IsiDataKppmPage() {
         resetForm();
         setView('success');
       } else {
-        const msg = res.message || '';
-        if (msg.includes('wajib diisi') || msg.includes('Field')) {
-          setSubmitError('Harap lengkapi semua field yang ditandai di bawah ini sebelum mengirim pendaftaran.');
-        } else {
-          setSubmitError(msg || 'Terjadi kesalahan. Silakan coba lagi.');
+        // Tampilkan pesan error dari backend
+        const msg = res.message || 'Terjadi kesalahan. Silakan coba lagi.';
+        setSubmitError(msg);
+        // Highlight field yang bermasalah berdasarkan pesan backend
+        const fieldErrs = parseBackendError(msg);
+        if (Object.keys(fieldErrs).length > 0) {
+          setFieldErrors(fieldErrs);
         }
       }
     } catch {
@@ -429,6 +494,8 @@ export default function IsiDataKppmPage() {
       setIsSubmitting(false);
     }
   };
+
+
 
   const progress = (() => {
     const fields = [
@@ -828,14 +895,29 @@ export default function IsiDataKppmPage() {
               <FormField label="Kelas" readOnly>
                 <Input id="field-kelas" value={student?.class ?? ''} readOnly icon={<LockIcon />} />
               </FormField>
-              <FormField label="Kode Semester" required hasError={fieldErrors['kodeSemester']} hint="Contoh: 20242">
-                <Input id="field-kode-semester" placeholder="20242" value={form.kodeSemester} hasError={fieldErrors['kodeSemester']} onChange={(e) => handleChange('kodeSemester', e.target.value)} maxLength={5} />
+              <FormField label="Kode Semester" required hasError={!!fieldErrors['kodeSemester']} hint="Contoh: 20242">
+                <Input id="field-kode-semester" placeholder="20242" value={form.kodeSemester} hasError={!!fieldErrors['kodeSemester']} onChange={(e) => handleChange('kodeSemester', e.target.value)} maxLength={5} />
               </FormField>
               <FormField label="Email" readOnly>
                 <Input id="field-email" type="email" value={student?.email ?? ''} readOnly icon={<LockIcon />} />
               </FormField>
-              <FormField label="No. WhatsApp" required hasError={fieldErrors['whatsapp']} hint="Format: 628xxxxxxxxxx">
-                <Input id="field-whatsapp" placeholder="628123456789" value={form.whatsapp} hasError={fieldErrors['whatsapp']} onChange={(e) => handleChange('whatsapp', e.target.value)} type="tel" />
+              <FormField
+                label="No. WhatsApp"
+                required
+                hasError={!!fieldErrors['whatsapp']}
+                errorMsg={fieldErrors['whatsapp']}
+                hint={!fieldErrors['whatsapp'] ? 'Hanya angka, 9–15 digit. Contoh: 6281234567890' : undefined}
+              >
+                <Input
+                  id="field-whatsapp"
+                  placeholder="6281234567890"
+                  value={form.whatsapp}
+                  hasError={!!fieldErrors['whatsapp']}
+                  onChange={(e) => handleChange('whatsapp', e.target.value.replace(/\D/g, ''))}
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={15}
+                />
               </FormField>
             </div>
           </div>
@@ -849,26 +931,42 @@ export default function IsiDataKppmPage() {
               color="#2563EB"
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label="Perusahaan / Instansi Tempat KP" required hasError={fieldErrors['perusahaan']}>
-                <Input id="field-perusahaan" placeholder="Contoh: PT. Telkom Indonesia" value={form.perusahaan} hasError={fieldErrors['perusahaan']} onChange={(e) => handleChange('perusahaan', e.target.value)} icon={<BuildingIcon />} />
+              <FormField label="Perusahaan / Instansi Tempat KP" required hasError={!!fieldErrors['perusahaan']}>
+                <Input id="field-perusahaan" placeholder="Contoh: PT. Telkom Indonesia" value={form.perusahaan} hasError={!!fieldErrors['perusahaan']} onChange={(e) => handleChange('perusahaan', e.target.value)} icon={<BuildingIcon />} />
               </FormField>
-              <FormField label="Posisi / Divisi Penempatan KP" required hasError={fieldErrors['posisiDivisi']}>
-                <Input id="field-posisi" placeholder="Contoh: Software Engineer Intern" value={form.posisiDivisi} hasError={fieldErrors['posisiDivisi']} onChange={(e) => handleChange('posisiDivisi', e.target.value)} />
+              <FormField label="Posisi / Divisi Penempatan KP" required hasError={!!fieldErrors['posisiDivisi']}>
+                <Input id="field-posisi" placeholder="Contoh: Software Engineer Intern" value={form.posisiDivisi} hasError={!!fieldErrors['posisiDivisi']} onChange={(e) => handleChange('posisiDivisi', e.target.value)} />
               </FormField>
-              <FormField label="Tanggal Mulai KP" required hasError={fieldErrors['tanggalMulai']}>
-                <div className="relative" data-error={fieldErrors['tanggalMulai'] || undefined}>
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><CalendarIcon /></span>
-                  <input id="field-tanggal-mulai" type="date" value={form.tanggalMulai} onChange={(e) => { handleChange('tanggalMulai', e.target.value); if(fieldErrors['tanggalMulai']) setFieldErrors(p=>({...p,tanggalMulai:false})); }}
-                    className={`w-full h-10 pl-9 pr-3 rounded-lg border text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all
-                      ${fieldErrors['tanggalMulai'] ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`} />
-                </div>
-              </FormField>
-              <FormField label="Tanggal Berakhir KP" required hasError={fieldErrors['tanggalAkhir']}>
+              <FormField label="Tanggal Mulai KP" required hasError={!!fieldErrors['tanggalMulai']}>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><CalendarIcon /></span>
-                  <input id="field-tanggal-akhir" type="date" value={form.tanggalAkhir} min={form.tanggalMulai} onChange={(e) => { handleChange('tanggalAkhir', e.target.value); if(fieldErrors['tanggalAkhir']) setFieldErrors(p=>({...p,tanggalAkhir:false})); }}
+                  <input
+                    id="field-tanggal-mulai"
+                    type="date"
+                    value={form.tanggalMulai}
+                    onChange={(e) => { handleChange('tanggalMulai', e.target.value); if(fieldErrors['tanggalAkhir']) setFieldErrors(p=>({...p,tanggalAkhir:''})); }}
                     className={`w-full h-10 pl-9 pr-3 rounded-lg border text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all
-                      ${fieldErrors['tanggalAkhir'] ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`} />
+                      ${fieldErrors['tanggalMulai'] ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`}
+                  />
+                </div>
+              </FormField>
+              <FormField
+                label="Tanggal Berakhir KP"
+                required
+                hasError={!!fieldErrors['tanggalAkhir']}
+                errorMsg={fieldErrors['tanggalAkhir']}
+              >
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><CalendarIcon /></span>
+                  <input
+                    id="field-tanggal-akhir"
+                    type="date"
+                    value={form.tanggalAkhir}
+                    min={form.tanggalMulai || undefined}
+                    onChange={(e) => { handleChange('tanggalAkhir', e.target.value); }}
+                    className={`w-full h-10 pl-9 pr-3 rounded-lg border text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all
+                      ${fieldErrors['tanggalAkhir'] ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`}
+                  />
                 </div>
               </FormField>
             </div>
@@ -896,14 +994,20 @@ export default function IsiDataKppmPage() {
                 onDragLeave={() => setIsDragging(false)}
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-all duration-200
-                  ${isDragging ? 'border-[#CC0000] bg-red-50 dark:bg-red-900/20 scale-[1.01]' : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:border-[#CC0000]/50 hover:bg-red-50/40 dark:hover:bg-red-900/10'}`}
+                  ${isDragging
+                    ? 'border-[#CC0000] bg-red-50 dark:bg-red-900/20 scale-[1.01]'
+                    : !!fieldErrors['suratToss']
+                      ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20'
+                      : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:border-[#CC0000]/50 hover:bg-red-50/40 dark:hover:bg-red-900/10'}`}
               >
-                <div className={`transition-colors ${isDragging ? 'text-[#CC0000]' : 'text-gray-300'}`}><UploadCloudIcon /></div>
+                <div className={`transition-colors ${isDragging ? 'text-[#CC0000]' : !!fieldErrors['suratToss'] ? 'text-red-400' : 'text-gray-300'}`}><UploadCloudIcon /></div>
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{isDragging ? 'Lepaskan file di sini...' : 'Drag & drop atau klik untuk upload'}</p>
+                  <p className={`text-sm font-semibold ${!!fieldErrors['suratToss'] ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-200'}`}>
+                    {isDragging ? 'Lepaskan file di sini...' : !!fieldErrors['suratToss'] ? 'Surat TOSS wajib diupload' : 'Drag & drop atau klik untuk upload'}
+                  </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">PDF, JPG, PNG — Maksimal 5 MB</p>
                 </div>
-                <span className="text-xs font-semibold text-[#CC0000] bg-red-50 border border-red-100 px-4 py-1.5 rounded-full">Pilih File</span>
+                <span className={`text-xs font-semibold px-4 py-1.5 rounded-full border ${!!fieldErrors['suratToss'] ? 'text-red-600 bg-red-50 border-red-200' : 'text-[#CC0000] bg-red-50 border-red-100'}`}>Pilih File</span>
               </div>
             ) : (
               <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
@@ -932,17 +1036,45 @@ export default function IsiDataKppmPage() {
               color="#7C3AED"
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label="Nama Pembimbing Lapang / Mentor" required hasError={fieldErrors['mentorName']}>
-                <Input id="field-mentor-name" placeholder="Nama lengkap pembimbing" value={form.mentorName} hasError={fieldErrors['mentorName']} onChange={(e) => handleChange('mentorName', e.target.value)} icon={<UserIcon />} />
+              <FormField label="Nama Pembimbing Lapang / Mentor" required hasError={!!fieldErrors['mentorName']}>
+                <Input id="field-mentor-name" placeholder="Nama lengkap pembimbing" value={form.mentorName} hasError={!!fieldErrors['mentorName']} onChange={(e) => handleChange('mentorName', e.target.value)} icon={<UserIcon />} />
               </FormField>
-              <FormField label="Posisi / Jabatan Pembimbing" required hasError={fieldErrors['mentorPosition']}>
-                <Input id="field-mentor-position" placeholder="Contoh: Senior Software Engineer" value={form.mentorPosition} hasError={fieldErrors['mentorPosition']} onChange={(e) => handleChange('mentorPosition', e.target.value)} />
+              <FormField label="Posisi / Jabatan Pembimbing" required hasError={!!fieldErrors['mentorPosition']}>
+                <Input id="field-mentor-position" placeholder="Contoh: Senior Software Engineer" value={form.mentorPosition} hasError={!!fieldErrors['mentorPosition']} onChange={(e) => handleChange('mentorPosition', e.target.value)} />
               </FormField>
-              <FormField label="Email Pembimbing" required hasError={fieldErrors['mentorEmail']}>
-                <Input id="field-mentor-email" type="email" placeholder="email@perusahaan.com" value={form.mentorEmail} hasError={fieldErrors['mentorEmail']} onChange={(e) => handleChange('mentorEmail', e.target.value)} />
+              <FormField
+                label="Email Pembimbing"
+                required
+                hasError={!!fieldErrors['mentorEmail']}
+                errorMsg={fieldErrors['mentorEmail']}
+                hint={!fieldErrors['mentorEmail'] ? 'Contoh: mentor@perusahaan.com' : undefined}
+              >
+                <Input
+                  id="field-mentor-email"
+                  type="text"
+                  placeholder="email@perusahaan.com"
+                  value={form.mentorEmail}
+                  hasError={!!fieldErrors['mentorEmail']}
+                  onChange={(e) => handleChange('mentorEmail', e.target.value)}
+                />
               </FormField>
-              <FormField label="No. Telepon Pembimbing" required hasError={fieldErrors['mentorPhone']}>
-                <Input id="field-mentor-phone" type="tel" placeholder="628123456789" value={form.mentorPhone} hasError={fieldErrors['mentorPhone']} onChange={(e) => handleChange('mentorPhone', e.target.value)} />
+              <FormField
+                label="No. Telepon Pembimbing"
+                required
+                hasError={!!fieldErrors['mentorPhone']}
+                errorMsg={fieldErrors['mentorPhone']}
+                hint={!fieldErrors['mentorPhone'] ? 'Hanya angka, 9–15 digit' : undefined}
+              >
+                <Input
+                  id="field-mentor-phone"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="6281234567890"
+                  value={form.mentorPhone}
+                  hasError={!!fieldErrors['mentorPhone']}
+                  onChange={(e) => handleChange('mentorPhone', e.target.value.replace(/\D/g, ''))}
+                  maxLength={15}
+                />
               </FormField>
             </div>
           </div>
@@ -960,7 +1092,7 @@ export default function IsiDataKppmPage() {
               color="#CC0000"
             />
             <div className="max-w-sm">
-              <FormField label="Dosen Pembimbing Akademik" required hasError={fieldErrors['lecturerId']}>
+              <FormField label="Dosen Pembimbing Akademik" required hasError={!!fieldErrors['lecturerId']}>
                 <div className="relative">
                   <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
@@ -968,7 +1100,7 @@ export default function IsiDataKppmPage() {
                   <select
                     id="field-lecturer"
                     value={selectedLecturerId}
-                    onChange={(e) => { setSelectedLecturerId(e.target.value); if(fieldErrors['lecturerId']) setFieldErrors(p=>({...p,lecturerId:false})); }}
+                    onChange={(e) => { setSelectedLecturerId(e.target.value); if(fieldErrors['lecturerId']) setFieldErrors(p=>({...p,lecturerId:''})); }}
                     disabled={isLoadingLecturers}
                     className={`w-full h-10 pl-9 pr-8 rounded-lg border text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all appearance-none disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-400
                       ${fieldErrors['lecturerId'] ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`}
@@ -989,6 +1121,8 @@ export default function IsiDataKppmPage() {
               </FormField>
             </div>
           </div>
+
+
 
           {/* Error Submit */}
           {submitError && (
