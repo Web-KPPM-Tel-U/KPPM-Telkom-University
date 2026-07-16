@@ -549,8 +549,8 @@ export default function IsiDataKppmPage() {
             <polyline points="20,6 9,17 4,12" />
           </svg>
         </div>
-        <h1 className="text-xl font-bold text-gray-900 mb-1">Pendaftaran Berhasil Dikirim</h1>
-        <p className="text-gray-500 text-sm mb-6 max-w-sm">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">Pendaftaran Berhasil Dikirim</h1>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 max-w-sm">
           Data KP/Magang Anda telah dikirim dan sedang menunggu verifikasi dari pembimbing akademik.
         </p>
         <button
@@ -594,7 +594,7 @@ export default function IsiDataKppmPage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>
                   </svg>
-                  <span className="text-sm font-semibold text-gray-800">Surat Pengajuan TOSS</span>
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Surat Pengajuan TOSS</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <a
@@ -1013,7 +1013,7 @@ export default function IsiDataKppmPage() {
               <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
                 <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0"><FileIcon /></div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate">{uploadedFile.name}</p>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{uploadedFile.name}</p>
                   <p className="text-xs text-gray-400">{formatFileSize(uploadedFile.size)}</p>
                 </div>
                 <button type="button" onClick={() => setUploadedFile(null)} className="text-gray-400 hover:text-red-500 transition-colors p-1"><TrashIcon /></button>
