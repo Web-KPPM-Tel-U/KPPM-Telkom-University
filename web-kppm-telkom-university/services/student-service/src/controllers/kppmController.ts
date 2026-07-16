@@ -213,6 +213,18 @@ export const submitRegistration = async (
     });
   } catch (err: any) {
     console.error('[KPPM] submitRegistration error:', err.message);
+
+    // MySQL ER_DUP_ENTRY (errno 1062) — terjadi jika ada UNIQUE CONSTRAINT di DB
+    // (misal: uq_student_semester). Tampilkan pesan yang ramah, bukan error 500.
+    if (err.errno === 1062 || err.code === 'ER_DUP_ENTRY') {
+      res.status(409).json({
+        success: false,
+        message:
+          'Anda sudah memiliki pendaftaran KPPM aktif untuk semester ini. Tidak dapat mengajukan duplikat.',
+      });
+      return;
+    }
+
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
 };
