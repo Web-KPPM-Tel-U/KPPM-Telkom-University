@@ -26,21 +26,21 @@ interface LecturerRow {
 
 // ─── Student Login ────────────────────────────────────────────────────────────
 export const studentLogin = async (req: Request, res: Response): Promise<void> => {
-  const { nim, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!nim || !password) {
-    res.status(400).json({ success: false, message: 'NIM dan password wajib diisi' });
+  if (!email || !password) {
+    res.status(400).json({ success: false, message: 'Email dan password wajib diisi' });
     return;
   }
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT student_id, nim, student_name, class, email, password FROM students WHERE nim = ?',
-      [nim]
+      'SELECT student_id, nim, student_name, class, email, password FROM students WHERE email = ?',
+      [email]
     );
 
     if (!rows || rows.length === 0) {
-      res.status(401).json({ success: false, message: 'NIM atau password salah' });
+      res.status(401).json({ success: false, message: 'Email atau password salah' });
       return;
     }
 
@@ -57,7 +57,7 @@ export const studentLogin = async (req: Request, res: Response): Promise<void> =
     }
 
     if (!passwordValid) {
-      res.status(401).json({ success: false, message: 'NIM atau password salah' });
+      res.status(401).json({ success: false, message: 'Email atau password salah' });
       return;
     }
 

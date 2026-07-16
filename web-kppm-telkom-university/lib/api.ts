@@ -80,16 +80,16 @@ const authHeaders = (): HeadersInit => ({
 // ─── Auth API ─────────────────────────────────────────────────────────────────
 
 /**
- * Login Mahasiswa dengan NIM dan Password
+ * Login Mahasiswa dengan Email dan Password
  */
 export const loginMahasiswa = async (
-  nim: string,
+  email: string,
   password: string
 ): Promise<ApiResponse<LoginResponse>> => {
   const res = await fetch(`${API_BASE_URL}/auth/student/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nim, password }),
+    body: JSON.stringify({ email, password }),
   });
   return res.json();
 };
