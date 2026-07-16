@@ -68,9 +68,10 @@ const LoadingSpinner = () => (
 
 const StatusBadge = ({ status }: { status: string }) => {
   const labels: Record<string, { label: string; color: string }> = {
-    belum_daftar: { label: 'Belum Mendaftar', color: 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-400' },
-    pending_approval: { label: 'Menunggu Verifikasi', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-500' },
-    approved: { label: 'Disetujui', color: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500' },
+    belum_daftar:    { label: 'Belum Mendaftar',     color: 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-400' },
+    pending_approval:{ label: 'Menunggu Verifikasi', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-500' },
+    approved:        { label: 'Disetujui',           color: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500' },
+    cancelled:       { label: 'Dibatalkan',          color: 'bg-gray-100 text-gray-500 dark:bg-slate-800 dark:text-slate-500' },
   };
   const { label, color } = labels[status] || { label: status, color: 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-400' };
   return (
@@ -82,38 +83,48 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 // ─── Progress Stepper ─────────────────────────────────────────────────────────
 
-const ProgressStepper = ({ steps, currentStep }: { steps: KppmStep[]; currentStep: number }) => (
-  <div className="relative">
-    <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 dark:bg-slate-700 mx-8 z-0" />
-    <div
-      className="absolute top-4 left-0 h-0.5 bg-[#CC0000] z-0 transition-all duration-500 mx-8"
-      style={{ width: `${Math.min(currentStep / (steps.length - 1), 1) * 100}%` }}
-    />
-    <div className="relative z-10 flex justify-between">
-      {steps.map((step) => {
-        const isDone = step.completed;
-        const isCurrent = step.step === currentStep + 1;
-        return (
-          <div key={step.step} className="flex flex-col items-center gap-2 flex-1">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all text-sm font-bold ${isDone
-                ? 'bg-[#CC0000] border-[#CC0000] text-white'
-                : isCurrent
-                  ? 'bg-white dark:bg-slate-900 border-[#CC0000] text-[#CC0000]'
-                  : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-400 dark:text-slate-500'
+const ProgressStepper = ({ steps, currentStep }: { steps: KppmStep[]; currentStep: number }) => {
+  const totalSteps = steps.length;
+  // Progress bar width berdasarkan berapa step yang completed
+  const completedCount = steps.filter(s => s.completed).length;
+  const progressPct = totalSteps > 1 ? (completedCount / (totalSteps - 1)) * 100 : 0;
+
+  return (
+    <div className="relative">
+      <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 dark:bg-slate-700 mx-8 z-0" />
+      <div
+        className="absolute top-4 left-0 h-0.5 bg-[#CC0000] z-0 transition-all duration-500 mx-8"
+        style={{ width: `${Math.min(progressPct, 100)}%` }}
+      />
+      <div className="relative z-10 flex justify-between">
+        {steps.map((step) => {
+          const isDone    = step.completed;
+          const isCurrent = step.step === currentStep + 1;
+          return (
+            <div key={step.step} className="flex flex-col items-center gap-2 flex-1">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all text-sm font-bold ${
+                  isDone
+                    ? 'bg-[#CC0000] border-[#CC0000] text-white'
+                    : isCurrent
+                      ? 'bg-white dark:bg-slate-900 border-[#CC0000] text-[#CC0000]'
+                      : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-400 dark:text-slate-500'
                 }`}
-            >
-              {isDone ? <CheckIcon /> : step.step}
+              >
+                {isDone ? <CheckIcon /> : step.step}
+              </div>
+              <span className={`text-xs text-center font-medium leading-tight ${
+                isDone || isCurrent ? 'text-gray-800 dark:text-slate-200' : 'text-gray-400 dark:text-slate-500'
+              }`}>
+                {step.label}
+              </span>
             </div>
-            <span className={`text-xs text-center font-medium leading-tight ${isDone || isCurrent ? 'text-gray-800 dark:text-slate-200' : 'text-gray-400 dark:text-slate-500'}`}>
-              {step.label}
-            </span>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Status Card ──────────────────────────────────────────────────────────────
 
@@ -201,7 +212,21 @@ export default function DashboardPage() {
 
       {/* ── Status Card ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <StatusCard label="Status KPPM" value="Belum Mendaftar" color="text-gray-700 dark:text-slate-300" />
+        <StatusCard
+          label="Status KPPM"
+          value={{
+            belum_daftar:     'Belum Mendaftar',
+            pending_approval: 'Menunggu Verifikasi',
+            approved:         'Disetujui',
+            cancelled:        'Dibatalkan',
+          }[kppm?.status ?? 'belum_daftar'] ?? 'Belum Mendaftar'}
+          color={{
+            belum_daftar:     'text-gray-700 dark:text-slate-300',
+            pending_approval: 'text-yellow-600 dark:text-yellow-400',
+            approved:         'text-green-600 dark:text-green-400',
+            cancelled:        'text-gray-400 dark:text-slate-500',
+          }[kppm?.status ?? 'belum_daftar'] ?? 'text-gray-700 dark:text-slate-300'}
+        />
         <StatusCard label="Program Studi" value={profile?.prodi || '-'} color="text-[#CC0000] dark:text-red-400" />
       </div>
 

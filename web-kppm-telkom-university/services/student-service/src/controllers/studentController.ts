@@ -91,59 +91,86 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
       foto_url: null,
     };
 
-    // 2. Status pendaftaran KPPM
+    // 2. Status pendaftaran KPPM (ambil yang terbaru, prioritaskan non-cancelled)
     const [regRows] = await pool.execute<any[]>(
       `SELECT registration_id, status, company_name, internship_start, internship_end,
-              submitted_at, approved_at
+              submitted_at, approved_at, cancelled_at
        FROM internship_registrations
        WHERE student_id = ?
-       ORDER BY created_at DESC LIMIT 1`,
+       ORDER BY
+         CASE status
+           WHEN 'approved'         THEN 1
+           WHEN 'pending_approval' THEN 2
+           WHEN 'cancelled'        THEN 3
+         END,
+         created_at DESC
+       LIMIT 1`,
       [userId]
     );
 
     let kppmStatus;
-    if (!regRows || regRows.length === 0) {
+    // Jika tidak ada registrasi AKTIF (belum daftar sama sekali, atau semua sudah dibatalkan),
+    // tampilkan status "Belum Mendaftar" — cancelled dianggap reset ke titik awal
+    const hasActiveReg = regRows && regRows.length > 0 && regRows[0].status !== 'cancelled';
+
+    if (!hasActiveReg) {
       // Belum pernah daftar
       kppmStatus = {
         registration_id: null,
         status: 'belum_daftar',
         current_step: 0,
         steps: [
-          { step: 1, label: 'Pengisian Data', completed: false, date: null },
-          { step: 2, label: 'Verifikasi Dosen', completed: false, date: null },
-          { step: 3, label: 'Persetujuan Perusahaan', completed: false, date: null },
-          { step: 4, label: 'Selesai', completed: false, date: null },
+          { step: 1, label: 'Pengisian Data',               completed: false, date: null },
+          { step: 2, label: 'Verifikasi Dosen',              completed: false, date: null },
+          { step: 3, label: 'Penilaian Pembimbing Lapangan', completed: false, date: null },
+          { step: 4, label: 'Penilaian Pembimbing Akademik', completed: false, date: null },
+          { step: 5, label: 'Upload Hasil KP',              completed: false, date: null },
         ],
         next_steps: [
-          { label: 'Isi data pendaftaran KPPM', completed: false },
-          { label: 'Verifikasi oleh Dosen Pembimbing', completed: false },
-          { label: 'Persetujuan Perusahaan', completed: false },
+          { label: 'Isi data pendaftaran KPPM',          completed: false },
+          { label: 'Verifikasi oleh Dosen Pembimbing',   completed: false },
+          { label: 'Penilaian Pembimbing Lapangan',      completed: false },
+          { label: 'Penilaian Pembimbing Akademik',      completed: false },
+          { label: 'Upload Hasil KP',                    completed: false },
         ],
       };
     } else {
-      const reg = regRows[0];
+      const reg        = regRows[0];
       const isPending  = reg.status === 'pending_approval';
       const isApproved = reg.status === 'approved';
+      const isCancelled = reg.status === 'cancelled';
+
+      // current_step = index step TERAKHIR yang selesai (0-based dari step 1)
+      // pending_approval → hanya step 1 selesai → current_step = 1
+      // approved         → step 1 & 2 selesai   → current_step = 2
+      const currentStep = isApproved ? 2 : (isPending ? 1 : 0);
 
       kppmStatus = {
-        registration_id: reg.registration_id,
-        status: reg.status,
-        company_name: reg.company_name,
+        registration_id:  reg.registration_id,
+        status:           reg.status,
+        company_name:     reg.company_name,
         internship_start: reg.internship_start,
-        internship_end: reg.internship_end,
-        submitted_at: reg.submitted_at,
-        approved_at: reg.approved_at,
-        current_step: isApproved ? 4 : 1,
+        internship_end:   reg.internship_end,
+        submitted_at:     reg.submitted_at,
+        approved_at:      reg.approved_at,
+        cancelled_at:     reg.cancelled_at,
+        current_step:     currentStep,
         steps: [
-          { step: 1, label: 'Pengisian Data',       completed: true,       date: reg.submitted_at },
-          { step: 2, label: 'Verifikasi Dosen',      completed: isPending || isApproved, date: isPending ? reg.submitted_at : null },
-          { step: 3, label: 'Persetujuan Perusahaan',completed: isApproved, date: reg.approved_at },
-          { step: 4, label: 'Selesai',               completed: isApproved, date: reg.approved_at },
+          // Step 1: Pengisian Data → selesai begitu ada registrasi (kecuali cancelled)
+          { step: 1, label: 'Pengisian Data',               completed: !isCancelled,  date: reg.submitted_at },
+          // Step 2: Verifikasi Dosen → selesai hanya jika approved
+          { step: 2, label: 'Verifikasi Dosen',              completed: isApproved,    date: isApproved ? reg.approved_at : null },
+          // Step 3-5: Belum ada implementasi penilaian, selalu false
+          { step: 3, label: 'Penilaian Pembimbing Lapangan', completed: false,          date: null },
+          { step: 4, label: 'Penilaian Pembimbing Akademik', completed: false,          date: null },
+          { step: 5, label: 'Upload Hasil KP',              completed: false,          date: null },
         ],
         next_steps: [
-          { label: 'Isi data pendaftaran KPPM',    completed: true },
-          { label: 'Verifikasi Dosen',             completed: isPending || isApproved },
-          { label: 'Persetujuan Perusahaan',        completed: isApproved },
+          { label: 'Isi data pendaftaran KPPM',          completed: !isCancelled },
+          { label: 'Verifikasi oleh Dosen Pembimbing',   completed: isApproved },
+          { label: 'Penilaian Pembimbing Lapangan',      completed: false },
+          { label: 'Penilaian Pembimbing Akademik',      completed: false },
+          { label: 'Upload Hasil KP',                    completed: false },
         ],
       };
     }

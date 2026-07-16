@@ -191,9 +191,10 @@ export interface KppmRegistration {
   internship_position: string;
   internship_start: string;
   internship_end: string;
-  status: 'pending_approval' | 'approved';
+  status: 'pending_approval' | 'approved' | 'cancelled';
   submitted_at: string;
   approved_at: string | null;
+  cancelled_at: string | null;
   created_at: string;
 }
 
@@ -205,6 +206,7 @@ export interface KppmRegistrationDetail extends KppmRegistration {
   mentor_email: string;
   mentor_phone: string;
   pembimbing_akademik: string | null;
+  cancelled_at: string | null;
   // Data mahasiswa
   nim: string | null;
   student_name: string | null;
@@ -257,6 +259,20 @@ export const getKppmRegistrationDetail = async (
   id: number
 ): Promise<ApiResponse<KppmRegistrationDetail>> => {
   const res = await fetch(`${API_BASE_URL}/student/kppm/registrations/${id}`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
+
+/**
+ * Batalkan pendaftaran KPPM berdasarkan ID.
+ * Hanya bisa dilakukan jika status masih 'pending_approval'.
+ */
+export const cancelKppmRegistration = async (
+  id: number
+): Promise<ApiResponse<null>> => {
+  const res = await fetch(`${API_BASE_URL}/student/kppm/registrations/${id}`, {
+    method: 'DELETE',
     headers: authHeaders(),
   });
   return res.json();
