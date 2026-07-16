@@ -138,11 +138,12 @@ export const submitRegistration = async (
   const tossFilePath = `/uploads/toss/${req.file.filename}`;
 
   try {
-    // Cek apakah sudah ada pendaftaran aktif di semester yang sama
+    // Cek apakah sudah ada pendaftaran AKTIF di semester yang sama
+    // (pengajuan yang sudah dibatalkan / cancelled tidak dihitung sebagai duplikat)
     const [existingRows] = await pool.execute<any[]>(
       `SELECT registration_id, status
        FROM internship_registrations
-       WHERE student_id = ? AND semester_code = ?
+       WHERE student_id = ? AND semester_code = ? AND status != 'cancelled'
        LIMIT 1`,
       [userId, kode_semester.trim()]
     );
@@ -151,7 +152,7 @@ export const submitRegistration = async (
       res.status(409).json({
         success: false,
         message:
-          'Anda sudah memiliki pendaftaran KPPM untuk semester ini. Tidak dapat mengajukan duplikat.',
+          'Anda sudah memiliki pendaftaran KPPM aktif untuk semester ini. Tidak dapat mengajukan duplikat.',
       });
       return;
     }
@@ -242,7 +243,7 @@ export const getRegistrations = async (
     const [rows] = await pool.execute<any[]>(
       `SELECT registration_id, semester_code, company_name, internship_position,
               internship_start, internship_end, status,
-              submitted_at, approved_at, created_at
+              submitted_at, approved_at, cancelled_at, created_at
        FROM internship_registrations
        WHERE student_id = ?
        ORDER BY created_at DESC
@@ -299,7 +300,7 @@ export const getRegistrationDetail = async (
               r.internship_start, r.internship_end,
               r.toss_cover_letter_file,
               r.mentor_name, r.mentor_position, r.mentor_email, r.mentor_phone,
-              r.status, r.submitted_at, r.approved_at, r.created_at,
+              r.status, r.submitted_at, r.approved_at, r.cancelled_at, r.created_at,
               l.lecturer_name AS pembimbing_akademik,
               s.nim, s.student_name, s.class AS student_class, s.email AS student_email
        FROM internship_registrations r
@@ -338,6 +339,95 @@ export const getLecturers = async (
     res.status(200).json({ success: true, data: rows });
   } catch (err: any) {
     console.error('[KPPM] getLecturers error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Cancel / Batalkan Pendaftaran KPPM ──────────────────────────────────────
+
+/**
+ * DELETE /student/kppm/registrations/:id
+ * Membatalkan pendaftaran KPPM (soft delete — status diubah ke 'cancelled').
+ * Aturan:
+ *  - Hanya pemilik pendaftaran yang dapat membatalkan (student_id harus cocok).
+ *  - Hanya bisa dibatalkan jika status masih 'pending_approval'.
+ *  - Jika sudah 'approved', pembatalan ditolak.
+ *  - Data & file TOSS tetap disimpan untuk keperluan logging / riwayat.
+ */
+export const cancelRegistration = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const userId         = req.user?.sub;
+  const registrationId = Number(req.params.id);
+
+  if (!userId) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+    return;
+  }
+
+  if (isNaN(registrationId)) {
+    res.status(400).json({ success: false, message: 'ID pendaftaran tidak valid.' });
+    return;
+  }
+
+  try {
+    // Cek keberadaan dan kepemilikan pendaftaran
+    const [rows] = await pool.execute<any[]>(
+      `SELECT registration_id, status
+       FROM internship_registrations
+       WHERE registration_id = ? AND student_id = ?`,
+      [registrationId, userId]
+    );
+
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Data pendaftaran tidak ditemukan.' });
+      return;
+    }
+
+    const reg = rows[0];
+
+    // Tolak jika sudah disetujui
+    if (reg.status === 'approved') {
+      res.status(403).json({
+        success: false,
+        message: 'Pendaftaran yang sudah disetujui tidak dapat dibatalkan.',
+      });
+      return;
+    }
+
+    // Tolak jika sudah dibatalkan sebelumnya
+    if (reg.status === 'cancelled') {
+      res.status(400).json({
+        success: false,
+        message: 'Pendaftaran ini sudah dibatalkan sebelumnya.',
+      });
+      return;
+    }
+
+    // Hanya boleh jika masih pending_approval
+    if (reg.status !== 'pending_approval') {
+      res.status(400).json({
+        success: false,
+        message: `Pendaftaran dengan status '${reg.status}' tidak dapat dibatalkan.`,
+      });
+      return;
+    }
+
+    // Soft delete: update status ke 'cancelled' + catat waktu pembatalan
+    await pool.execute(
+      `UPDATE internship_registrations
+       SET status = 'cancelled', cancelled_at = NOW()
+       WHERE registration_id = ? AND student_id = ?`,
+      [registrationId, userId]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Pendaftaran KPPM berhasil dibatalkan.',
+    });
+  } catch (err: any) {
+    console.error('[KPPM] cancelRegistration error:', err.message);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
 };

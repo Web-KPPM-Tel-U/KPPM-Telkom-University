@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getProfile, getDashboard, changePassword } from '../controllers/studentController';
-import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, upload } from '../controllers/kppmController';
+import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, upload } from '../controllers/kppmController';
 import { verifyToken } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -16,8 +16,9 @@ router.patch('/change-password', verifyToken, changePassword);
 // GET    /student/kppm/registrations/:id  — detail satu pendaftaran
 router.post('/kppm/register',           verifyToken, upload.single('surat_toss'), submitRegistration);
 router.get('/kppm/registrations',       verifyToken, getRegistrations);
-router.get('/kppm/registrations/:id',   verifyToken, getRegistrationDetail);
-router.get('/lecturers',                verifyToken, getLecturers);
+router.get('/kppm/registrations/:id',    verifyToken, getRegistrationDetail);
+router.delete('/kppm/registrations/:id', verifyToken, cancelRegistration);
+router.get('/lecturers',                 verifyToken, getLecturers);
 
 export default router;
 

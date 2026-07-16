@@ -335,7 +335,7 @@ export default function StudentDashboardLayout({ children }: { children: React.R
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Sidebar ── */}
-        <aside className={`bg-white dark:bg-slate-900 flex-shrink-0 transition-all duration-300 overflow-hidden z-20 ${sidebarOpen ? 'w-56' : 'w-0'}`} style={{ borderRight: '1px solid var(--border-light, #ebebeb)', boxShadow: '2px 0 12px rgba(0,0,0,0.05)' }}>
+        <aside className={`bg-white dark:bg-slate-900 flex-shrink-0 transition-all duration-300 overflow-hidden z-20 border-r border-[#ebebeb] dark:border-slate-700/60 ${sidebarOpen ? 'w-56' : 'w-0'}`} style={{ boxShadow: '2px 0 12px rgba(0,0,0,0.05)' }}>
           <div className="w-56 overflow-y-auto h-full flex flex-col">
             {/* Profile Card */}
             <div className="p-4 border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors duration-300">

@@ -55,18 +55,20 @@ CREATE TABLE IF NOT EXISTS internship_registrations (
 
     status ENUM(
         'pending_approval',
-        'approved'
+        'approved',
+        'cancelled'
     ) DEFAULT 'pending_approval',
 
     submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    approved_at DATETIME NULL,
+    approved_at  DATETIME NULL,
+    cancelled_at DATETIME NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
 
-    CONSTRAINT uq_student_semester
-        UNIQUE (student_id, semester_code),
+    -- Catatan: validasi duplikat pendaftaran per semester ditangani di level aplikasi
+    -- (mengecualikan pengajuan yang sudah berstatus 'cancelled')
 
     CONSTRAINT fk_registration_student
         FOREIGN KEY (student_id)
