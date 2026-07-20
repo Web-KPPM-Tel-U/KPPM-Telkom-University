@@ -21,6 +21,7 @@ interface LecturerRow {
   lecturer_id: number;
   nip: string;
   lecturer_name: string;
+  email: string;
   password: string;
 }
 
@@ -93,21 +94,21 @@ export const studentLogin = async (req: Request, res: Response): Promise<void> =
 
 // ─── Lecturer Login ───────────────────────────────────────────────────────────
 export const lecturerLogin = async (req: Request, res: Response): Promise<void> => {
-  const { nip, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!nip || !password) {
-    res.status(400).json({ success: false, message: 'NIP dan password wajib diisi' });
+  if (!email || !password) {
+    res.status(400).json({ success: false, message: 'Email dan password wajib diisi' });
     return;
   }
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT lecturer_id, nip, lecturer_name, password FROM lecturers WHERE nip = ?',
-      [nip]
+      'SELECT lecturer_id, nip, lecturer_name, email, password FROM lecturers WHERE email = ?',
+      [email]
     );
 
     if (!rows || rows.length === 0) {
-      res.status(401).json({ success: false, message: 'NIP atau password salah' });
+      res.status(401).json({ success: false, message: 'Email atau password salah' });
       return;
     }
 
@@ -121,7 +122,7 @@ export const lecturerLogin = async (req: Request, res: Response): Promise<void> 
     }
 
     if (!passwordValid) {
-      res.status(401).json({ success: false, message: 'NIP atau password salah' });
+      res.status(401).json({ success: false, message: 'Email atau password salah' });
       return;
     }
 
@@ -129,6 +130,7 @@ export const lecturerLogin = async (req: Request, res: Response): Promise<void> 
       sub: lecturer.lecturer_id,
       nip: lecturer.nip,
       name: lecturer.lecturer_name,
+      email: lecturer.email,
       role: 'lecturer',
     };
 
@@ -143,6 +145,7 @@ export const lecturerLogin = async (req: Request, res: Response): Promise<void> 
           id: lecturer.lecturer_id,
           nip: lecturer.nip,
           name: lecturer.lecturer_name,
+          email: lecturer.email,
           role: 'lecturer',
         },
       },
@@ -264,4 +267,81 @@ export const mentorVerifyOtp = async (req: Request, res: Response): Promise<void
 // ─── Logout ───────────────────────────────────────────────────────────────────
 export const logout = (_req: Request, res: Response): void => {
   res.status(200).json({ success: true, message: 'Logout berhasil' });
+};
+
+// ─── Lecturer: Change Password ────────────────────────────────────────────────
+export const changeLecturerPassword = async (req: Request, res: Response): Promise<void> => {
+  // Token payload is attached by verifyToken middleware
+  const authHeader = req.headers['authorization'];
+  const token = authHeader?.split(' ')[1];
+
+  if (!token) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+    return;
+  }
+
+  let lecturerId: number;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { sub: number; role: string };
+    if (decoded.role !== 'lecturer') {
+      res.status(403).json({ success: false, message: 'Akses ditolak' });
+      return;
+    }
+    lecturerId = decoded.sub;
+  } catch {
+    res.status(401).json({ success: false, message: 'Token tidak valid' });
+    return;
+  }
+
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ success: false, message: 'Password lama dan password baru wajib diisi' });
+    return;
+  }
+  if (newPassword.length < 8) {
+    res.status(400).json({ success: false, message: 'Password baru minimal 8 karakter' });
+    return;
+  }
+  if (currentPassword === newPassword) {
+    res.status(400).json({ success: false, message: 'Password baru tidak boleh sama dengan password lama' });
+    return;
+  }
+
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT password FROM lecturers WHERE lecturer_id = ?',
+      [lecturerId]
+    );
+
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Data dosen tidak ditemukan' });
+      return;
+    }
+
+    const storedPassword = rows[0].password;
+
+    let isCurrentPasswordValid = false;
+    if (storedPassword.startsWith('$2')) {
+      isCurrentPasswordValid = await bcrypt.compare(currentPassword, storedPassword);
+    } else {
+      isCurrentPasswordValid = storedPassword === currentPassword;
+    }
+
+    if (!isCurrentPasswordValid) {
+      res.status(400).json({ success: false, message: 'Password lama yang Anda masukkan salah' });
+      return;
+    }
+
+    const hashedNew = await bcrypt.hash(newPassword, 10);
+    await pool.execute(
+      'UPDATE lecturers SET password = ? WHERE lecturer_id = ?',
+      [hashedNew, lecturerId]
+    );
+
+    res.status(200).json({ success: true, message: 'Password berhasil diubah' });
+  } catch (err: any) {
+    console.error('[Auth Service] changeLecturerPassword error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan internal pada server.' });
+  }
 };

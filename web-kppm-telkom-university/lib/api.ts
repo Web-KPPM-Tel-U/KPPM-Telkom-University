@@ -26,6 +26,7 @@ export interface LecturerUser {
   id: number;
   nip: string;
   name: string;
+  email: string;
   role: 'lecturer';
 }
 
@@ -95,16 +96,16 @@ export const loginMahasiswa = async (
 };
 
 /**
- * Login Dosen dengan NIP dan Password
+ * Login Dosen dengan Email dan Password
  */
 export const loginDosen = async (
-  nip: string,
+  email: string,
   password: string
 ): Promise<ApiResponse<LoginResponse>> => {
   const res = await fetch(`${API_BASE_URL}/auth/lecturer/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nip, password }),
+    body: JSON.stringify({ email, password }),
   });
   return res.json();
 };
@@ -292,6 +293,32 @@ export interface Lecturer {
 export const getLecturersList = async (): Promise<ApiResponse<Lecturer[]>> => {
   const res = await fetch(`${API_BASE_URL}/student/lecturers`, {
     headers: authHeaders(),
+  });
+  return res.json();
+};
+
+// ─── Lecturer Profile & Auth API ──────────────────────────────────────────────
+
+/**
+ * Ambil profil dosen dari localStorage cache
+ */
+export const getLecturerProfile = (): LecturerUser | null => {
+  const user = getUser();
+  if (user && user.role === 'lecturer') return user as LecturerUser;
+  return null;
+};
+
+/**
+ * Ganti password dosen
+ */
+export const changeLecturerPassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<ApiResponse<null>> => {
+  const res = await fetch(`${API_BASE_URL}/auth/lecturer/change-password`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ currentPassword, newPassword }),
   });
   return res.json();
 };

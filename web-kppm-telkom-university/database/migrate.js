@@ -214,6 +214,26 @@ const MIGRATIONS = [
     ignoreErrorCode: 1826, // ER_DUP_CONSTRAINT_NAME — FK sudah ada (jika step 1 di-skip)
   },
 
+  // ── v4: Tambah kolom email ke tabel lecturers (untuk login dosen pakai email) ─
+  {
+    description: 'Add email column to lecturers (if missing)',
+    sql: `ALTER TABLE internship_management.lecturers
+          ADD COLUMN email VARCHAR(100) NOT NULL DEFAULT '' AFTER lecturer_name;`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME — kolom sudah ada
+  },
+  {
+    description: 'Populate email for existing lecturers',
+    sql: `UPDATE internship_management.lecturers
+          SET email = CONCAT(nip, '@telkomuniversity.ac.id')
+          WHERE email = '';`,
+  },
+  {
+    description: 'Add unique index on lecturers.email (if missing)',
+    sql: `ALTER TABLE internship_management.lecturers
+          ADD UNIQUE INDEX uq_lecturer_email (email);`,
+    ignoreErrorCode: 1061, // ER_DUP_KEYNAME — index sudah ada
+  },
+
 ];
 
 // ─── Seed data ────────────────────────────────────────────────────────────────

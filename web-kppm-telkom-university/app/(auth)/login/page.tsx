@@ -71,7 +71,7 @@ export default function LoginPage() {
   const [showMahasiswaPassword, setShowMahasiswaPassword] = useState(false);
 
   // ── Dosen state
-  const [nip, setNip] = useState('');
+  const [dosenEmail, setDosenEmail] = useState('');
   const [dosenPassword, setDosenPassword] = useState('');
   const [showDosenPassword, setShowDosenPassword] = useState(false);
 
@@ -127,17 +127,17 @@ export default function LoginPage() {
   const handleDosenLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
-    if (!nip.trim() || !dosenPassword.trim()) { setError('NIP dan password wajib diisi'); return; }
+    if (!dosenEmail.trim() || !dosenPassword.trim()) { setError('Email dan password wajib diisi'); return; }
     setIsLoading(true);
     try {
-      const res = await loginDosen(nip.trim(), dosenPassword);
+      const res = await loginDosen(dosenEmail.trim(), dosenPassword);
       if (res.success && res.data) {
         setToken(res.data.token);
         setUser(res.data.user);
         setSuccess('Login berhasil. Mengalihkan...');
-        setTimeout(() => router.push('/dashboard'), 700);
+        setTimeout(() => router.push('/dosen/dashboard'), 700);
       } else {
-        setError(res.message || 'NIP atau password salah.');
+        setError(res.message || 'Email atau password salah.');
       }
     } catch {
       setError('Tidak dapat terhubung ke server. Pastikan backend berjalan.');
@@ -314,14 +314,14 @@ export default function LoginPage() {
             {activeTab === 'dosen' && (
               <form id="form-dosen" onSubmit={handleDosenLogin} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">NIP</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Dosen</label>
                   <input
-                    id="input-nip"
-                    type="text"
-                    value={nip}
-                    onChange={(e) => setNip(e.target.value)}
-                    placeholder="Contoh: 19800101001"
-                    maxLength={30}
+                    id="input-dosen-email"
+                    type="email"
+                    value={dosenEmail}
+                    onChange={(e) => setDosenEmail(e.target.value)}
+                    placeholder="nama@telkomuniversity.ac.id"
+                    autoComplete="email"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
                   />
                 </div>
@@ -344,6 +344,7 @@ export default function LoginPage() {
                       {showDosenPassword ? <EyeOffIcon /> : <EyeIcon />}
                     </button>
                   </div>
+                  <p className="text-xs text-gray-400 mt-1.5">Password default: NIP Anda</p>
                 </div>
                 <button
                   id="btn-login-dosen"
