@@ -41,4 +41,4 @@ yarn-error.log*
 next-env.d.ts
 
 # Upload files
-web-kppm-telkom-university/services/student-service/uploads/
+services/student-service/uploads/

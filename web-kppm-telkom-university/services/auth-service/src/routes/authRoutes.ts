@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   studentLogin,
   lecturerLogin,
+  changeLecturerPassword,
   mentorSendOtp,
   mentorVerifyOtp,
   logout,
@@ -14,6 +15,7 @@ router.post('/student/login', studentLogin);
 
 // Dosen
 router.post('/lecturer/login', lecturerLogin);
+router.patch('/lecturer/change-password', changeLecturerPassword);
 
 // Mentor
 router.post('/mentor/send-otp', mentorSendOtp);
