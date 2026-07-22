@@ -52,11 +52,75 @@ const AcademicIcon = () => (
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-function getGreetingInfo(hour: number): { text: string; emoji: string } {
-  if (hour < 11) return { text: 'Selamat Pagi', emoji: '🌤️' };
-  if (hour < 15) return { text: 'Selamat Siang', emoji: '☀️' };
-  if (hour < 18) return { text: 'Selamat Sore', emoji: '🌇' };
-  return { text: 'Selamat Malam', emoji: '🌙' };
+type GreetingPeriod = 'pagi' | 'siang' | 'sore' | 'malam';
+
+function getGreetingInfo(hour: number): { text: string; period: GreetingPeriod } {
+  if (hour < 11) return { text: 'Selamat Pagi',  period: 'pagi'  };
+  if (hour < 15) return { text: 'Selamat Siang', period: 'siang' };
+  if (hour < 18) return { text: 'Selamat Sore',  period: 'sore'  };
+  return          { text: 'Selamat Malam', period: 'malam' };
+}
+
+// ─── Greeting Icon SVG ───────────────────────────────────────────────────────
+
+function GreetingIcon({ period }: { period: GreetingPeriod }) {
+  if (period === 'pagi') {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="4.5" fill="rgba(255,255,255,0.92)" stroke="white" strokeWidth="0.5"/>
+        <line x1="12" y1="2"    x2="12" y2="4.5"   stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="12" y1="19.5" x2="12" y2="22"    stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="2"  y1="12"   x2="4.5"  y2="12"  stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="19.5" y1="12" x2="22"   y2="12"  stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="4.93" y1="4.93"  x2="6.7"   y2="6.7"   stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="17.3" y1="17.3"  x2="19.07" y2="19.07" stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="19.07" y1="4.93" x2="17.3"  y2="6.7"   stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="6.7"   y1="17.3" x2="4.93"  y2="19.07" stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+  if (period === 'siang') {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="5.5" fill="rgba(255,255,255,0.95)" stroke="white" strokeWidth="0.5"/>
+        <line x1="12" y1="1.5" x2="12" y2="4"     stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="12" y1="20"  x2="12" y2="22.5"  stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="1.5" y1="12" x2="4"   y2="12"   stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="20"  y1="12" x2="22.5" y2="12"  stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="4.22" y1="4.22" x2="6"    y2="6"     stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="18"   y1="18"   x2="19.78" y2="19.78" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="19.78" y1="4.22" x2="18"  y2="6"     stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="6"     y1="18"   x2="4.22" y2="19.78" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+  if (period === 'sore') {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="2" y1="16" x2="22" y2="16" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M6 16 A6 6 0 0 1 18 16" fill="rgba(255,255,255,0.7)"/>
+        <path d="M6 16 A6 6 0 0 1 18 16" stroke="white" strokeWidth="1.2" fill="none"/>
+        <line x1="12"   y1="4"   x2="12"  y2="7"   stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="4.93" y1="7.5" x2="6.7" y2="9.2" stroke="rgba(255,255,255,0.75)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="19.07" y1="7.5" x2="17.3" y2="9.2" stroke="rgba(255,255,255,0.75)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="2"    y1="12" x2="4.5" y2="12" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="19.5" y1="12" x2="22"  y2="12" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+  // Malam — bulan sabit
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+        fill="rgba(255,255,255,0.85)"
+        stroke="white"
+        strokeWidth="1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function getCurrentDate(): string {
@@ -158,7 +222,7 @@ function InfoBanner() {
 export default function DosenDashboardPage() {
   const router = useRouter();
   const [lecturer, setLecturer] = useState<LecturerUser | null>(null);
-  const [greeting, setGreeting] = useState<{ text: string; emoji: string }>({ text: 'Selamat Datang', emoji: '👋' });
+  const [greeting, setGreeting] = useState<{ text: string; period: GreetingPeriod }>({ text: 'Selamat Datang', period: 'pagi' });
   const [currentDate, setCurrentDate] = useState('');
 
   useEffect(() => {
@@ -197,7 +261,7 @@ export default function DosenDashboardPage() {
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">{greeting.emoji}</span>
+              <GreetingIcon period={greeting.period} />
               <span className="text-red-200 text-sm font-medium">{greeting.text}</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight truncate">
@@ -222,9 +286,6 @@ export default function DosenDashboardPage() {
         {/* Bottom bar */}
         <div className="relative mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
           <p className="text-red-100/60 text-xs">Portal Dosen PA — Sistem Manajemen KPPM Telkom University</p>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white/80 bg-white/10 px-2.5 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />Aktif
-          </span>
         </div>
       </div>
 

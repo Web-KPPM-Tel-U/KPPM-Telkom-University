@@ -55,6 +55,7 @@ const MIGRATIONS = [
       lecturer_id   BIGINT AUTO_INCREMENT PRIMARY KEY,
       nip           VARCHAR(30)  NOT NULL UNIQUE,
       lecturer_name VARCHAR(100) NOT NULL,
+      email         VARCHAR(100) NOT NULL DEFAULT '',
       password      VARCHAR(255) NOT NULL,
       created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -232,6 +233,41 @@ const MIGRATIONS = [
     sql: `ALTER TABLE internship_management.lecturers
           ADD UNIQUE INDEX uq_lecturer_email (email);`,
     ignoreErrorCode: 1061, // ER_DUP_KEYNAME — index sudah ada
+  },
+
+
+  // ── v5: Pastikan kolom email ada di tabel lecturers (untuk integrasi dashboard dosen) ─
+  {
+    description: 'Add email column to lecturers CREATE TABLE (if missing)',
+    sql: `ALTER TABLE internship_management.lecturers
+          ADD COLUMN email VARCHAR(100) NOT NULL DEFAULT '' AFTER lecturer_name;`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME — kolom sudah ada
+  },
+  {
+    description: 'Populate email for lecturers with empty email',
+    sql: `UPDATE internship_management.lecturers
+          SET email = CONCAT(nip, '@telkomuniversity.ac.id')
+          WHERE email = '';`,
+  },
+  {
+    description: 'Add unique index on lecturers.email (v5, if missing)',
+    sql: `ALTER TABLE internship_management.lecturers
+          ADD UNIQUE INDEX uq_lecturer_email_v5 (email);`,
+    ignoreErrorCode: 1061, // ER_DUP_KEYNAME — index sudah ada
+  },
+
+  // ── v6: Tambah status 'rejected' — dosen tolak pengajuan ─────────────────────
+  {
+    description: 'Add rejected status to internship_registrations ENUM',
+    sql: `ALTER TABLE internship_management.internship_registrations
+          MODIFY COLUMN status
+          ENUM('pending_approval','approved','cancelled','rejected') DEFAULT 'pending_approval';`,
+  },
+  {
+    description: 'Add rejected_at column (if missing)',
+    sql: `ALTER TABLE internship_management.internship_registrations
+          ADD COLUMN rejected_at DATETIME NULL AFTER cancelled_at;`,
+    ignoreErrorCode: 1060,
   },
 
 ];

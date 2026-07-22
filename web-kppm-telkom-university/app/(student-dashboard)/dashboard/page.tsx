@@ -72,6 +72,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     pending_approval:{ label: 'Menunggu Verifikasi', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-500' },
     approved:        { label: 'Disetujui',           color: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500' },
     cancelled:       { label: 'Dibatalkan',          color: 'bg-gray-100 text-gray-500 dark:bg-slate-800 dark:text-slate-500' },
+    rejected:        { label: 'Ditolak',             color: 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400' },
   };
   const { label, color } = labels[status] || { label: status, color: 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-400' };
   return (

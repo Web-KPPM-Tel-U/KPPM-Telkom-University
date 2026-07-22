@@ -94,7 +94,7 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
     // 2. Status pendaftaran KPPM (ambil yang terbaru, prioritaskan non-cancelled)
     const [regRows] = await pool.execute<any[]>(
       `SELECT registration_id, status, company_name, internship_start, internship_end,
-              submitted_at, approved_at, cancelled_at
+              submitted_at, approved_at, cancelled_at, rejected_at
        FROM internship_registrations
        WHERE student_id = ?
        ORDER BY
@@ -102,6 +102,7 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
            WHEN 'approved'         THEN 1
            WHEN 'pending_approval' THEN 2
            WHEN 'cancelled'        THEN 3
+           WHEN 'rejected'         THEN 4
          END,
          created_at DESC
        LIMIT 1`,
@@ -109,9 +110,11 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
     );
 
     let kppmStatus;
-    // Jika tidak ada registrasi AKTIF (belum daftar sama sekali, atau semua sudah dibatalkan),
-    // tampilkan status "Belum Mendaftar" — cancelled dianggap reset ke titik awal
-    const hasActiveReg = regRows && regRows.length > 0 && regRows[0].status !== 'cancelled';
+    // Jika tidak ada registrasi AKTIF (belum daftar sama sekali, atau semua sudah dibatalkan/ditolak),
+    // tampilkan status "Belum Mendaftar" — cancelled & rejected dianggap reset ke titik awal
+    const hasActiveReg = regRows && regRows.length > 0
+      && regRows[0].status !== 'cancelled'
+      && regRows[0].status !== 'rejected';
 
     if (!hasActiveReg) {
       // Belum pernah daftar
