@@ -282,7 +282,7 @@ export const changeLecturerPassword = async (req: Request, res: Response): Promi
 
   let lecturerId: number;
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { sub: number; role: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as unknown as { sub: number; role: string };
     if (decoded.role !== 'lecturer') {
       res.status(403).json({ success: false, message: 'Akses ditolak' });
       return;
