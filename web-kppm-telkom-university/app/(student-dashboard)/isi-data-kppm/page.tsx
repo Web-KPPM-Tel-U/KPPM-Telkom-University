@@ -516,6 +516,7 @@ export default function IsiDataKppmPage() {
     pending_approval: { text: 'Menunggu Verifikasi', bg: 'bg-amber-50',  dot: 'bg-amber-400', text_color: 'text-amber-700' },
     approved:         { text: 'Disetujui',           bg: 'bg-green-50',  dot: 'bg-green-500', text_color: 'text-green-700' },
     cancelled:        { text: 'Dibatalkan',          bg: 'bg-gray-100',  dot: 'bg-gray-400',  text_color: 'text-gray-500'  },
+    rejected:         { text: 'Ditolak',             bg: 'bg-red-50',    dot: 'bg-red-500',   text_color: 'text-red-600'   },
   };
 
   if (isLoading) return <LoadingSpinner />;
@@ -706,7 +707,22 @@ export default function IsiDataKppmPage() {
               )}
             </div>
 
-            {/* BANNER DIBATALKAN — tampil jika status cancelled */}
+            {/* BANNER DITOLAK DOSEN — tampil jika status rejected */}
+            {detailData.status === 'rejected' && (
+              <div className="flex items-start gap-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl px-5 py-4">
+                <div className="w-9 h-9 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-red-700 dark:text-red-400">Pengajuan Ditolak oleh Dosen</p>
+                  <p className="text-xs text-red-500 dark:text-red-500 mt-0.5">
+                    Pengajuan KPPM Anda tidak disetujui. Silakan hubungi dosen pembimbing Anda untuk informasi lebih lanjut atau ajukan kembali.
+                  </p>
+                </div>
+              </div>
+            )}
             {detailData.status === 'cancelled' && (
               <div className="flex items-start gap-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl px-5 py-4">
                 <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0 mt-0.5">

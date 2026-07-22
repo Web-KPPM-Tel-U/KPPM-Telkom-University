@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getProfile, getDashboard, changePassword } from '../controllers/studentController';
-import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, upload } from '../controllers/kppmController';
+import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload } from '../controllers/kppmController';
 import { verifyToken } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -19,6 +19,12 @@ router.get('/kppm/registrations',       verifyToken, getRegistrations);
 router.get('/kppm/registrations/:id',    verifyToken, getRegistrationDetail);
 router.delete('/kppm/registrations/:id', verifyToken, cancelRegistration);
 router.get('/lecturers',                 verifyToken, getLecturers);
+
+// ─── Lecturer Routes ──────────────────────────────────────────────────────────
+// GET   /student/lecturer/students              — daftar mahasiswa bimbingan + status pengajuan
+// PATCH /student/lecturer/registrations/:id/status — approve atau reject pengajuan
+router.get('/lecturer/students',                        verifyToken, getLecturerStudents);
+router.patch('/lecturer/registrations/:id/status',      verifyToken, updateRegistrationStatus);
 
 export default router;
 

@@ -175,13 +175,12 @@ export const submitRegistration = async (
   const tossFilePath = `/uploads/toss/${req.file.filename}`;
 
   try {
-    // Cek apakah mahasiswa sudah punya pengajuan AKTIF (status apapun selain 'cancelled')
-    // Validasi berdasarkan keberadaan pengajuan aktif, bukan kode semester
-    // Sehingga 1 mahasiswa hanya boleh punya 1 pengajuan aktif di waktu manapun
+    // Cek apakah mahasiswa sudah punya pengajuan AKTIF
+    // cancelled & rejected dianggap selesai — mahasiswa boleh mengajukan lagi
     const [existingRows] = await pool.execute<any[]>(
       `SELECT registration_id, status
        FROM internship_registrations
-       WHERE student_id = ? AND status != 'cancelled'
+       WHERE student_id = ? AND status NOT IN ('cancelled', 'rejected')
        LIMIT 1`,
       [userId]
     );
@@ -478,6 +477,139 @@ export const cancelRegistration = async (
     });
   } catch (err: any) {
     console.error('[KPPM] cancelRegistration error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Get Daftar Mahasiswa Bimbingan (untuk Dosen) ────────────────────────────
+
+/**
+ * GET /student/lecturer/students
+ * Mengembalikan daftar mahasiswa yang punya pengajuan KPPM ke dosen yang login.
+ * Requires JWT dengan role 'lecturer'.
+ */
+export const getLecturerStudents = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const lecturerId = req.user?.sub;
+  const role       = req.user?.role;
+
+  if (!lecturerId) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+    return;
+  }
+
+  if (role !== 'lecturer') {
+    res.status(403).json({ success: false, message: 'Akses ditolak. Hanya untuk dosen.' });
+    return;
+  }
+
+  const limit  = Math.min(Number(req.query.limit)  || 50, 100);
+  const offset = Number(req.query.offset) || 0;
+
+  try {
+    // Ambil semua pengajuan yang ditujukan ke dosen ini, beserta data mahasiswa
+    const [rows] = await pool.execute<any[]>(
+      `SELECT
+         s.nim,
+         s.student_name,
+         s.class         AS student_class,
+         s.email         AS student_email,
+         r.registration_id,
+         r.semester_code,
+         r.company_name,
+         r.internship_position,
+         r.internship_start,
+         r.internship_end,
+         r.status,
+         r.submitted_at,
+         r.approved_at,
+         r.cancelled_at,
+         r.rejected_at,
+         r.whatsapp_number,
+         r.mentor_name,
+         r.mentor_position,
+         r.mentor_email,
+         r.mentor_phone,
+         r.toss_cover_letter_file
+       FROM internship_registrations r
+       JOIN students s ON s.student_id = r.student_id
+       WHERE r.lecturer_id = ?
+       ORDER BY r.submitted_at DESC
+       LIMIT ? OFFSET ?`,
+      [lecturerId, limit, offset]
+    );
+
+    const [countRows] = await pool.execute<any[]>(
+      `SELECT COUNT(*) AS total
+       FROM internship_registrations
+       WHERE lecturer_id = ?`,
+      [lecturerId]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      meta: {
+        total:  countRows[0]?.total ?? 0,
+        limit,
+        offset,
+      },
+    });
+  } catch (err: any) {
+    console.error('[KPPM] getLecturerStudents error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+
+// --- Update Status Pengajuan (untuk Dosen) ---
+
+export const updateRegistrationStatus = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const lecturerId     = req.user?.sub;
+  const role           = req.user?.role;
+  const registrationId = Number(req.params.id);
+  const { action }     = req.body as { action: 'approved' | 'cancelled' };
+
+  if (!lecturerId) { res.status(401).json({ success: false, message: 'Tidak terautentikasi.' }); return; }
+  if (role !== 'lecturer') { res.status(403).json({ success: false, message: 'Akses ditolak. Hanya untuk dosen.' }); return; }
+  if (isNaN(registrationId)) { res.status(400).json({ success: false, message: 'ID pendaftaran tidak valid.' }); return; }
+  if (!['approved', 'rejected'].includes(action)) { res.status(400).json({ success: false, message: 'Aksi tidak valid.' }); return; }
+
+  try {
+    const [rows] = await pool.execute<any[]>(
+      `SELECT registration_id, status FROM internship_registrations WHERE registration_id = ? AND lecturer_id = ?`,
+      [registrationId, lecturerId]
+    );
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Pengajuan tidak ditemukan.' });
+      return;
+    }
+    const reg = rows[0];
+    if (reg.status !== 'pending_approval') {
+      res.status(400).json({ success: false, message: `Pengajuan status '${reg.status}' tidak dapat diubah.` });
+      return;
+    }
+
+    if (action === 'approved') {
+      await pool.execute(
+        `UPDATE internship_registrations SET status = 'approved', approved_at = NOW() WHERE registration_id = ?`,
+        [registrationId]
+      );
+      res.status(200).json({ success: true, message: 'Pengajuan berhasil disetujui.' });
+    } else {
+      await pool.execute(
+        `UPDATE internship_registrations SET status = 'rejected', rejected_at = NOW() WHERE registration_id = ?`,
+        [registrationId]
+      );
+      res.status(200).json({ success: true, message: 'Pengajuan berhasil ditolak.' });
+    }
+  } catch (err: any) {
+    console.error('[KPPM] updateRegistrationStatus error:', err.message);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
 };

@@ -192,7 +192,7 @@ export interface KppmRegistration {
   internship_position: string;
   internship_start: string;
   internship_end: string;
-  status: 'pending_approval' | 'approved' | 'cancelled';
+  status: 'pending_approval' | 'approved' | 'cancelled' | 'rejected';
   submitted_at: string;
   approved_at: string | null;
   cancelled_at: string | null;
@@ -323,3 +323,71 @@ export const changeLecturerPassword = async (
   return res.json();
 };
 
+// ─── Lecturer Students API ────────────────────────────────────────────────────
+
+export interface LecturerStudentEntry {
+  // Data mahasiswa
+  nim: string;
+  student_name: string;
+  student_class: string;
+  student_email: string;
+  // Data pengajuan
+  registration_id: number;
+  semester_code: string;
+  company_name: string;
+  internship_position: string;
+  internship_start: string;
+  internship_end: string;
+  status: 'pending_approval' | 'approved' | 'cancelled' | 'rejected';
+  submitted_at: string;
+  approved_at: string | null;
+  cancelled_at: string | null;
+  rejected_at: string | null;
+  whatsapp_number: string;
+  mentor_name: string;
+  mentor_position: string;
+  mentor_email: string;
+  mentor_phone: string;
+  toss_cover_letter_file: string | null;
+}
+
+export interface LecturerStudentsApiResponse {
+  success: boolean;
+  message?: string;
+  data: LecturerStudentEntry[];
+  meta: { total: number; limit: number; offset: number };
+}
+
+/**
+ * Ambil daftar mahasiswa bimbingan dosen beserta status pengajuan KPPM.
+ * Hanya bisa dipanggil saat login sebagai dosen (role: lecturer).
+ */
+export const getLecturerStudents = async (
+  limit = 50,
+  offset = 0
+): Promise<LecturerStudentsApiResponse> => {
+  const res = await fetch(
+    `${API_BASE_URL}/student/lecturer/students?limit=${limit}&offset=${offset}`,
+    { headers: authHeaders() }
+  );
+  return res.json();
+};
+
+/**
+ * Dosen menyetujui atau menolak pengajuan KPPM mahasiswa.
+ * action: 'approved' | 'cancelled' | 'rejected'
+ */
+export const updateLecturerRegistrationStatus = async (
+  registrationId: number,
+  action: 'approved' | 'cancelled' | 'rejected'
+): Promise<{ success: boolean; message?: string }> => {
+  const res = await fetch(
+    `${API_BASE_URL}/student/lecturer/registrations/${registrationId}/status`,
+    {
+      method: 'PATCH',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    }
+  );
+  return res.json();
+};
