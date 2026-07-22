@@ -42,3 +42,7 @@ next-env.d.ts
 
 # Upload files
 services/student-service/uploads/
+
+# AI agent config files
+CLAUDE.md
+AGENT.md
