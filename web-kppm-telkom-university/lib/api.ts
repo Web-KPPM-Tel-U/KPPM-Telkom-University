@@ -448,3 +448,61 @@ export const getMentorProfile = (): MentorUser | null => {
   return null;
 };
 
+// ─── Mentor Grades API ────────────────────────────────────────────────────────
+
+export interface MentorGradeScores {
+  attendance: number;
+  discipline: number;
+  commitment: number;
+  planning: number;
+  teamwork: number;
+  guidance: number;
+  report: number;
+  problem_solving: number;
+}
+
+export interface MentorGradeData {
+  mentor_score_id?: number;
+  registration_id: number;
+  scores: MentorGradeScores;
+  total_nilai_lapangan: number;
+  updated_at?: string;
+}
+
+/**
+ * Submit / update nilai mentor untuk satu mahasiswa
+ */
+export const submitMentorGrade = async (
+  registrationId: number,
+  scores: MentorGradeScores
+): Promise<ApiResponse<MentorGradeData>> => {
+  const res = await fetch(`${API_BASE_URL}/student/mentor/grades/${registrationId}`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(scores),
+  });
+  return res.json();
+};
+
+/**
+ * Ambil nilai satu mahasiswa berdasarkan registration_id
+ */
+export const getMentorGrade = async (
+  registrationId: number
+): Promise<ApiResponse<MentorGradeData | null>> => {
+  const res = await fetch(`${API_BASE_URL}/student/mentor/grades/${registrationId}`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
+
+/**
+ * Ambil semua nilai yang sudah diinput oleh mentor ini
+ */
+export const getAllMentorGrades = async (): Promise<ApiResponse<any[]>> => {
+  const res = await fetch(`${API_BASE_URL}/student/mentor/grades`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
+

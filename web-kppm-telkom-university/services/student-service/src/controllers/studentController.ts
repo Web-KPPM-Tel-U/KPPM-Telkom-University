@@ -143,10 +143,21 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
       const isApproved = reg.status === 'approved';
       const isCancelled = reg.status === 'cancelled';
 
+      // Cek apakah mentor sudah menginput nilai (step 3)
+      let hasMentorScore = false;
+      if (isApproved) {
+        const [scoreRows] = await pool.execute<any[]>(
+          'SELECT mentor_score_id FROM mentor_scores WHERE registration_id = ? LIMIT 1',
+          [reg.registration_id]
+        );
+        hasMentorScore = scoreRows.length > 0;
+      }
+
       // current_step = index step TERAKHIR yang selesai (0-based dari step 1)
       // pending_approval → hanya step 1 selesai → current_step = 1
       // approved         → step 1 & 2 selesai   → current_step = 2
-      const currentStep = isApproved ? 2 : (isPending ? 1 : 0);
+      // approved + nilai mentor → step 1,2,3 selesai → current_step = 3
+      const currentStep = hasMentorScore ? 3 : (isApproved ? 2 : (isPending ? 1 : 0));
 
       kppmStatus = {
         registration_id:  reg.registration_id,
@@ -160,18 +171,18 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
         current_step:     currentStep,
         steps: [
           // Step 1: Pengisian Data → selesai begitu ada registrasi (kecuali cancelled)
-          { step: 1, label: 'Pengisian Data',               completed: !isCancelled,  date: reg.submitted_at },
+          { step: 1, label: 'Pengisian Data',               completed: !isCancelled,    date: reg.submitted_at },
           // Step 2: Verifikasi Dosen → selesai hanya jika approved
-          { step: 2, label: 'Verifikasi Dosen',              completed: isApproved,    date: isApproved ? reg.approved_at : null },
-          // Step 3-5: Belum ada implementasi penilaian, selalu false
-          { step: 3, label: 'Penilaian Pembimbing Lapangan', completed: false,          date: null },
-          { step: 4, label: 'Penilaian Pembimbing Akademik', completed: false,          date: null },
-          { step: 5, label: 'Upload Hasil KP',              completed: false,          date: null },
+          { step: 2, label: 'Verifikasi Dosen',              completed: isApproved,      date: isApproved ? reg.approved_at : null },
+          // Step 3: Penilaian Pembimbing Lapangan → selesai jika mentor sudah input nilai
+          { step: 3, label: 'Penilaian Pembimbing Lapangan', completed: hasMentorScore,  date: null },
+          { step: 4, label: 'Penilaian Pembimbing Akademik', completed: false,            date: null },
+          { step: 5, label: 'Upload Hasil KP',              completed: false,            date: null },
         ],
         next_steps: [
           { label: 'Isi data pendaftaran KPPM',          completed: !isCancelled },
           { label: 'Verifikasi oleh Dosen Pembimbing',   completed: isApproved },
-          { label: 'Penilaian Pembimbing Lapangan',      completed: false },
+          { label: 'Penilaian Pembimbing Lapangan',      completed: hasMentorScore },
           { label: 'Penilaian Pembimbing Akademik',      completed: false },
           { label: 'Upload Hasil KP',                    completed: false },
         ],

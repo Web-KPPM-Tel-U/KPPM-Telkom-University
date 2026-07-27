@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getProfile, getDashboard, changePassword } from '../controllers/studentController';
 import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload } from '../controllers/kppmController';
 import { getMentorDashboard } from '../controllers/mentorController';
+import { submitMentorGrade, getMentorGrade, getAllMentorGrades } from '../controllers/mentorGradesController';
 import { verifyToken } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -28,8 +29,14 @@ router.get('/lecturer/students',                        verifyToken, getLecturer
 router.patch('/lecturer/registrations/:id/status',      verifyToken, updateRegistrationStatus);
 
 // ─── Mentor Routes ───────────────────────────────────────────────────────────
-// GET /student/mentor/dashboard — data mahasiswa yang dibimbing mentor (role: mentor)
-router.get('/mentor/dashboard', verifyToken, getMentorDashboard);
+// GET  /student/mentor/dashboard           — data mahasiswa yang dibimbing
+// GET  /student/mentor/grades              — semua nilai yang sudah diinput
+// GET  /student/mentor/grades/:id          — nilai satu mahasiswa
+// POST /student/mentor/grades/:id          — submit / update nilai mahasiswa
+router.get('/mentor/dashboard',              verifyToken, getMentorDashboard);
+router.get('/mentor/grades',                 verifyToken, getAllMentorGrades);
+router.get('/mentor/grades/:registration_id', verifyToken, getMentorGrade);
+router.post('/mentor/grades/:registration_id', verifyToken, submitMentorGrade);
 
 export default router;
 
