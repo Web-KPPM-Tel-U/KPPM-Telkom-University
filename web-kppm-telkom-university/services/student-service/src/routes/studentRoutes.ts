@@ -3,6 +3,7 @@ import { getProfile, getDashboard, changePassword, getMyGrades } from '../contro
 import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload } from '../controllers/kppmController';
 import { getMentorDashboard } from '../controllers/mentorController';
 import { submitMentorGrade, getMentorGrade, getAllMentorGrades } from '../controllers/mentorGradesController';
+import { submitLecturerGrade, getLecturerGrade } from '../controllers/lecturerGradesController';
 import { verifyToken } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -26,8 +27,12 @@ router.get('/lecturers',                 verifyToken, getLecturers);
 // ─── Lecturer Routes ──────────────────────────────────────────────────────────
 // GET   /student/lecturer/students              — daftar mahasiswa bimbingan + status pengajuan
 // PATCH /student/lecturer/registrations/:id/status — approve atau reject pengajuan
+// GET   /student/lecturer/grades/:id            — ambil nilai satu mahasiswa
+// POST  /student/lecturer/grades/:id            — submit / update nilai mahasiswa
 router.get('/lecturer/students',                        verifyToken, getLecturerStudents);
 router.patch('/lecturer/registrations/:id/status',      verifyToken, updateRegistrationStatus);
+router.get('/lecturer/grades/:registration_id',          verifyToken, getLecturerGrade);
+router.post('/lecturer/grades/:registration_id',         verifyToken, submitLecturerGrade);
 
 // ─── Mentor Routes ───────────────────────────────────────────────────────────
 // GET  /student/mentor/dashboard           — data mahasiswa yang dibimbing

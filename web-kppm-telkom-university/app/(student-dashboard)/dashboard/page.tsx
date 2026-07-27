@@ -92,11 +92,13 @@ const ProgressStepper = ({ steps, currentStep }: { steps: KppmStep[]; currentSte
 
   return (
     <div className="relative">
-      <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 dark:bg-slate-700 mx-8 z-0" />
-      <div
-        className="absolute top-4 left-0 h-0.5 bg-[#CC0000] z-0 transition-all duration-500 mx-8"
-        style={{ width: `${Math.min(progressPct, 100)}%` }}
-      />
+      {/* Track wrapper — starts & ends at the center of first/last circles (w-8/2 = 1rem) */}
+      <div className="absolute top-4 left-0 right-0 mx-[1rem] h-0.5 z-0 overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700">
+        <div
+          className="h-full bg-[#CC0000] transition-all duration-500"
+          style={{ width: `${Math.min(progressPct, 100)}%` }}
+        />
+      </div>
       <div className="relative z-10 flex justify-between">
         {steps.map((step) => {
           const isDone    = step.completed;
@@ -249,6 +251,7 @@ export default function DashboardPage() {
           <div className="flex gap-3 mt-8">
             <button
               id="btn-ajukan-pendaftaran"
+              onClick={() => router.push('/isi-data-kppm')}
               className="px-5 py-2.5 bg-[#CC0000] hover:bg-[#A30000] text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
             >
               Ajukan Pendaftaran

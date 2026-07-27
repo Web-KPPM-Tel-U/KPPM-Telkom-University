@@ -149,7 +149,7 @@ function GradeForm({
             <>
               {/* Rubrik note */}
               <p className="text-xs text-gray-500 dark:text-slate-400 mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 rounded-xl px-3 py-2">
-                ⚠️ Nilai Angka diisi sesuai <strong>rubrik penilaian KPPM</strong> (skala 0–100 untuk setiap indikator).
+                Nilai Angka diisi sesuai <strong>rubrik penilaian KPPM</strong> (skala 0–100 untuk setiap indikator).
               </p>
 
               {/* Tabel indikator */}
@@ -217,7 +217,7 @@ function GradeForm({
               )}
               {success && (
                 <p className="mt-3 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/50 rounded-xl px-3 py-2">
-                  ✅ {success}
+                  {success}
                 </p>
               )}
 

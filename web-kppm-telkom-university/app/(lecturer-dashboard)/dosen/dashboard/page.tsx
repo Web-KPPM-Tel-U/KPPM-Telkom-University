@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getUser, getToken } from '@/lib/api';
+import { getUser, getToken, getLecturerStudents } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import type { LecturerUser } from '@/lib/api';
 
@@ -194,29 +194,6 @@ function ActionCard({
   );
 }
 
-// ─── Info Banner ────────────────────────────────────────────────────────────────
-
-function InfoBanner() {
-  return (
-    <div className="relative bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border border-amber-200/70 dark:border-amber-800/30 rounded-2xl p-4 overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-full opacity-5">
-        <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="80" cy="20" r="40" fill="#D97706"/></svg>
-      </div>
-      <div className="relative flex items-start gap-3">
-        <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-          <BellIcon />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-amber-800 dark:text-amber-200">Fitur dalam pengembangan</p>
-          <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 leading-relaxed">
-            Fitur persetujuan pendaftaran dan input nilai sedang disiapkan. Data ringkasan akan tampil otomatis setelah backend terhubung.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function DosenDashboardPage() {
@@ -224,6 +201,13 @@ export default function DosenDashboardPage() {
   const [lecturer, setLecturer] = useState<LecturerUser | null>(null);
   const [greeting, setGreeting] = useState<{ text: string; period: GreetingPeriod }>({ text: 'Selamat Datang', period: 'pagi' });
   const [currentDate, setCurrentDate] = useState('');
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    graded: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const token = getToken();
@@ -234,6 +218,27 @@ export default function DosenDashboardPage() {
     const hour = new Date().getHours();
     setGreeting(getGreetingInfo(hour));
     setCurrentDate(getCurrentDate());
+
+    const fetchStats = async () => {
+      try {
+        const res = await getLecturerStudents(1000, 0);
+        if (res.success && res.data) {
+          const students = res.data;
+          setStats({
+            total: students.length,
+            pending: students.filter(s => s.status === 'pending_approval').length,
+            approved: students.filter(s => s.status === 'approved').length,
+            graded: students.filter(s => s.is_graded === 1).length,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchStats();
   }, [router]);
 
   const initials = lecturer?.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'DS';
@@ -298,25 +303,25 @@ export default function DosenDashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             label="Total Mahasiswa"
-            value="—"
+            value={isLoading ? "..." : stats.total}
             icon={<UsersIcon />}
             gradient="bg-blue-500"
           />
           <StatCard
             label="Menunggu Persetujuan"
-            value="—"
+            value={isLoading ? "..." : stats.pending}
             icon={<ClockIcon />}
             gradient="bg-amber-500"
           />
           <StatCard
             label="Sudah Disetujui"
-            value="—"
+            value={isLoading ? "..." : stats.approved}
             icon={<CheckCircleIcon />}
             gradient="bg-green-500"
           />
           <StatCard
             label="Nilai Diinput"
-            value="—"
+            value={isLoading ? "..." : stats.graded}
             icon={<GradeIcon />}
             gradient="bg-purple-500"
           />
@@ -334,7 +339,6 @@ export default function DosenDashboardPage() {
             icon={<UsersIcon size={22} />}
             label="Data Mahasiswa Bimbingan"
             desc="Lihat, kelola & setujui pendaftaran KPPM mahasiswa"
-            tag="Baru"
             color="text-blue-600 dark:text-blue-400"
             iconBg="bg-blue-50 dark:bg-blue-950"
           />
@@ -349,8 +353,7 @@ export default function DosenDashboardPage() {
         </div>
       </div>
 
-      {/* ── Info Banner ── */}
-      <InfoBanner />
+
     </div>
   );
 }

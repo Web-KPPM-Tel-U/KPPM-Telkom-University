@@ -15,32 +15,26 @@ const ArrowLeftIcon = () => (
   </svg>
 );
 
-const FileIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14,2 14,8 20,8" />
-  </svg>
-);
-
 // ─── Konfigurasi indikator Mentor ────────────────────────────────────────────
 const MENTOR_INDICATORS: { key: keyof Omit<MyMentorGrades, 'total' | 'updated_at'>; label: string; bobot: number }[] = [
-  { key: 'attendance',     label: 'Kehadiran tepat waktu',                                                              bobot: 5  },
-  { key: 'discipline',     label: 'Kedisiplinan (kesesuaian dengan aturan)',                                            bobot: 5  },
-  { key: 'commitment',     label: 'Komitmen terhadap tugas / pekerjaan',                                               bobot: 5  },
-  { key: 'planning',       label: 'Merencanakan penyelesaian tugas, bekerja efektif dan mandiri selama KP',            bobot: 5  },
-  { key: 'teamwork',       label: 'Bekerja sama dalam tim organisasi / perusahaan selama KP',                          bobot: 10 },
-  { key: 'guidance',       label: 'Frekuensi bimbingan dengan pembimbing lapang',                                      bobot: 5  },
-  { key: 'report',         label: 'Kualitas laporan',                                                                  bobot: 5  },
-  { key: 'problem_solving',label: 'Identifikasi dan Formulasi Masalah',                                                bobot: 5  },
+  { key: 'attendance',      label: 'Kehadiran tepat waktu',                                                              bobot: 5  },
+  { key: 'discipline',      label: 'Kedisiplinan (kesesuaian dengan aturan)',                                            bobot: 5  },
+  { key: 'commitment',      label: 'Komitmen terhadap tugas / pekerjaan',                                               bobot: 5  },
+  { key: 'planning',        label: 'Merencanakan penyelesaian tugas, bekerja efektif dan mandiri selama KP',            bobot: 5  },
+  { key: 'teamwork',        label: 'Bekerja sama dalam tim organisasi / perusahaan selama KP',                          bobot: 10 },
+  { key: 'guidance',        label: 'Frekuensi bimbingan dengan pembimbing lapang',                                      bobot: 5  },
+  { key: 'report',          label: 'Kualitas laporan',                                                                  bobot: 5  },
+  { key: 'problem_solving', label: 'Identifikasi dan Formulasi Masalah',                                                bobot: 5  },
 ];
 
-// ─── Konfigurasi indikator Dosen ─────────────────────────────────────────────
-const LECTURER_INDICATORS: { key: keyof Omit<MyLecturerGrades, 'total' | 'updated_at'>; label: string }[] = [
-  { key: 'commitment',     label: 'Komitmen terhadap tugas (PLO05 - CLO01)' },
-  { key: 'planning',       label: 'Perencanaan penyelesaian tugas (PLO07 - CLO02)' },
-  { key: 'guidance',       label: 'Frekuensi bimbingan akademik (PLO05 - CLO04)' },
-  { key: 'presentation',   label: 'Kualitas presentasi (PLO05 - CLO04)' },
-  { key: 'report',         label: 'Kualitas laporan (PLO05 - CLO04)' },
-  { key: 'identification', label: 'Identifikasi & Formulasi Masalah (PLO01 - CLO05)' },
+// ─── Konfigurasi indikator Dosen PA ──────────────────────────────────────────
+const LECTURER_INDICATORS: { key: keyof Omit<MyLecturerGrades, 'total' | 'updated_at'>; label: string; bobot: number }[] = [
+  { key: 'commitment',     label: 'Komitmen terhadap tugas / pekerjaan',                                                                        bobot: 10 },
+  { key: 'planning',       label: 'Mahasiswa mampu merencanakan penyelesaian tugas atau pekerjaan, bekerja efektif, dan mandiri selama KP',     bobot:  5 },
+  { key: 'guidance',       label: 'Frekuensi bimbingan dengan pembimbing akademik',                                                             bobot:  5 },
+  { key: 'presentation',   label: 'Kualitas Presentasi',                                                                                        bobot: 15 },
+  { key: 'report',         label: 'Kualitas Laporan KP',                                                                                       bobot: 10 },
+  { key: 'identification', label: 'Identifikasi dan Formulasi Masalah',                                                                         bobot: 10 },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -82,6 +76,7 @@ function PendingSection({ title, subtitle }: { title: string; subtitle: string }
 
 // ─── Tabel Nilai Mentor ───────────────────────────────────────────────────────
 function MentorGradeTable({ grades }: { grades: MyMentorGrades }) {
+  const TOTAL_BOBOT = MENTOR_INDICATORS.reduce((s, i) => s + i.bobot, 0);
   return (
     <div>
       <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
@@ -118,6 +113,7 @@ function MentorGradeTable({ grades }: { grades: MyMentorGrades }) {
             <tr className="bg-gray-50 dark:bg-slate-800 border-t-2 border-gray-200 dark:border-gray-700">
               <td colSpan={3} className="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300 text-sm">
                 Total Nilai Pembimbing Lapangan
+                <span className="ml-2 text-xs text-gray-400 font-normal">(Bobot total: {TOTAL_BOBOT}%)</span>
               </td>
               <td className="px-4 py-3 text-center" />
               <td className="px-4 py-3 text-center">
@@ -128,14 +124,15 @@ function MentorGradeTable({ grades }: { grades: MyMentorGrades }) {
         </table>
       </div>
       <p className="text-[11px] text-gray-400 mt-2 px-1">
-        * Nilai Pembimbing Lapangan diisi sesuai rubrik penilaian KPPM · Diperbarui: {fmtDate(grades.updated_at)}
+        Diperbarui: {fmtDate(grades.updated_at)}
       </p>
     </div>
   );
 }
 
-// ─── Tabel Nilai Dosen ────────────────────────────────────────────────────────
+// ─── Tabel Nilai Dosen PA ─────────────────────────────────────────────────────
 function LecturerGradeTable({ grades }: { grades: MyLecturerGrades }) {
+  const TOTAL_BOBOT = LECTURER_INDICATORS.reduce((s, i) => s + i.bobot, 0);
   return (
     <div>
       <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
@@ -143,29 +140,38 @@ function LecturerGradeTable({ grades }: { grades: MyLecturerGrades }) {
           <thead>
             <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-[11px] uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
               <th className="px-4 py-2.5 text-center w-8">No</th>
-              <th className="px-4 py-2.5 text-left">Komponen Penilaian</th>
+              <th className="px-4 py-2.5 text-left">Indikator Penilaian</th>
+              <th className="px-4 py-2.5 text-center w-20">Bobot (%)</th>
               <th className="px-4 py-2.5 text-center w-24">Nilai</th>
+              <th className="px-4 py-2.5 text-center w-28">Bobot × Nilai</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
             {LECTURER_INDICATORS.map((ind, i) => {
               const val = grades[ind.key];
+              const contrib = (ind.bobot / 100) * val;
               return (
                 <tr key={ind.key} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-4 py-3 text-center text-gray-400 text-xs">{i + 1}</td>
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs leading-snug">{ind.label}</td>
                   <td className="px-4 py-3 text-center">
+                    <span className="text-xs font-bold text-[#CC0000] bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-lg">{ind.bobot}</span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
                     <ScoreBadge value={val} />
                   </td>
+                  <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-200 font-semibold">{contrib.toFixed(2)}</td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
             <tr className="bg-gray-50 dark:bg-slate-800 border-t-2 border-gray-200 dark:border-gray-700">
-              <td colSpan={2} className="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300 text-sm">
-                Rata-rata Nilai Pembimbing Akademik
+              <td colSpan={3} className="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300 text-sm">
+                Total Nilai Pembimbing Akademik
+                <span className="ml-2 text-xs text-gray-400 font-normal">(Bobot total: {TOTAL_BOBOT}%)</span>
               </td>
+              <td className="px-4 py-3 text-center" />
               <td className="px-4 py-3 text-center">
                 <span className="text-xl font-extrabold text-[#CC0000]">{grades.total.toFixed(2)}</span>
               </td>
@@ -196,7 +202,7 @@ export default function LihatNilaiPage() {
       try {
         const res = await getMyGrades();
         if (res.success) {
-          setData(res.data);
+          setData(res.data ?? null);
         } else {
           setError(res.message || 'Gagal memuat nilai.');
         }
@@ -275,10 +281,7 @@ export default function LihatNilaiPage() {
                   <th className="text-right px-6 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">Tampilkan</span>
-                      <select
-                        disabled
-                        className="border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 focus:outline-none cursor-not-allowed"
-                      >
+                      <select disabled className="border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 focus:outline-none cursor-not-allowed">
                         <option>10</option>
                       </select>
                       <span className="text-xs text-gray-400 font-normal">data</span>
@@ -342,21 +345,13 @@ export default function LihatNilaiPage() {
               {!data ? 'Tidak ada data' : 'Menampilkan 1–1 dari 1 data'}
             </p>
             <div className="flex items-center gap-1">
-              <button
-                disabled
-                className="px-3 py-1 text-xs text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
-              >
+              <button disabled className="px-3 py-1 text-xs text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 cursor-not-allowed">
                 Sebelumnya
               </button>
               {data && (
-                <button className="px-3 py-1 text-xs font-bold bg-[#CC0000] text-white rounded-lg">
-                  1
-                </button>
+                <button className="px-3 py-1 text-xs font-bold bg-[#CC0000] text-white rounded-lg">1</button>
               )}
-              <button
-                disabled
-                className="px-3 py-1 text-xs text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
-              >
+              <button disabled className="px-3 py-1 text-xs text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 cursor-not-allowed">
                 Selanjutnya
               </button>
             </div>
@@ -415,13 +410,10 @@ export default function LihatNilaiPage() {
 
       {/* Nilai Pembimbing Lapangan */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100">Nilai Pembimbing Lapangan</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Dinilai oleh: {reg.mentor_name} · {reg.mentor_position}</p>
-          </div>
+        <div>
+          <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100">Nilai Pembimbing Lapangan</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Dinilai oleh: {reg.mentor_name} · {reg.mentor_position}</p>
         </div>
-
         {mentorGrades ? (
           <MentorGradeTable grades={mentorGrades} />
         ) : (
@@ -434,13 +426,10 @@ export default function LihatNilaiPage() {
 
       {/* Nilai Pembimbing Akademik */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100">Nilai Pembimbing Akademik</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Dinilai oleh: {reg.dosen_name}</p>
-          </div>
+        <div>
+          <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100">Nilai Pembimbing Akademik</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Dinilai oleh: {reg.dosen_name}</p>
         </div>
-
         {lecturerGrades ? (
           <LecturerGradeTable grades={lecturerGrades} />
         ) : (

@@ -6,69 +6,69 @@
  * set environment variable sebelum menjalankan.
  */
 
-const path   = require('path');
+const path = require('path');
 
 // Pastikan mysql2 bisa di-resolve dari student-service/node_modules
 // sehingga script bisa dijalankan dari direktori manapun
 const studentServiceModules = path.join(__dirname, '../../services/student-service/node_modules');
-require('module').Module._nodeModulePaths = ((orig) => function(from) {
+require('module').Module._nodeModulePaths = ((orig) => function (from) {
   const paths = orig.call(this, from);
   if (!paths.includes(studentServiceModules)) paths.unshift(studentServiceModules);
   return paths;
 })(require('module').Module._nodeModulePaths);
 
-const mysql  = require('mysql2/promise');
+const mysql = require('mysql2/promise');
 require('dotenv').config({
   path: path.join(__dirname, '../../services/student-service/.env'),
 });
 
 const DB_CONFIG = {
-  host:     process.env.DB_HOST     || 'localhost',
-  port:     Number(process.env.DB_PORT) || 3306,
-  user:     process.env.DB_USER     || 'root',
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME     || 'internship_management',
+  database: process.env.DB_NAME || 'internship_management',
 };
 
 const LECTURERS = [
   {
-    nip:           '198001012005011001',
+    nip: '198001012005011001',
     lecturer_name: 'Dr. Bambang Supriyanto, M.T.',
-    password:      'password123',
+    password: 'password123',
   },
   {
-    nip:           '198205152009121002',
+    nip: '198205152009121002',
     lecturer_name: 'Dra. Siti Aminah, M.Kom.',
-    password:      'password123',
+    password: 'password123',
   },
   {
-    nip:           '197803232003121003',
+    nip: '197803232003121003',
     lecturer_name: 'Ir. Hendra Kusuma, M.T., Ph.D.',
-    password:      'password123',
+    password: 'password123',
   },
 ];
 
 const STUDENTS = [
   {
-    nim:          '1301213001',
+    nim: '1301213001',
     student_name: 'Reynaldy Pratama',
-    class:        'IF-46-01',
-    email:        'reynaldy.pratama@student.telkomuniversity.ac.id',
-    password:     'password123',
+    class: 'IF-46-01',
+    email: 'reynaldy.pratama@student.telkomuniversity.ac.id',
+    password: 'password123',
   },
   {
-    nim:          '1301213002',
+    nim: '1301213002',
     student_name: 'Budi Santoso',
-    class:        'IF-46-02',
-    email:        'budi.santoso@student.telkomuniversity.ac.id',
-    password:     'password123',
+    class: 'IF-46-02',
+    email: 'budi.santoso@student.telkomuniversity.ac.id',
+    password: 'password123',
   },
   {
-    nim:          '1301213003',
+    nim: '1301213003',
     student_name: 'Siti Rahayu',
-    class:        'SI-46-01',
-    email:        'siti.rahayu@student.telkomuniversity.ac.id',
-    password:     'password123',
+    class: 'SI-46-01',
+    email: 'siti.rahayu@student.telkomuniversity.ac.id',
+    password: 'password123',
   },
 ];
 

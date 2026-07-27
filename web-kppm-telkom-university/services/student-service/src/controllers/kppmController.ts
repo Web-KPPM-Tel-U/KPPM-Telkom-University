@@ -532,9 +532,11 @@ export const getLecturerStudents = async (
          r.mentor_position,
          r.mentor_email,
          r.mentor_phone,
-         r.toss_cover_letter_file
+         r.toss_cover_letter_file,
+         IF(ls.registration_id IS NOT NULL, 1, 0) AS is_graded
        FROM internship_registrations r
        JOIN students s ON s.student_id = r.student_id
+       LEFT JOIN lecturer_scores ls ON ls.registration_id = r.registration_id
        WHERE r.lecturer_id = ?
        ORDER BY r.submitted_at DESC
        LIMIT ? OFFSET ?`,
