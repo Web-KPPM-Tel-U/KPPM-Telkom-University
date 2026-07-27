@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getProfile, getDashboard, changePassword } from '../controllers/studentController';
 import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload } from '../controllers/kppmController';
+import { getMentorDashboard } from '../controllers/mentorController';
 import { verifyToken } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -25,6 +26,10 @@ router.get('/lecturers',                 verifyToken, getLecturers);
 // PATCH /student/lecturer/registrations/:id/status — approve atau reject pengajuan
 router.get('/lecturer/students',                        verifyToken, getLecturerStudents);
 router.patch('/lecturer/registrations/:id/status',      verifyToken, updateRegistrationStatus);
+
+// ─── Mentor Routes ───────────────────────────────────────────────────────────
+// GET /student/mentor/dashboard — data mahasiswa yang dibimbing mentor (role: mentor)
+router.get('/mentor/dashboard', verifyToken, getMentorDashboard);
 
 export default router;
 
