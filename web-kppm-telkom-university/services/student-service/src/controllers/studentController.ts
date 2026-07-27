@@ -153,11 +153,26 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
         hasMentorScore = scoreRows.length > 0;
       }
 
-      // current_step = index step TERAKHIR yang selesai (0-based dari step 1)
-      // pending_approval → hanya step 1 selesai → current_step = 1
-      // approved         → step 1 & 2 selesai   → current_step = 2
-      // approved + nilai mentor → step 1,2,3 selesai → current_step = 3
-      const currentStep = hasMentorScore ? 3 : (isApproved ? 2 : (isPending ? 1 : 0));
+      // Cek apakah dosen PA sudah menginput nilai (step 4)
+      let hasLecturerScore = false;
+      if (isApproved) {
+        const [lsRows] = await pool.execute<any[]>(
+          'SELECT lecturer_score_id FROM lecturer_scores WHERE registration_id = ? LIMIT 1',
+          [reg.registration_id]
+        );
+        hasLecturerScore = lsRows.length > 0;
+      }
+
+      // current_step = step TERAKHIR yang selesai
+      // pending_approval  → current_step = 1
+      // approved          → current_step = 2
+      // approved + mentor → current_step = 3
+      // approved + mentor + dosen → current_step = 4
+      const currentStep = hasLecturerScore ? 4
+        : hasMentorScore  ? 3
+        : isApproved      ? 2
+        : isPending        ? 1
+        : 0;
 
       kppmStatus = {
         registration_id:  reg.registration_id,
@@ -170,20 +185,22 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
         cancelled_at:     reg.cancelled_at,
         current_step:     currentStep,
         steps: [
-          // Step 1: Pengisian Data → selesai begitu ada registrasi (kecuali cancelled)
-          { step: 1, label: 'Pengisian Data',               completed: !isCancelled,    date: reg.submitted_at },
-          // Step 2: Verifikasi Dosen → selesai hanya jika approved
-          { step: 2, label: 'Verifikasi Dosen',              completed: isApproved,      date: isApproved ? reg.approved_at : null },
-          // Step 3: Penilaian Pembimbing Lapangan → selesai jika mentor sudah input nilai
-          { step: 3, label: 'Penilaian Pembimbing Lapangan', completed: hasMentorScore,  date: null },
-          { step: 4, label: 'Penilaian Pembimbing Akademik', completed: false,            date: null },
-          { step: 5, label: 'Upload Hasil KP',              completed: false,            date: null },
+          // Step 1: Pengisian Data
+          { step: 1, label: 'Pengisian Data',               completed: !isCancelled,      date: reg.submitted_at },
+          // Step 2: Verifikasi Dosen
+          { step: 2, label: 'Verifikasi Dosen',              completed: isApproved,        date: isApproved ? reg.approved_at : null },
+          // Step 3: Penilaian Pembimbing Lapangan
+          { step: 3, label: 'Penilaian Pembimbing Lapangan', completed: hasMentorScore,    date: null },
+          // Step 4: Penilaian Pembimbing Akademik
+          { step: 4, label: 'Penilaian Pembimbing Akademik', completed: hasLecturerScore,  date: null },
+          // Step 5: Upload Hasil KP
+          { step: 5, label: 'Upload Hasil KP',              completed: false,              date: null },
         ],
         next_steps: [
           { label: 'Isi data pendaftaran KPPM',          completed: !isCancelled },
           { label: 'Verifikasi oleh Dosen Pembimbing',   completed: isApproved },
           { label: 'Penilaian Pembimbing Lapangan',      completed: hasMentorScore },
-          { label: 'Penilaian Pembimbing Akademik',      completed: false },
+          { label: 'Penilaian Pembimbing Akademik',      completed: hasLecturerScore },
           { label: 'Upload Hasil KP',                    completed: false },
         ],
       };
@@ -348,28 +365,33 @@ export const getMyGrades = async (req: AuthenticatedRequest, res: Response): Pro
       [reg.registration_id]
     );
 
+    const LECTURER_BOBOT: Record<string, number> = {
+      commitment:     10,
+      planning:        5,
+      guidance:        5,
+      presentation:   15,
+      report:         10,
+      identification: 10,
+    };
+
     let lecturerGrades = null;
     if (lecturerRows.length > 0) {
       const ls = lecturerRows[0];
-      // Hitung total rata-rata sederhana ke-6 komponen
-      const vals = [
-        Number(ls.plo05_clo01_commitment),
-        Number(ls.plo07_clo02_planning),
-        Number(ls.plo05_clo04_guidance),
-        Number(ls.plo05_clo04_presentation),
-        Number(ls.plo05_clo04_report),
-        Number(ls.plo01_clo05_identification),
-      ];
-      const total = vals.reduce((s, v) => s + v, 0) / vals.length;
-      lecturerGrades = {
+      const scores = {
         commitment:     Number(ls.plo05_clo01_commitment),
         planning:       Number(ls.plo07_clo02_planning),
         guidance:       Number(ls.plo05_clo04_guidance),
         presentation:   Number(ls.plo05_clo04_presentation),
         report:         Number(ls.plo05_clo04_report),
         identification: Number(ls.plo01_clo05_identification),
-        total:          parseFloat(total.toFixed(2)),
-        updated_at:     ls.updated_at,
+      };
+      const total = Object.keys(LECTURER_BOBOT).reduce(
+        (sum, f) => sum + (LECTURER_BOBOT[f] / 100) * scores[f as keyof typeof scores], 0
+      );
+      lecturerGrades = {
+        ...scores,
+        total:      parseFloat(total.toFixed(2)),
+        updated_at: ls.updated_at,
       };
     }
 

@@ -351,6 +351,7 @@ export interface LecturerStudentEntry {
   mentor_email: string;
   mentor_phone: string;
   toss_cover_letter_file: string | null;
+  is_graded: number;
 }
 
 export interface LecturerStudentsApiResponse {
@@ -555,6 +556,52 @@ export interface MyGradesData {
  */
 export const getMyGrades = async (): Promise<ApiResponse<MyGradesData | null>> => {
   const res = await fetch(`${API_BASE_URL}/student/grades`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
+
+// ─── Lecturer Grades API ────────────────────────────────────────────────────
+
+export interface LecturerGradeScores {
+  commitment: number;
+  planning: number;
+  guidance: number;
+  presentation: number;
+  report: number;
+  identification: number;
+}
+
+export interface LecturerGradeData {
+  lecturer_score_id?: number;
+  registration_id: number;
+  scores: LecturerGradeScores;
+  total_nilai_pa: number;
+  updated_at?: string;
+}
+
+/**
+ * Submit / update nilai PA dosen untuk satu mahasiswa
+ */
+export const submitLecturerGrade = async (
+  registrationId: number,
+  scores: LecturerGradeScores
+): Promise<ApiResponse<LecturerGradeData>> => {
+  const res = await fetch(`${API_BASE_URL}/student/lecturer/grades/${registrationId}`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(scores),
+  });
+  return res.json();
+};
+
+/**
+ * Ambil nilai PA satu mahasiswa berdasarkan registration_id
+ */
+export const getLecturerGrade = async (
+  registrationId: number
+): Promise<ApiResponse<LecturerGradeData | null>> => {
+  const res = await fetch(`${API_BASE_URL}/student/lecturer/grades/${registrationId}`, {
     headers: authHeaders(),
   });
   return res.json();
