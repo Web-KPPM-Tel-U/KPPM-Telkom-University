@@ -506,3 +506,56 @@ export const getAllMentorGrades = async (): Promise<ApiResponse<any[]>> => {
   return res.json();
 };
 
+// ─── Student Grades API ───────────────────────────────────────────────────────
+
+export interface MyMentorGrades {
+  attendance: number;
+  discipline: number;
+  commitment: number;
+  planning: number;
+  teamwork: number;
+  guidance: number;
+  report: number;
+  problem_solving: number;
+  total: number;
+  updated_at: string;
+}
+
+export interface MyLecturerGrades {
+  commitment: number;
+  planning: number;
+  guidance: number;
+  presentation: number;
+  report: number;
+  identification: number;
+  total: number;
+  updated_at: string;
+}
+
+export interface MyGradesData {
+  registration: {
+    registration_id: number;
+    company_name: string;
+    internship_position: string;
+    internship_start: string;
+    internship_end: string;
+    semester_code: string;
+    mentor_name: string;
+    mentor_position: string;
+    dosen_name: string;
+    submitted_at: string;
+    approved_at: string;
+  };
+  mentor_grades: MyMentorGrades | null;
+  lecturer_grades: MyLecturerGrades | null;
+}
+
+/**
+ * Ambil nilai KPPM milik mahasiswa yang sedang login
+ */
+export const getMyGrades = async (): Promise<ApiResponse<MyGradesData | null>> => {
+  const res = await fetch(`${API_BASE_URL}/student/grades`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
