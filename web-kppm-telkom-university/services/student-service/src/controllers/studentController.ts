@@ -276,3 +276,125 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response): 
   }
 };
 
+// ─── Get My Grades ────────────────────────────────────────────────────────────
+// Bobot indikator nilai mentor (%)
+const MENTOR_BOBOT: Record<string, number> = {
+  attendance: 5, discipline: 5, commitment: 5, planning: 5,
+  teamwork: 10, guidance: 5, report: 5, problem_solving: 5,
+};
+
+export const getMyGrades = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const userId = req.user?.sub;
+  if (!userId) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+    return;
+  }
+
+  try {
+    // Ambil registrasi aktif yang sudah approved
+    const [regRows] = await pool.execute<any[]>(
+      `SELECT ir.registration_id, ir.company_name, ir.internship_position,
+              ir.internship_start, ir.internship_end, ir.semester_code,
+              ir.mentor_name, ir.mentor_position, ir.mentor_email,
+              ir.submitted_at, ir.approved_at,
+              l.lecturer_name AS dosen_name
+       FROM internship_registrations ir
+       JOIN lecturers l ON ir.lecturer_id = l.lecturer_id
+       WHERE ir.student_id = ? AND ir.status = 'approved'
+       ORDER BY ir.approved_at DESC
+       LIMIT 1`,
+      [userId]
+    );
+
+    if (regRows.length === 0) {
+      res.status(200).json({
+        success: true,
+        data: null,
+        message: 'Belum ada pendaftaran KPPM yang disetujui',
+      });
+      return;
+    }
+
+    const reg = regRows[0];
+
+    // Nilai Mentor (Pembimbing Lapangan)
+    const [mentorRows] = await pool.execute<any[]>(
+      'SELECT * FROM mentor_scores WHERE registration_id = ?',
+      [reg.registration_id]
+    );
+
+    let mentorGrades = null;
+    if (mentorRows.length > 0) {
+      const ms = mentorRows[0];
+      const fields = Object.keys(MENTOR_BOBOT);
+      const total = fields.reduce((sum, f) => sum + (MENTOR_BOBOT[f] / 100) * Number(ms[f]), 0);
+      mentorGrades = {
+        attendance:     Number(ms.attendance),
+        discipline:     Number(ms.discipline),
+        commitment:     Number(ms.commitment),
+        planning:       Number(ms.planning),
+        teamwork:       Number(ms.teamwork),
+        guidance:       Number(ms.guidance),
+        report:         Number(ms.report),
+        problem_solving:Number(ms.problem_solving),
+        total:          parseFloat(total.toFixed(2)),
+        updated_at:     ms.updated_at,
+      };
+    }
+
+    // Nilai Dosen (Pembimbing Akademik)
+    const [lecturerRows] = await pool.execute<any[]>(
+      'SELECT * FROM lecturer_scores WHERE registration_id = ?',
+      [reg.registration_id]
+    );
+
+    let lecturerGrades = null;
+    if (lecturerRows.length > 0) {
+      const ls = lecturerRows[0];
+      // Hitung total rata-rata sederhana ke-6 komponen
+      const vals = [
+        Number(ls.plo05_clo01_commitment),
+        Number(ls.plo07_clo02_planning),
+        Number(ls.plo05_clo04_guidance),
+        Number(ls.plo05_clo04_presentation),
+        Number(ls.plo05_clo04_report),
+        Number(ls.plo01_clo05_identification),
+      ];
+      const total = vals.reduce((s, v) => s + v, 0) / vals.length;
+      lecturerGrades = {
+        commitment:     Number(ls.plo05_clo01_commitment),
+        planning:       Number(ls.plo07_clo02_planning),
+        guidance:       Number(ls.plo05_clo04_guidance),
+        presentation:   Number(ls.plo05_clo04_presentation),
+        report:         Number(ls.plo05_clo04_report),
+        identification: Number(ls.plo01_clo05_identification),
+        total:          parseFloat(total.toFixed(2)),
+        updated_at:     ls.updated_at,
+      };
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        registration: {
+          registration_id:    reg.registration_id,
+          company_name:       reg.company_name,
+          internship_position:reg.internship_position,
+          internship_start:   reg.internship_start,
+          internship_end:     reg.internship_end,
+          semester_code:      reg.semester_code,
+          mentor_name:        reg.mentor_name,
+          mentor_position:    reg.mentor_position,
+          dosen_name:         reg.dosen_name,
+          submitted_at:       reg.submitted_at,
+          approved_at:        reg.approved_at,
+        },
+        mentor_grades:   mentorGrades,
+        lecturer_grades: lecturerGrades,
+      },
+    });
+  } catch (err: any) {
+    console.error('[Student Service] getMyGrades error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan internal pada server.' });
+  }
+};

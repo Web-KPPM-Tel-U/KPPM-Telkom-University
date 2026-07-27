@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getProfile, getDashboard, changePassword } from '../controllers/studentController';
+import { getProfile, getDashboard, changePassword, getMyGrades } from '../controllers/studentController';
 import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload } from '../controllers/kppmController';
 import { getMentorDashboard } from '../controllers/mentorController';
 import { submitMentorGrade, getMentorGrade, getAllMentorGrades } from '../controllers/mentorGradesController';
@@ -10,6 +10,7 @@ const router = Router();
 // ─── Student Routes ───────────────────────────────────────────────────────────
 router.get('/profile',   verifyToken, getProfile);
 router.get('/dashboard', verifyToken, getDashboard);
+router.get('/grades',    verifyToken, getMyGrades);
 router.patch('/change-password', verifyToken, changePassword);
 
 // ─── KPPM Registration Routes ─────────────────────────────────────────────────

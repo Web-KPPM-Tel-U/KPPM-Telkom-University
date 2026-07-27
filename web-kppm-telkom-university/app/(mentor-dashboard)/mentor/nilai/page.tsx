@@ -8,21 +8,20 @@ import {
 } from '@/lib/api';
 import type { MentorDashboardData, MentorMentee, MentorGradeScores } from '@/lib/api';
 
-// ─── Indikator Penilaian (sesuai form KPPM) ─────────────────────────────────
+// ─── Indikator Penilaian ─────────────────────────────────────────────────────
 const INDICATORS: {
   field: keyof MentorGradeScores;
   label: string;
-  description?: string;
   bobot: number;
 }[] = [
-  { field: 'attendance',       label: 'Kehadiran tepat waktu',                                                       bobot: 5  },
-  { field: 'discipline',       label: 'Kedisiplinan (kesesuaian dengan aturan)',                                      bobot: 5  },
-  { field: 'commitment',       label: 'Komitmen terhadap tugas / pekerjaan',                                         bobot: 5  },
-  { field: 'planning',         label: 'Mahasiswa mampu merencanakan penyelesaian tugas atau pekerjaan, bekerja efektif dan mandiri selama KP', bobot: 5  },
-  { field: 'teamwork',         label: 'Mahasiswa mampu bekerja sama dalam tim organisasi / perusahaan selama KP',    bobot: 10 },
-  { field: 'guidance',         label: 'Frekuensi bimbingan dengan pembimbing lapang',                                bobot: 5  },
-  { field: 'report',           label: 'Kualitas laporan',                                                            bobot: 5  },
-  { field: 'problem_solving',  label: 'Identifikasi dan Formulasi Masalah',                                          bobot: 5  },
+  { field: 'attendance',      label: 'Kehadiran tepat waktu',                                                         bobot: 5  },
+  { field: 'discipline',      label: 'Kedisiplinan (kesesuaian dengan aturan)',                                        bobot: 5  },
+  { field: 'commitment',      label: 'Komitmen terhadap tugas / pekerjaan',                                           bobot: 5  },
+  { field: 'planning',        label: 'Mahasiswa mampu merencanakan penyelesaian tugas, bekerja efektif dan mandiri selama KP', bobot: 5 },
+  { field: 'teamwork',        label: 'Mahasiswa mampu bekerja sama dalam tim organisasi / perusahaan selama KP',      bobot: 10 },
+  { field: 'guidance',        label: 'Frekuensi bimbingan dengan pembimbing lapang',                                  bobot: 5  },
+  { field: 'report',          label: 'Kualitas laporan',                                                              bobot: 5  },
+  { field: 'problem_solving', label: 'Identifikasi dan Formulasi Masalah',                                            bobot: 5  },
 ];
 
 const TOTAL_BOBOT = INDICATORS.reduce((s, i) => s + i.bobot, 0);
@@ -40,11 +39,11 @@ function calcTotal(scores: MentorGradeScores): number {
 }
 
 function getGrade(total: number): { label: string; color: string } {
-  if (total >= 85) return { label: 'A', color: 'text-green-600 bg-green-50' };
-  if (total >= 70) return { label: 'B', color: 'text-blue-600 bg-blue-50' };
-  if (total >= 55) return { label: 'C', color: 'text-yellow-600 bg-yellow-50' };
-  if (total >= 40) return { label: 'D', color: 'text-orange-600 bg-orange-50' };
-  return { label: 'E', color: 'text-red-600 bg-red-50' };
+  if (total >= 85) return { label: 'A', color: 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/30' };
+  if (total >= 70) return { label: 'B', color: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30' };
+  if (total >= 55) return { label: 'C', color: 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30' };
+  if (total >= 40) return { label: 'D', color: 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/30' };
+  return { label: 'E', color: 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/30' };
 }
 
 // ─── Grade Form Modal ─────────────────────────────────────────────────────────
@@ -104,12 +103,11 @@ function GradeForm({
   };
 
   const total = calcTotal(scores);
-  const grade = getGrade(total);
   const initials = mentee.student.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto bg-black/40 backdrop-blur-sm">
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl">
+      <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-2xl border dark:border-slate-700">
 
         {/* Header */}
         <div className="bg-gradient-to-r from-[#CC0000] to-[#990000] rounded-t-3xl px-6 py-5 text-white">
@@ -150,15 +148,15 @@ function GradeForm({
           ) : (
             <>
               {/* Rubrik note */}
-              <p className="text-xs text-gray-500 mb-4 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+              <p className="text-xs text-gray-500 dark:text-slate-400 mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 rounded-xl px-3 py-2">
                 ⚠️ Nilai Angka diisi sesuai <strong>rubrik penilaian KPPM</strong> (skala 0–100 untuk setiap indikator).
               </p>
 
               {/* Tabel indikator */}
-              <div className="overflow-x-auto rounded-2xl border border-gray-100">
+              <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-slate-700">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider">
+                    <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 text-[11px] uppercase tracking-wider border-b border-gray-100 dark:border-slate-700">
                       <th className="px-3 py-2.5 text-center w-8">No</th>
                       <th className="px-3 py-2.5 text-left">Indikator Penilaian</th>
                       <th className="px-3 py-2.5 text-center w-16">Bobot (%)</th>
@@ -166,15 +164,15 @@ function GradeForm({
                       <th className="px-3 py-2.5 text-center w-28">Bobot × Nilai</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-gray-50 dark:divide-slate-700/50">
                     {INDICATORS.map((ind, idx) => {
                       const contrib = (ind.bobot / 100) * (scores[ind.field] || 0);
                       return (
-                        <tr key={ind.field} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-3 py-3 text-center text-gray-400 text-xs">{idx + 1}</td>
-                          <td className="px-3 py-3 text-gray-700 leading-tight text-xs">{ind.label}</td>
+                        <tr key={ind.field} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="px-3 py-3 text-center text-gray-400 dark:text-slate-500 text-xs">{idx + 1}</td>
+                          <td className="px-3 py-3 text-gray-700 dark:text-slate-300 leading-tight text-xs">{ind.label}</td>
                           <td className="px-3 py-3 text-center">
-                            <span className="inline-block bg-[#CC0000]/8 text-[#CC0000] text-xs font-bold px-2 py-0.5 rounded-lg">
+                            <span className="inline-block bg-[#CC0000]/10 dark:bg-red-900/30 text-[#CC0000] dark:text-red-400 text-xs font-bold px-2 py-0.5 rounded-lg">
                               {ind.bobot}
                             </span>
                           </td>
@@ -186,21 +184,21 @@ function GradeForm({
                               value={scores[ind.field] === 0 ? '' : scores[ind.field]}
                               placeholder="0"
                               onChange={e => handleChange(ind.field, e.target.value)}
-                              className="w-20 text-center border border-gray-200 rounded-xl px-2 py-1.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all"
+                              className="w-20 text-center border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-xl px-2 py-1.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all"
                             />
                           </td>
-                          <td className="px-3 py-3 text-center text-gray-700 font-semibold text-sm">
-                            {contrib > 0 ? contrib.toFixed(2) : <span className="text-gray-300">—</span>}
+                          <td className="px-3 py-3 text-center text-gray-700 dark:text-slate-200 font-semibold text-sm">
+                            {contrib > 0 ? contrib.toFixed(2) : <span className="text-gray-300 dark:text-slate-600">—</span>}
                           </td>
                         </tr>
                       );
                     })}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-gray-50 border-t-2 border-gray-200">
-                      <td colSpan={3} className="px-3 py-3 text-right font-bold text-gray-700 text-sm">
+                    <tr className="bg-gray-50 dark:bg-slate-800 border-t-2 border-gray-200 dark:border-slate-700">
+                      <td colSpan={3} className="px-3 py-3 text-right font-bold text-gray-700 dark:text-slate-300 text-sm">
                         Total Nilai Pembimbing Lapangan
-                        <span className="ml-2 text-xs text-gray-400 font-normal">(Bobot total: {TOTAL_BOBOT}%)</span>
+                        <span className="ml-2 text-xs text-gray-400 dark:text-slate-500 font-normal">(Bobot total: {TOTAL_BOBOT}%)</span>
                       </td>
                       <td className="px-3 py-3 text-center" />
                       <td className="px-3 py-3 text-center">
@@ -211,15 +209,14 @@ function GradeForm({
                 </table>
               </div>
 
-
               {/* Feedback */}
               {error && (
-                <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+                <p className="mt-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 rounded-xl px-3 py-2">
                   ⚠️ {error}
                 </p>
               )}
               {success && (
-                <p className="mt-3 text-sm text-green-700 bg-green-50 border border-green-100 rounded-xl px-3 py-2">
+                <p className="mt-3 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/50 rounded-xl px-3 py-2">
                   ✅ {success}
                 </p>
               )}
@@ -228,7 +225,7 @@ function GradeForm({
               <div className="mt-5 flex gap-3">
                 <button
                   onClick={onClose}
-                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 rounded-2xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-3 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-2xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   Batal
                 </button>
@@ -265,39 +262,38 @@ function MenteeRow({
   onOpenForm: (m: MentorMentee) => void;
 }) {
   const avatarColors = [
-    'bg-blue-100 text-blue-700',
-    'bg-purple-100 text-purple-700',
-    'bg-green-100 text-green-700',
-    'bg-amber-100 text-amber-700',
-    'bg-cyan-100 text-cyan-700',
+    'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+    'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+    'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
+    'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+    'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300',
   ];
   const initials = mentee.student.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const total = gradeMap[mentee.registration_id];
   const hasGrade = total !== null && total !== undefined;
-  const grade = hasGrade ? getGrade(total!) : null;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 flex items-center gap-4">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all p-5 flex items-center gap-4">
       <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${avatarColors[idx % avatarColors.length]}`}>
         {initials}
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-gray-900 text-sm truncate">{mentee.student.name}</p>
-        <p className="text-gray-400 text-xs mt-0.5">NIM: {mentee.student.nim} · {mentee.student.class}</p>
-        <p className="text-gray-400 text-xs truncate">{mentee.company_name} — {mentee.internship_position}</p>
+        <p className="font-bold text-gray-900 dark:text-slate-100 text-sm truncate">{mentee.student.name}</p>
+        <p className="text-gray-400 dark:text-slate-500 text-xs mt-0.5">NIM: {mentee.student.nim} · {mentee.student.class}</p>
+        <p className="text-gray-400 dark:text-slate-500 text-xs truncate">{mentee.company_name} — {mentee.internship_position}</p>
       </div>
 
       <div className="flex-shrink-0 flex items-center gap-3">
         {hasGrade ? (
           <div className="text-center">
-            <p className="text-[10px] text-gray-400 font-semibold mb-0.5">Nilai</p>
+            <p className="text-[10px] text-gray-400 dark:text-slate-500 font-semibold mb-0.5">Nilai</p>
             <div className="flex items-center gap-1.5">
-              <span className="text-lg font-extrabold text-gray-800">{total!.toFixed(2)}</span>
+              <span className="text-lg font-extrabold text-gray-800 dark:text-slate-100">{total!.toFixed(2)}</span>
             </div>
           </div>
         ) : (
-          <span className="text-xs text-gray-400 bg-gray-50 border border-dashed border-gray-200 px-3 py-1.5 rounded-xl">
+          <span className="text-xs text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-800 border border-dashed border-gray-200 dark:border-slate-700 px-3 py-1.5 rounded-xl">
             Belum dinilai
           </span>
         )}
@@ -306,7 +302,7 @@ function MenteeRow({
           onClick={() => onOpenForm(mentee)}
           className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
             hasGrade
-              ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
               : 'bg-[#CC0000] text-white hover:bg-[#A30000] shadow-sm'
           }`}
         >
@@ -365,15 +361,12 @@ export default function MentorGradesPage() {
     fetchData();
   }, [router]);
 
-  const graded = Object.values(gradeMap).filter(v => v !== null).length;
-  const total = data?.mentees.length ?? 0;
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64 p-8">
         <div className="text-center">
           <div className="w-10 h-10 border-4 border-[#CC0000] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Memuat data...</p>
+          <p className="text-gray-500 dark:text-slate-400 text-sm">Memuat data...</p>
         </div>
       </div>
     );
@@ -382,8 +375,8 @@ export default function MentorGradesPage() {
   if (error) {
     return (
       <div className="p-6 max-w-lg mx-auto mt-8">
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
-          <p className="text-red-700 font-semibold mb-3">{error}</p>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-center">
+          <p className="text-red-700 dark:text-red-400 font-semibold mb-3">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-[#CC0000] text-white rounded-xl text-sm font-bold"
@@ -400,16 +393,15 @@ export default function MentorGradesPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-gray-900">Input Nilai Mahasiswa</h1>
-        <p className="text-gray-500 text-sm mt-1">Form Penilaian Pembimbing Lapang KPPM — Fakultas Rekayasa Industri</p>
+        <h1 className="text-2xl font-extrabold text-gray-900 dark:text-slate-100">Input Nilai Mahasiswa</h1>
+        <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Form Penilaian Pembimbing Lapang KPPM — Fakultas Rekayasa Industri</p>
       </div>
-
 
       {/* Daftar mahasiswa */}
       {data && data.mentees.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-10 text-center">
-          <p className="text-gray-500 font-semibold text-sm">Tidak ada mahasiswa yang perlu dinilai</p>
-          <p className="text-gray-400 text-xs mt-1">Mahasiswa akan muncul setelah pendaftaran disetujui.</p>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-10 text-center">
+          <p className="text-gray-500 dark:text-slate-400 font-semibold text-sm">Tidak ada mahasiswa yang perlu dinilai</p>
+          <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">Mahasiswa akan muncul setelah pendaftaran disetujui.</p>
         </div>
       ) : (
         <div className="space-y-3">
