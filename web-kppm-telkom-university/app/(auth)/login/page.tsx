@@ -156,8 +156,7 @@ export default function LoginPage() {
       if (res.success) {
         setOtpSent(true);
         setOtpCountdown(60);
-        const devOtp = (res.data as { dev_otp?: string })?.dev_otp;
-        setSuccess(`OTP dikirim ke ${mentorEmail}` + (devOtp ? ` (DEV: ${devOtp})` : ''));
+        setSuccess(`Kode OTP telah dikirim ke ${mentorEmail}. Silakan cek inbox email Anda.`);
       } else {
         setError(res.message || 'Gagal mengirim OTP.');
       }
@@ -180,7 +179,7 @@ export default function LoginPage() {
         setToken(res.data.token);
         setUser(res.data.user);
         setSuccess('Verifikasi berhasil. Mengalihkan...');
-        setTimeout(() => router.push('/dashboard'), 700);
+        setTimeout(() => router.push('/mentor/dashboard'), 700);
       } else {
         setError(res.message || 'OTP tidak valid atau sudah kadaluarsa.');
       }

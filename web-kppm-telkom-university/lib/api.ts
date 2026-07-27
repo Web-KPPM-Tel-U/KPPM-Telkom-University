@@ -32,6 +32,8 @@ export interface LecturerUser {
 
 export interface MentorUser {
   email: string;
+  name?: string;
+  company?: string;
   role: 'mentor';
 }
 
@@ -391,3 +393,58 @@ export const updateLecturerRegistrationStatus = async (
   );
   return res.json();
 };
+
+// ─── Mentor API ───────────────────────────────────────────────────────────────────────
+
+export interface MentorMentee {
+  registration_id: number;
+  status: string;
+  semester_code: string;
+  company_name: string;
+  internship_position: string;
+  internship_start: string;
+  internship_end: string;
+  submitted_at: string;
+  approved_at: string | null;
+  pembimbing_akademik: string | null;
+  student: {
+    student_id: number;
+    nim: string;
+    name: string;
+    class: string;
+    email: string;
+    whatsapp: string;
+  };
+}
+
+export interface MentorDashboardData {
+  mentor: {
+    name: string;
+    position: string;
+    email: string;
+    phone: string;
+    company_name: string;
+  };
+  total_mentees: number;
+  mentees: MentorMentee[];
+}
+
+/**
+ * Ambil dashboard mentor (data mahasiswa yang dibimbing)
+ */
+export const getMentorDashboard = async (): Promise<ApiResponse<MentorDashboardData>> => {
+  const res = await fetch(`${API_BASE_URL}/student/mentor/dashboard`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
+
+/**
+ * Ambil profil mentor dari localStorage cache
+ */
+export const getMentorProfile = (): MentorUser | null => {
+  const user = getUser();
+  if (user && user.role === 'mentor') return user as MentorUser;
+  return null;
+};
+

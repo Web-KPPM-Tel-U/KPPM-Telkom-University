@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { Request, Response } from 'express';
 import pool from '../config/db';
+import { sendOtpEmail } from '../services/emailService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'kppm-telkom-secret-dev-2024';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
@@ -193,12 +194,19 @@ export const mentorSendOtp = async (req: Request, res: Response): Promise<void> 
       [registrationId, otp, expiredAt]
     );
 
-    console.log(`[Auth Service] OTP untuk ${email}: ${otp}`);
+    // Kirim OTP via email
+    try {
+      await sendOtpEmail(email, otp);
+      console.log(`[Auth Service] OTP berhasil dikirim ke email: ${email}`);
+    } catch (emailErr: any) {
+      console.error(`[Auth Service] Gagal mengirim email ke ${email}:`, emailErr.message);
+      // Tetap log OTP ke console sebagai fallback jika email gagal
+      console.log(`[Auth Service] FALLBACK OTP untuk ${email}: ${otp}`);
+    }
 
     res.status(200).json({
       success: true,
-      message: `OTP telah dikirim ke ${email}`,
-      dev_otp: otp, // DEV ONLY
+      message: `Kode OTP telah dikirim ke email ${email}. Silakan cek inbox Anda.`,
     });
   } catch (err: any) {
     console.error('[Auth Service] mentorSendOtp error:', err.message);
