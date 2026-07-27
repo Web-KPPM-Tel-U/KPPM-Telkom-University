@@ -83,9 +83,6 @@ function MenteeCard({ mentee, idx }: { mentee: MentorMentee; idx: number }) {
               <p className="font-bold text-gray-900 text-sm">{mentee.student.name}</p>
               <p className="text-gray-400 text-xs mt-0.5">NIM: {mentee.student.nim} · {mentee.student.class}</p>
             </div>
-            <span className="flex-shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold bg-green-50 text-green-700 px-2 py-1 rounded-full">
-              <CheckIcon /> Disetujui
-            </span>
           </div>
           <div className="flex flex-wrap gap-3 mt-2.5">
             <span className="flex items-center gap-1 text-xs text-gray-500">
@@ -301,7 +298,7 @@ export default function MentorDashboardPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
             {mentees.map((mentee, idx) => (
               <MenteeCard key={mentee.registration_id} mentee={mentee} idx={idx} />
             ))}
