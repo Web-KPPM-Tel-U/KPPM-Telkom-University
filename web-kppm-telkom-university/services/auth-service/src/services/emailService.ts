@@ -79,7 +79,6 @@ export const sendOtpEmail = async (toEmail: string, otp: string): Promise<void> 
                         <td style="padding:16px 20px;">
                           <table cellpadding="0" cellspacing="0">
                             <tr>
-                              <td style="padding-right:10px;font-size:18px;">⏰</td>
                               <td>
                                 <p style="margin:0;font-size:13px;font-weight:700;color:#374151;">Kode berlaku selama <span style="color:#CC0000;">5 menit</span></p>
                                 <p style="margin:2px 0 0;font-size:12px;color:#6b7280;">Setelah 5 menit, Anda perlu meminta kode baru.</p>
@@ -92,7 +91,6 @@ export const sendOtpEmail = async (toEmail: string, otp: string): Promise<void> 
                         <td style="padding:0 20px 16px;">
                           <table cellpadding="0" cellspacing="0">
                             <tr>
-                              <td style="padding-right:10px;font-size:18px;">🔒</td>
                               <td>
                                 <p style="margin:0;font-size:13px;font-weight:700;color:#374151;">Jaga kerahasiaan kode ini</p>
                                 <p style="margin:2px 0 0;font-size:12px;color:#6b7280;">Jangan bagikan kode ini kepada siapapun.</p>

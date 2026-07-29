@@ -300,12 +300,6 @@ export default function LoginPage() {
                 >
                   {isLoading ? 'Memproses...' : 'Masuk'}
                 </button>
-                <p className="text-center text-sm text-gray-500">
-                  Belum punya akun?{' '}
-                  <a href="/register" className="text-[#CC0000] font-semibold hover:underline">
-                    Registrasi Mahasiswa
-                  </a>
-                </p>
               </form>
             )}
 

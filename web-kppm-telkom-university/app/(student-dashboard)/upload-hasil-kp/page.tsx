@@ -18,7 +18,7 @@ export default function UploadHasilKpPage() {
           Halaman upload dokumen hasil kerja praktik (laporan, sertifikat, nilai pembimbing lapangan) akan segera tersedia.
         </p>
         <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-[#CC0000] rounded-lg text-sm font-medium">
-          🚧 Dalam Pengembangan
+          Dalam Pengembangan
         </div>
       </div>
     </div>

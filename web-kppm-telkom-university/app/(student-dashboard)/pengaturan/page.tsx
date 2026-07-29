@@ -344,7 +344,7 @@ export default function PengaturanPage() {
               </form>
 
               <div className="mt-5 p-3.5 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-transparent dark:border-slate-800">
-                <p className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 mb-1.5">💡 Tips Password Aman</p>
+                <p className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 mb-1.5">Tips Password Aman</p>
                 <ul className="text-[11px] text-gray-400 dark:text-slate-500 space-y-0.5 list-disc list-inside">
                   <li>Minimal 8 karakter</li>
                   <li>Kombinasikan huruf besar, kecil, angka &amp; simbol</li>

@@ -38,7 +38,7 @@ app.use((_req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🎓 Student Service running at http://localhost:${PORT}`);
+  console.log(`\n[Student Service] Running at http://localhost:${PORT}`);
   console.log(`   Routes:`);
   console.log(`   GET  /student/profile                 (requires JWT)`);
   console.log(`   GET  /student/dashboard               (requires JWT)`);

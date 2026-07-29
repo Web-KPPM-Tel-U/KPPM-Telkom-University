@@ -135,7 +135,7 @@ app.use((_req: Request, res: Response) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🚀 API Gateway running at http://localhost:${PORT}`);
+  console.log(`\n[API Gateway] Running at http://localhost:${PORT}`);
   console.log(`   → /auth/*    → Auth Service    (${AUTH_SERVICE})`);
   console.log(`   → /student/* → Student Service (${STUDENT_SERVICE})`);
   console.log(`   → /health    → Health check\n`);
