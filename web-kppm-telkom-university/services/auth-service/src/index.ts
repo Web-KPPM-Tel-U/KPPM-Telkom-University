@@ -34,7 +34,7 @@ app.use((_req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🔐 Auth Service running at http://localhost:${PORT}`);
+  console.log(`\n[Auth Service] Running at http://localhost:${PORT}`);
   console.log(`   Routes:`);
   console.log(`   POST /auth/student/login`);
   console.log(`   POST /auth/lecturer/login`);

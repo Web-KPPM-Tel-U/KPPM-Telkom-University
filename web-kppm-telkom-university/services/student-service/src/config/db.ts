@@ -14,11 +14,11 @@ const pool = mysql.createPool({
 // ─── Test connection on startup ──────────────────────────────────────────────
 pool.getConnection()
   .then((conn) => {
-    console.log('✅ Student Service: Database connected successfully');
+    console.log('[Student Service] Database connected successfully');
     conn.release();
   })
   .catch((err) => {
-    console.error('❌ Student Service: Database connection failed:', err.message);
+    console.error('[Student Service] Database connection failed:', err.message);
   });
 
 export default pool;
