@@ -14,7 +14,6 @@ export interface ApiResponse<T = unknown> {
 }
 
 export interface StudentUser {
-  id: number;
   nim: string;
   name: string;
   class: string;
@@ -440,7 +439,6 @@ export interface MentorMentee {
   approved_at: string | null;
   pembimbing_akademik: string | null;
   student: {
-    student_id: number;
     nim: string;
     name: string;
     class: string;

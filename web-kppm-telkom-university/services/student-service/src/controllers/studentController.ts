@@ -16,17 +16,17 @@ function getProdiFromClass(classCode: string): string {
 
 // ─── Get Profile ──────────────────────────────────────────────────────────────
 export const getProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.user?.sub;
+  const nim = req.user?.nim || String(req.user?.sub || '');
 
-  if (!userId) {
+  if (!nim) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT student_id, nim, student_name, class, email FROM students WHERE student_id = ?',
-      [userId]
+      'SELECT nim, student_name, class, email FROM students WHERE nim = ?',
+      [nim]
     );
 
     if (!rows || rows.length === 0) {
@@ -38,7 +38,6 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response): Prom
     res.status(200).json({
       success: true,
       data: {
-        student_id: s.student_id,
         nim: s.nim,
         name: s.student_name,
         class: s.class,
@@ -60,9 +59,9 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response): Prom
 
 // ─── Get Dashboard ────────────────────────────────────────────────────────────
 export const getDashboard = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.user?.sub;
+  const nim = req.user?.nim || String(req.user?.sub || '');
 
-  if (!userId) {
+  if (!nim) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
@@ -70,8 +69,8 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
   try {
     // 1. Profil mahasiswa
     const [studentRows] = await pool.execute<any[]>(
-      'SELECT student_id, nim, student_name, class, email FROM students WHERE student_id = ?',
-      [userId]
+      'SELECT nim, student_name, class, email FROM students WHERE nim = ?',
+      [nim]
     );
 
     if (!studentRows || studentRows.length === 0) {
@@ -81,7 +80,6 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
 
     const s = studentRows[0];
     const profile = {
-      student_id: s.student_id,
       nim: s.nim,
       name: s.student_name,
       class: s.class,
@@ -91,12 +89,12 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
       foto_url: null,
     };
 
-    // 2. Status pendaftaran KPPM (ambil yang terbaru, prioritaskan non-cancelled)
+    // 2. Status pendaftaran KPPM
     const [regRows] = await pool.execute<any[]>(
       `SELECT registration_id, status, company_name, internship_start, internship_end,
               submitted_at, approved_at, cancelled_at, rejected_at
        FROM internship_registrations
-       WHERE student_id = ?
+       WHERE nim = ?
        ORDER BY
          CASE status
            WHEN 'approved'         THEN 1
@@ -106,18 +104,15 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
          END,
          created_at DESC
        LIMIT 1`,
-      [userId]
+      [nim]
     );
 
     let kppmStatus;
-    // Jika tidak ada registrasi AKTIF (belum daftar sama sekali, atau semua sudah dibatalkan/ditolak),
-    // tampilkan status "Belum Mendaftar" — cancelled & rejected dianggap reset ke titik awal
     const hasActiveReg = regRows && regRows.length > 0
       && regRows[0].status !== 'cancelled'
       && regRows[0].status !== 'rejected';
 
     if (!hasActiveReg) {
-      // Belum pernah daftar
       kppmStatus = {
         registration_id: null,
         status: 'belum_daftar',
@@ -143,7 +138,6 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
       const isApproved = reg.status === 'approved';
       const isCancelled = reg.status === 'cancelled';
 
-      // Cek apakah mentor sudah menginput nilai (step 3)
       let hasMentorScore = false;
       if (isApproved) {
         const [scoreRows] = await pool.execute<any[]>(
@@ -153,7 +147,6 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
         hasMentorScore = scoreRows.length > 0;
       }
 
-      // Cek apakah dosen PA sudah menginput nilai (step 4)
       let hasLecturerScore = false;
       if (isApproved) {
         const [lsRows] = await pool.execute<any[]>(
@@ -163,11 +156,6 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
         hasLecturerScore = lsRows.length > 0;
       }
 
-      // current_step = step TERAKHIR yang selesai
-      // pending_approval  → current_step = 1
-      // approved          → current_step = 2
-      // approved + mentor → current_step = 3
-      // approved + mentor + dosen → current_step = 4
       const currentStep = hasLecturerScore ? 4
         : hasMentorScore  ? 3
         : isApproved      ? 2
@@ -185,15 +173,10 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
         cancelled_at:     reg.cancelled_at,
         current_step:     currentStep,
         steps: [
-          // Step 1: Pengisian Data
           { step: 1, label: 'Pengisian Data',               completed: !isCancelled,      date: reg.submitted_at },
-          // Step 2: Verifikasi Dosen
           { step: 2, label: 'Verifikasi Dosen',              completed: isApproved,        date: isApproved ? reg.approved_at : null },
-          // Step 3: Penilaian Pembimbing Lapangan
           { step: 3, label: 'Penilaian Pembimbing Lapangan', completed: hasMentorScore,    date: null },
-          // Step 4: Penilaian Pembimbing Akademik
           { step: 4, label: 'Penilaian Pembimbing Akademik', completed: hasLecturerScore,  date: null },
-          // Step 5: Upload Hasil KP
           { step: 5, label: 'Upload Hasil KP',              completed: false,              date: null },
         ],
         next_steps: [
@@ -222,9 +205,9 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
 
 // ─── Change Password ──────────────────────────────────────────────────────────
 export const changePassword = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.user?.sub;
+  const nim = req.user?.nim || String(req.user?.sub || '');
 
-  if (!userId) {
+  if (!nim) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
@@ -235,12 +218,10 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response): 
     res.status(400).json({ success: false, message: 'Password lama dan password baru wajib diisi' });
     return;
   }
-
   if (newPassword.length < 8) {
     res.status(400).json({ success: false, message: 'Password baru minimal 8 karakter' });
     return;
   }
-
   if (currentPassword === newPassword) {
     res.status(400).json({ success: false, message: 'Password baru tidak boleh sama dengan password lama' });
     return;
@@ -249,10 +230,9 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response): 
   try {
     const bcrypt = await import('bcryptjs');
 
-    // Ambil password saat ini dari database
     const [rows] = await pool.execute<any[]>(
-      'SELECT password FROM students WHERE student_id = ?',
-      [userId]
+      'SELECT password FROM students WHERE nim = ?',
+      [nim]
     );
 
     if (!rows || rows.length === 0) {
@@ -262,7 +242,6 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response): 
 
     const storedPassword = rows[0].password;
 
-    // Verifikasi password lama
     let isCurrentPasswordValid = false;
     if (storedPassword.startsWith('$2')) {
       isCurrentPasswordValid = await bcrypt.compare(currentPassword, storedPassword);
@@ -275,11 +254,10 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response): 
       return;
     }
 
-    // Hash password baru dan simpan
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     await pool.execute(
-      'UPDATE students SET password = ? WHERE student_id = ?',
-      [hashedNewPassword, userId]
+      'UPDATE students SET password = ? WHERE nim = ?',
+      [hashedNewPassword, nim]
     );
 
     res.status(200).json({ success: true, message: 'Password berhasil diubah' });
@@ -294,21 +272,19 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response): 
 };
 
 // ─── Get My Grades ────────────────────────────────────────────────────────────
-// Bobot indikator nilai mentor (%)
 const MENTOR_BOBOT: Record<string, number> = {
   attendance: 5, discipline: 5, commitment: 5, planning: 5,
   teamwork: 10, guidance: 5, report: 5, problem_solving: 5,
 };
 
 export const getMyGrades = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.user?.sub;
-  if (!userId) {
+  const nim = req.user?.nim || String(req.user?.sub || '');
+  if (!nim) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
 
   try {
-    // Ambil registrasi aktif yang sudah approved
     const [regRows] = await pool.execute<any[]>(
       `SELECT ir.registration_id, ir.company_name, ir.internship_position,
               ir.internship_start, ir.internship_end, ir.semester_code,
@@ -317,10 +293,10 @@ export const getMyGrades = async (req: AuthenticatedRequest, res: Response): Pro
               l.lecturer_name AS dosen_name
        FROM internship_registrations ir
        JOIN lecturers l ON ir.lecturer_id = l.lecturer_id
-       WHERE ir.student_id = ? AND ir.status = 'approved'
+       WHERE ir.nim = ? AND ir.status = 'approved'
        ORDER BY ir.approved_at DESC
        LIMIT 1`,
-      [userId]
+      [nim]
     );
 
     if (regRows.length === 0) {
@@ -334,7 +310,6 @@ export const getMyGrades = async (req: AuthenticatedRequest, res: Response): Pro
 
     const reg = regRows[0];
 
-    // Nilai Mentor (Pembimbing Lapangan)
     const [mentorRows] = await pool.execute<any[]>(
       'SELECT * FROM mentor_scores WHERE registration_id = ?',
       [reg.registration_id]
@@ -359,7 +334,6 @@ export const getMyGrades = async (req: AuthenticatedRequest, res: Response): Pro
       };
     }
 
-    // Nilai Dosen (Pembimbing Akademik)
     const [lecturerRows] = await pool.execute<any[]>(
       'SELECT * FROM lecturer_scores WHERE registration_id = ?',
       [reg.registration_id]

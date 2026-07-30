@@ -24,7 +24,7 @@ async function verifyMentorAccess(
   const [rows] = await pool.execute<any[]>(
     `SELECT ir.registration_id, ir.mentor_email, s.nim, s.student_name, ir.company_name, ir.semester_code
      FROM internship_registrations ir
-     JOIN students s ON ir.student_id = s.student_id
+     JOIN students s ON ir.nim = s.nim
      WHERE ir.registration_id = ? AND ir.mentor_email = ? AND ir.status = 'approved'`,
     [registrationId, mentorEmail]
   );
@@ -210,7 +210,7 @@ export const getAllMentorGrades = async (req: AuthenticatedRequest, res: Respons
       `SELECT ms.*, s.nim, s.student_name, ir.company_name, ir.semester_code, ir.internship_position
        FROM mentor_scores ms
        JOIN internship_registrations ir ON ms.registration_id = ir.registration_id
-       JOIN students s ON ir.student_id = s.student_id
+       JOIN students s ON ir.nim = s.nim
        WHERE ir.mentor_email = ?
        ORDER BY ms.updated_at DESC`,
       [mentorEmail]

@@ -63,9 +63,9 @@ export const submitRegistration = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
-  const userId = req.user?.sub;
+  const nim = req.user?.nim || String(req.user?.sub || '');
 
-  if (!userId) {
+  if (!nim) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
@@ -180,9 +180,9 @@ export const submitRegistration = async (
     const [existingRows] = await pool.execute<any[]>(
       `SELECT registration_id, status
        FROM internship_registrations
-       WHERE student_id = ? AND status NOT IN ('cancelled', 'rejected')
+       WHERE nim = ? AND status NOT IN ('cancelled', 'rejected')
        LIMIT 1`,
-      [userId]
+      [nim]
     );
 
     if (existingRows && existingRows.length > 0) {
@@ -213,7 +213,7 @@ export const submitRegistration = async (
     // Insert pendaftaran ke tabel internship_registrations
     const [result] = await pool.execute<any>(
       `INSERT INTO internship_registrations
-         (student_id, lecturer_id, semester_code, whatsapp_number,
+         (nim, lecturer_id, semester_code, whatsapp_number,
           company_name, internship_position,
           internship_start, internship_end,
           toss_cover_letter_file,
@@ -221,7 +221,7 @@ export const submitRegistration = async (
           status, submitted_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_approval', NOW())`,
       [
-        userId,
+        nim,
         assignedLecturerId,
         kode_semester.trim(),
         whatsapp.trim(),
@@ -278,9 +278,9 @@ export const getRegistrations = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
-  const userId = req.user?.sub;
+  const nim = req.user?.nim || String(req.user?.sub || '');
 
-  if (!userId) {
+  if (!nim) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
@@ -294,15 +294,15 @@ export const getRegistrations = async (
               internship_start, internship_end, status,
               submitted_at, approved_at, cancelled_at, created_at
        FROM internship_registrations
-       WHERE student_id = ?
+       WHERE nim = ?
        ORDER BY created_at DESC
        LIMIT ? OFFSET ?`,
-      [userId, limit, offset]
+      [nim, limit, offset]
     );
 
     const [countRows] = await pool.execute<any[]>(
-      'SELECT COUNT(*) AS total FROM internship_registrations WHERE student_id = ?',
-      [userId]
+      'SELECT COUNT(*) AS total FROM internship_registrations WHERE nim = ?',
+      [nim]
     );
 
     res.status(200).json({
@@ -329,10 +329,10 @@ export const getRegistrationDetail = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
-  const userId         = req.user?.sub;
+  const nim            = req.user?.nim || String(req.user?.sub || '');
   const registrationId = Number(req.params.id);
 
-  if (!userId) {
+  if (!nim) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
@@ -354,9 +354,9 @@ export const getRegistrationDetail = async (
               s.nim, s.student_name, s.class AS student_class, s.email AS student_email
        FROM internship_registrations r
        LEFT JOIN lecturers l ON l.lecturer_id = r.lecturer_id
-       LEFT JOIN students  s ON s.student_id  = r.student_id
-       WHERE r.registration_id = ? AND r.student_id = ?`,
-      [registrationId, userId]
+       LEFT JOIN students  s ON s.nim  = r.nim
+       WHERE r.registration_id = ? AND r.nim = ?`,
+      [registrationId, nim]
     );
 
     if (!rows || rows.length === 0) {
@@ -407,10 +407,10 @@ export const cancelRegistration = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
-  const userId         = req.user?.sub;
+  const nim            = req.user?.nim || String(req.user?.sub || '');
   const registrationId = Number(req.params.id);
 
-  if (!userId) {
+  if (!nim) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
@@ -425,8 +425,8 @@ export const cancelRegistration = async (
     const [rows] = await pool.execute<any[]>(
       `SELECT registration_id, status
        FROM internship_registrations
-       WHERE registration_id = ? AND student_id = ?`,
-      [registrationId, userId]
+       WHERE registration_id = ? AND nim = ?`,
+      [registrationId, nim]
     );
 
     if (!rows || rows.length === 0) {
@@ -467,8 +467,8 @@ export const cancelRegistration = async (
     await pool.execute(
       `UPDATE internship_registrations
        SET status = 'cancelled', cancelled_at = NOW()
-       WHERE registration_id = ? AND student_id = ?`,
-      [registrationId, userId]
+       WHERE registration_id = ? AND nim = ?`,
+      [registrationId, nim]
     );
 
     res.status(200).json({
@@ -535,7 +535,7 @@ export const getLecturerStudents = async (
          r.toss_cover_letter_file,
          IF(ls.registration_id IS NOT NULL, 1, 0) AS is_graded
        FROM internship_registrations r
-       JOIN students s ON s.student_id = r.student_id
+       JOIN students s ON s.nim = r.nim
        LEFT JOIN lecturer_scores ls ON ls.registration_id = r.registration_id
        WHERE r.lecturer_id = ?
        ORDER BY r.submitted_at DESC

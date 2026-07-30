@@ -10,7 +10,6 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface StudentRow {
-  student_id: number;
   nim: string;
   student_name: string;
   class: string;
@@ -39,7 +38,7 @@ export const studentLogin = async (req: Request, res: Response): Promise<void> =
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT student_id, nim, student_name, class, email, password, is_verified, password_changed FROM students WHERE nim = ?',
+      'SELECT nim, student_name, class, email, password, is_verified, password_changed FROM students WHERE nim = ?',
       [nim]
     );
 
@@ -50,7 +49,6 @@ export const studentLogin = async (req: Request, res: Response): Promise<void> =
 
     const student = rows[0] as StudentRow;
 
-    // Cek password — support bcrypt hash dan plain text (NIM default)
     let passwordValid = false;
     if (student.password.startsWith('$2')) {
       passwordValid = await bcrypt.compare(password, student.password);
@@ -67,7 +65,7 @@ export const studentLogin = async (req: Request, res: Response): Promise<void> =
     const passwordChanged = student.password_changed === 1;
 
     const payload = {
-      sub: student.student_id,
+      sub: student.nim,          // NIM sebagai identifier utama
       nim: student.nim,
       name: student.student_name,
       role: 'student',
@@ -83,7 +81,6 @@ export const studentLogin = async (req: Request, res: Response): Promise<void> =
       data: {
         token,
         user: {
-          id: student.student_id,
           nim: student.nim,
           name: student.student_name,
           class: student.class,
@@ -110,14 +107,14 @@ export const studentSendVerifyOtp = async (req: Request, res: Response): Promise
     return;
   }
 
-  let studentId: number;
+  let studentNim: string;
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     if (decoded.role !== 'student') {
       res.status(403).json({ success: false, message: 'Akses ditolak' });
       return;
     }
-    studentId = decoded.sub;
+    studentNim = decoded.nim;
   } catch {
     res.status(401).json({ success: false, message: 'Token tidak valid' });
     return;
@@ -129,7 +126,6 @@ export const studentSendVerifyOtp = async (req: Request, res: Response): Promise
     return;
   }
 
-  // Validasi domain email Telkom
   if (!email.endsWith('@student.telkomuniversity.ac.id')) {
     res.status(400).json({
       success: false,
@@ -141,26 +137,23 @@ export const studentSendVerifyOtp = async (req: Request, res: Response): Promise
   try {
     // Cek apakah email sudah dipakai oleh mahasiswa lain
     const [existing] = await pool.execute<any[]>(
-      'SELECT student_id FROM students WHERE email = ? AND student_id != ?',
-      [email, studentId]
+      'SELECT nim FROM students WHERE email = ? AND nim != ?',
+      [email, studentNim]
     );
     if (existing && existing.length > 0) {
       res.status(409).json({ success: false, message: 'Email ini sudah terdaftar oleh akun lain' });
       return;
     }
 
-    // Generate OTP 6 digit
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiredAt = new Date(Date.now() + 5 * 60 * 1000); // 5 menit
+    const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    // Hapus OTP lama, simpan yang baru
-    await pool.execute('DELETE FROM student_otps WHERE student_id = ?', [studentId]);
+    await pool.execute('DELETE FROM student_otps WHERE nim = ?', [studentNim]);
     await pool.execute(
-      'INSERT INTO student_otps (student_id, email_target, otp_code, expired_at) VALUES (?, ?, ?, ?)',
-      [studentId, email, otp, expiredAt]
+      'INSERT INTO student_otps (nim, email_target, otp_code, expired_at) VALUES (?, ?, ?, ?)',
+      [studentNim, email, otp, expiredAt]
     );
 
-    // Kirim OTP via email
     try {
       await sendStudentVerifyOtpEmail(email, otp);
       console.log(`[Auth Service] OTP verifikasi dikirim ke: ${email}`);
@@ -189,8 +182,7 @@ export const studentVerifyEmail = async (req: Request, res: Response): Promise<v
     return;
   }
 
-  let studentId: number;
-  let nim: string;
+  let studentNim: string;
   let name: string;
   let passwordChanged: boolean;
   try {
@@ -199,8 +191,7 @@ export const studentVerifyEmail = async (req: Request, res: Response): Promise<v
       res.status(403).json({ success: false, message: 'Akses ditolak' });
       return;
     }
-    studentId = decoded.sub;
-    nim = decoded.nim;
+    studentNim = decoded.nim;
     name = decoded.name;
     passwordChanged = decoded.password_changed === true;
   } catch {
@@ -215,13 +206,12 @@ export const studentVerifyEmail = async (req: Request, res: Response): Promise<v
   }
 
   try {
-    // Cari OTP yang valid
     const [rows] = await pool.execute<any[]>(
       `SELECT otp_id, email_target, otp_code, expired_at
        FROM student_otps
-       WHERE student_id = ? AND email_target = ? AND otp_code = ?
+       WHERE nim = ? AND email_target = ? AND otp_code = ?
        ORDER BY created_at DESC LIMIT 1`,
-      [studentId, email, otp]
+      [studentNim, email, otp]
     );
 
     if (!rows || rows.length === 0) {
@@ -236,17 +226,15 @@ export const studentVerifyEmail = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // Hapus OTP setelah dipakai, update email & is_verified di students
     await pool.execute('DELETE FROM student_otps WHERE otp_id = ?', [otpRow.otp_id]);
     await pool.execute(
-      'UPDATE students SET email = ?, is_verified = 1 WHERE student_id = ?',
-      [email, studentId]
+      'UPDATE students SET email = ?, is_verified = 1 WHERE nim = ?',
+      [email, studentNim]
     );
 
-    // Buat token baru dengan is_verified = true
     const newPayload = {
-      sub: studentId,
-      nim,
+      sub: studentNim,
+      nim: studentNim,
       name,
       role: 'student',
       is_verified: true,
@@ -260,8 +248,7 @@ export const studentVerifyEmail = async (req: Request, res: Response): Promise<v
       data: {
         token: newToken,
         user: {
-          id: studentId,
-          nim,
+          nim: studentNim,
           name,
           email,
           role: 'student',
@@ -276,7 +263,7 @@ export const studentVerifyEmail = async (req: Request, res: Response): Promise<v
   }
 };
 
-// ─── Student: Change Password (wajib setelah verifikasi) ─────────────────────
+// ─── Student: Change Password ─────────────────────────────────────────────────
 export const changeStudentPassword = async (req: Request, res: Response): Promise<void> => {
   const authHeader = req.headers['authorization'];
   const token = authHeader?.split(' ')[1];
@@ -286,10 +273,8 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
     return;
   }
 
-  let studentId: number;
-  let nim: string;
+  let studentNim: string;
   let name: string;
-  let email: string;
   let isVerified: boolean;
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
@@ -297,10 +282,8 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
       res.status(403).json({ success: false, message: 'Akses ditolak' });
       return;
     }
-    studentId = decoded.sub;
-    nim = decoded.nim;
+    studentNim = decoded.nim;
     name = decoded.name;
-    email = decoded.email || '';
     isVerified = decoded.is_verified === true;
   } catch {
     res.status(401).json({ success: false, message: 'Token tidak valid' });
@@ -319,8 +302,8 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT password FROM students WHERE student_id = ?',
-      [studentId]
+      'SELECT password, email FROM students WHERE nim = ?',
+      [studentNim]
     );
     if (!rows || rows.length === 0) {
       res.status(404).json({ success: false, message: 'Data mahasiswa tidak ditemukan' });
@@ -328,6 +311,8 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
     }
 
     const storedPassword = rows[0].password;
+    const freshEmail = rows[0].email;
+
     let isCurrentValid = false;
     if (storedPassword.startsWith('$2')) {
       isCurrentValid = await bcrypt.compare(currentPassword, storedPassword);
@@ -342,21 +327,13 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
 
     const hashedNew = await bcrypt.hash(newPassword, 10);
     await pool.execute(
-      'UPDATE students SET password = ?, password_changed = 1 WHERE student_id = ?',
-      [hashedNew, studentId]
+      'UPDATE students SET password = ?, password_changed = 1 WHERE nim = ?',
+      [hashedNew, studentNim]
     );
 
-    // Ambil email terbaru dari DB (mungkin baru diset saat verifikasi)
-    const [studentRows] = await pool.execute<any[]>(
-      'SELECT email FROM students WHERE student_id = ?',
-      [studentId]
-    );
-    const freshEmail = studentRows[0]?.email || email;
-
-    // Buat token baru dengan password_changed = true
     const newPayload = {
-      sub: studentId,
-      nim,
+      sub: studentNim,
+      nim: studentNim,
       name,
       role: 'student',
       is_verified: isVerified,
@@ -370,8 +347,7 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
       data: {
         token: newToken,
         user: {
-          id: studentId,
-          nim,
+          nim: studentNim,
           name,
           email: freshEmail,
           role: 'student',
@@ -471,7 +447,6 @@ export const mentorSendOtp = async (req: Request, res: Response): Promise<void> 
     }
 
     const registrationId = rows[0].registration_id;
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
 
