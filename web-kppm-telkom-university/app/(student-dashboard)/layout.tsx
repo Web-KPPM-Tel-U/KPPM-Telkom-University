@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { getUser, logout, getToken } from '@/lib/api';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import StudentOnboardingWizard from '@/components/StudentOnboardingWizard';
 
 // ─── Language Config ──────────────────────────────────────────────────────────
 
@@ -393,6 +394,9 @@ export default function StudentDashboardLayout({ children }: { children: React.R
         {/* ── Main Content ── */}
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+
+      {/* ── Onboarding Wizard (tampil otomatis jika belum verifikasi/ganti password) ── */}
+      <StudentOnboardingWizard />
     </div>
   );
 }
