@@ -1,4 +1,4 @@
-﻿import { Response } from 'express';
+import { Response } from 'express';
 import pool from '../config/db';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
@@ -22,7 +22,7 @@ async function verifyLecturerAccess(
   const [rows] = await pool.execute<any[]>(
     `SELECT ir.registration_id, s.nim, s.student_name, ir.company_name, ir.semester_code
      FROM internship_registrations ir
-     JOIN students s ON ir.student_id = s.student_id
+     JOIN students s ON ir.nim = s.nim
      WHERE ir.registration_id = ? AND ir.lecturer_id = ? AND ir.status = 'approved'`,
     [registrationId, lecturerId]
   );

@@ -31,14 +31,13 @@ export const getMentorDashboard = async (req: AuthenticatedRequest, res: Respons
          ir.mentor_name,
          ir.mentor_position,
          ir.mentor_phone,
-         s.student_id,
          s.nim,
          s.student_name,
          s.class AS student_class,
          s.email AS student_email,
          l.lecturer_name AS pembimbing_akademik
        FROM internship_registrations ir
-       JOIN students s ON ir.student_id = s.student_id
+       JOIN students s ON ir.nim = s.nim
        LEFT JOIN lecturers l ON ir.lecturer_id = l.lecturer_id
        WHERE ir.mentor_email = ? AND ir.status = 'approved'
        ORDER BY ir.approved_at DESC`,
@@ -67,7 +66,6 @@ export const getMentorDashboard = async (req: AuthenticatedRequest, res: Respons
       submitted_at: r.submitted_at,
       approved_at: r.approved_at,
       student: {
-        student_id: r.student_id,
         nim: r.nim,
         name: r.student_name,
         class: r.student_class,

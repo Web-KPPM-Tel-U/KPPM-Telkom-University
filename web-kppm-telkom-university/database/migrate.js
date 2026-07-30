@@ -39,8 +39,7 @@ const MIGRATIONS = [
   {
     description: 'Create students table',
     sql: `CREATE TABLE IF NOT EXISTS internship_management.students (
-      student_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
-      nim              VARCHAR(20)  NOT NULL UNIQUE,
+      nim              VARCHAR(20)  NOT NULL PRIMARY KEY,
       student_name     VARCHAR(100) NOT NULL,
       class            VARCHAR(20)  NOT NULL,
       email            VARCHAR(100) NULL DEFAULT NULL,
@@ -67,7 +66,7 @@ const MIGRATIONS = [
     description: 'Create internship_registrations table',
     sql: `CREATE TABLE IF NOT EXISTS internship_management.internship_registrations (
       registration_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
-      student_id          BIGINT NOT NULL,
+      nim                 VARCHAR(20)  NOT NULL,
       lecturer_id         BIGINT NOT NULL,
       semester_code       VARCHAR(20)  NOT NULL,
       whatsapp_number     VARCHAR(20)  NOT NULL,
@@ -87,7 +86,7 @@ const MIGRATIONS = [
       created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       CONSTRAINT fk_registration_student
-        FOREIGN KEY (student_id) REFERENCES internship_management.students(student_id) ON DELETE CASCADE,
+        FOREIGN KEY (nim) REFERENCES internship_management.students(nim) ON DELETE CASCADE,
       CONSTRAINT fk_registration_lecturer
         FOREIGN KEY (lecturer_id) REFERENCES internship_management.lecturers(lecturer_id)
     ) ENGINE=InnoDB;`,
@@ -189,33 +188,7 @@ const MIGRATIONS = [
           ENUM('pending_approval','approved','cancelled') DEFAULT 'pending_approval';`,
   },
 
-  // ── v3: Hapus constraint uq_student_semester ─────────────────────────────────
-  // uq_student_semester = UNIQUE KEY (student_id, semester_code)
-  // MySQL/MariaDB tidak mengizinkan DROP INDEX jika kolom dalam index tersebut
-  // juga dipakai oleh FOREIGN KEY. Urutan yang benar:
-  //   1. Drop FK yang memakai student_id (fk_registration_student)
-  //   2. Drop UNIQUE KEY uq_student_semester
-  //   3. Buat ulang FK fk_registration_student
-  {
-    description: 'Step 1/3 — Drop fk_registration_student (temp, to unblock unique key drop)',
-    sql: `ALTER TABLE internship_management.internship_registrations
-          DROP FOREIGN KEY fk_registration_student;`,
-    ignoreErrorCode: 1091,
-  },
-  {
-    description: 'Step 2/3 — Drop uq_student_semester (allows re-registration after cancellation)',
-    sql: `ALTER TABLE internship_management.internship_registrations
-          DROP INDEX uq_student_semester;`,
-    ignoreErrorCode: 1091,
-  },
-  {
-    description: 'Step 3/3 — Re-add fk_registration_student',
-    sql: `ALTER TABLE internship_management.internship_registrations
-          ADD CONSTRAINT fk_registration_student
-          FOREIGN KEY (student_id) REFERENCES internship_management.students(student_id)
-          ON DELETE CASCADE;`,
-    ignoreErrorCode: 1826, // ER_DUP_CONSTRAINT_NAME — FK sudah ada (jika step 1 di-skip)
-  },
+  // (v3 block removed as the table is now created correctly from scratch without uq_student_semester)
 
   // ── v4: Tambah kolom email ke tabel lecturers (untuk login dosen pakai email) ─
   {
@@ -263,13 +236,13 @@ const MIGRATIONS = [
     description: 'Create student_otps table',
     sql: `CREATE TABLE IF NOT EXISTS internship_management.student_otps (
       otp_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
-      student_id   BIGINT NOT NULL,
+      nim          VARCHAR(20) NOT NULL,
       email_target VARCHAR(100) NOT NULL,
       otp_code     VARCHAR(6) NOT NULL,
       expired_at   DATETIME NOT NULL,
       created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT fk_student_otp
-        FOREIGN KEY (student_id) REFERENCES internship_management.students(student_id) ON DELETE CASCADE
+        FOREIGN KEY (nim) REFERENCES internship_management.students(nim) ON DELETE CASCADE
     ) ENGINE=InnoDB;`,
   },
 
@@ -295,9 +268,15 @@ const MIGRATIONS = [
 const SEEDS = `
 INSERT IGNORE INTO internship_management.students
   (nim, student_name, class, email, is_verified, password_changed, password) VALUES
-  ('12345678', 'Budi Santoso', 'IF-45-01', NULL, 0, 0, '12345678'),
-  ('23456789', 'Siti Rahayu',  'IF-45-02', NULL, 0, 0, '23456789'),
-  ('34567890', 'Ahmad Fauzan', 'SI-45-01', NULL, 0, 0, '34567890');
+  ('1301213001', 'Reynaldy Pratama', 'IF-46-01', NULL, 0, 0, '1301213001'),
+  ('1301213002', 'Budi Santoso',     'IF-46-02', NULL, 0, 0, '1301213002'),
+  ('1301213003', 'Siti Rahayu',      'SI-46-01', NULL, 0, 0, '1301213003');
+
+INSERT IGNORE INTO internship_management.lecturers
+  (nip, lecturer_name, email, password) VALUES
+  ('198001012005011001', 'Dr. Bambang Supriyanto, M.T.', '198001012005011001@telkomuniversity.ac.id', 'password123'),
+  ('198205152009121002', 'Dra. Siti Aminah, M.Kom.', '198205152009121002@telkomuniversity.ac.id', 'password123'),
+  ('197803232003121003', 'Ir. Hendra Kusuma, M.T., Ph.D.', '197803232003121003@telkomuniversity.ac.id', 'password123');
 `;
 
 // ─── Runner ───────────────────────────────────────────────────────────────────

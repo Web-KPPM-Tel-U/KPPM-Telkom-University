@@ -5,13 +5,13 @@ COLLATE utf8mb4_unicode_ci;
 USE internship_management;
 
 CREATE TABLE IF NOT EXISTS students (
-    student_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-
-    nim VARCHAR(20) NOT NULL UNIQUE,
+    nim VARCHAR(20) NOT NULL PRIMARY KEY,
     student_name VARCHAR(100) NOT NULL,
     class VARCHAR(20) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(100) NULL DEFAULT NULL,
     password VARCHAR(255) NOT NULL,
+    is_verified TINYINT(1) NOT NULL DEFAULT 0,
+    password_changed TINYINT(1) NOT NULL DEFAULT 0,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS lecturers (
 CREATE TABLE IF NOT EXISTS internship_registrations (
     registration_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    student_id BIGINT NOT NULL,
+    nim VARCHAR(20) NOT NULL,
     lecturer_id BIGINT NOT NULL,
 
     semester_code VARCHAR(20) NOT NULL,
@@ -71,8 +71,8 @@ CREATE TABLE IF NOT EXISTS internship_registrations (
     -- (mengecualikan pengajuan yang sudah berstatus 'cancelled')
 
     CONSTRAINT fk_registration_student
-        FOREIGN KEY (student_id)
-        REFERENCES students(student_id)
+        FOREIGN KEY (nim)
+        REFERENCES students(nim)
         ON DELETE CASCADE,
 
     CONSTRAINT fk_registration_lecturer
@@ -185,10 +185,10 @@ CREATE TABLE IF NOT EXISTS mentor_scores (
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- Mahasiswa
-INSERT IGNORE INTO students (nim, student_name, class, email, password) VALUES
-    ('12345678', 'Budi Santoso',  'IF-45-01', 'budi.santoso@student.telkomuniversity.ac.id',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy'),
-    ('23456789', 'Siti Rahayu',   'IF-45-02', 'siti.rahayu@student.telkomuniversity.ac.id',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy'),
-    ('34567890', 'Ahmad Fauzan',  'SI-45-01', 'ahmad.fauzan@student.telkomuniversity.ac.id',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy');
+INSERT IGNORE INTO students (nim, student_name, class, email, is_verified, password_changed, password) VALUES
+    ('12345678', 'Budi Santoso',  'IF-45-01', NULL, 0, 0, '12345678'),
+    ('23456789', 'Siti Rahayu',   'IF-45-02', NULL, 0, 0, '23456789'),
+    ('34567890', 'Ahmad Fauzan',  'SI-45-01', NULL, 0, 0, '34567890');
 
 -- Dosen (Ditunda karena masih fokus service mahasiswa)
 -- INSERT IGNORE INTO lecturers (nip, lecturer_name, password) VALUES ...

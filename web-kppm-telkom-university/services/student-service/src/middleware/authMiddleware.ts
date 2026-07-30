@@ -5,11 +5,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'kppm-telkom-secret-dev-2024';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
-    sub: number;          // student_id (mahasiswa) atau lecturer_id (dosen)
-    nim?: string;         // NIM mahasiswa (hanya ada di JWT mahasiswa)
-    nip?: string;         // NIP dosen (hanya ada di JWT dosen)
+    sub: string | number;  // nim (mahasiswa, string) atau lecturer_id/registration_id (number)
+    nim?: string;          // NIM mahasiswa (hanya ada di JWT mahasiswa)
+    nip?: string;          // NIP dosen (hanya ada di JWT dosen)
     name: string;
-    role: string;         // 'student' | 'lecturer' | 'mentor'
+    role: string;          // 'student' | 'lecturer' | 'mentor'
   };
 }
 
