@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import {
   studentLogin,
+  studentSendVerifyOtp,
+  studentVerifyEmail,
+  changeStudentPassword,
   lecturerLogin,
   changeLecturerPassword,
   mentorSendOtp,
@@ -10,18 +13,21 @@ import {
 
 const router = Router();
 
-// Mahasiswa
+// ─── Mahasiswa ────────────────────────────────────────────────────────────────
 router.post('/student/login', studentLogin);
+router.post('/student/send-verify-otp', studentSendVerifyOtp);
+router.post('/student/verify-email', studentVerifyEmail);
+router.patch('/student/change-password', changeStudentPassword);
 
-// Dosen
+// ─── Dosen ────────────────────────────────────────────────────────────────────
 router.post('/lecturer/login', lecturerLogin);
 router.patch('/lecturer/change-password', changeLecturerPassword);
 
-// Mentor
+// ─── Mentor ───────────────────────────────────────────────────────────────────
 router.post('/mentor/send-otp', mentorSendOtp);
 router.post('/mentor/verify-otp', mentorVerifyOtp);
 
-// Logout (semua role)
+// ─── Logout (semua role) ──────────────────────────────────────────────────────
 router.post('/logout', logout);
 
 export default router;

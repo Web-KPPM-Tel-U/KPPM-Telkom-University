@@ -18,8 +18,10 @@ export interface StudentUser {
   nim: string;
   name: string;
   class: string;
-  email: string;
+  email: string | null;
   role: 'student';
+  is_verified: boolean;
+  password_changed: boolean;
 }
 
 export interface LecturerUser {
@@ -83,16 +85,16 @@ const authHeaders = (): HeadersInit => ({
 // ─── Auth API ─────────────────────────────────────────────────────────────────
 
 /**
- * Login Mahasiswa dengan Email dan Password
+ * Login Mahasiswa dengan NIM dan Password
  */
 export const loginMahasiswa = async (
-  email: string,
+  nim: string,
   password: string
 ): Promise<ApiResponse<LoginResponse>> => {
   const res = await fetch(`${API_BASE_URL}/auth/student/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ nim, password }),
   });
   return res.json();
 };
@@ -176,11 +178,40 @@ export const getStudentDashboard = async (): Promise<ApiResponse<unknown>> => {
 export const changeStudentPassword = async (
   currentPassword: string,
   newPassword: string
-): Promise<ApiResponse<null>> => {
-  const res = await fetch(`${API_BASE_URL}/student/change-password`, {
+): Promise<ApiResponse<{ token: string; user: StudentUser }>> => {
+  const res = await fetch(`${API_BASE_URL}/auth/student/change-password`, {
     method: 'PATCH',
     headers: authHeaders(),
     body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  return res.json();
+};
+
+/**
+ * Kirim OTP ke email @student.telkomuniversity.ac.id untuk verifikasi akun mahasiswa
+ */
+export const sendStudentVerifyOtp = async (
+  email: string
+): Promise<ApiResponse<null>> => {
+  const res = await fetch(`${API_BASE_URL}/auth/student/send-verify-otp`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ email }),
+  });
+  return res.json();
+};
+
+/**
+ * Verifikasi OTP email mahasiswa, simpan email ke database
+ */
+export const verifyStudentEmail = async (
+  email: string,
+  otp: string
+): Promise<ApiResponse<{ token: string; user: StudentUser }>> => {
+  const res = await fetch(`${API_BASE_URL}/auth/student/verify-email`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ email, otp }),
   });
   return res.json();
 };

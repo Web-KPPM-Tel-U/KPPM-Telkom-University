@@ -39,14 +39,16 @@ const MIGRATIONS = [
   {
     description: 'Create students table',
     sql: `CREATE TABLE IF NOT EXISTS internship_management.students (
-      student_id   BIGINT AUTO_INCREMENT PRIMARY KEY,
-      nim          VARCHAR(20)  NOT NULL UNIQUE,
-      student_name VARCHAR(100) NOT NULL,
-      class        VARCHAR(20)  NOT NULL,
-      email        VARCHAR(100) NOT NULL UNIQUE,
-      password     VARCHAR(255) NOT NULL,
-      created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      student_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+      nim              VARCHAR(20)  NOT NULL UNIQUE,
+      student_name     VARCHAR(100) NOT NULL,
+      class            VARCHAR(20)  NOT NULL,
+      email            VARCHAR(100) NULL DEFAULT NULL,
+      password         VARCHAR(255) NOT NULL,
+      is_verified      TINYINT(1)   NOT NULL DEFAULT 0,
+      password_changed TINYINT(1)   NOT NULL DEFAULT 0,
+      created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB;`,
   },
   {
@@ -256,6 +258,21 @@ const MIGRATIONS = [
     ignoreErrorCode: 1061, // ER_DUP_KEYNAME — index sudah ada
   },
 
+  // ── v5b: Tabel student_otps untuk verifikasi email mahasiswa ───────────────────
+  {
+    description: 'Create student_otps table',
+    sql: `CREATE TABLE IF NOT EXISTS internship_management.student_otps (
+      otp_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+      student_id   BIGINT NOT NULL,
+      email_target VARCHAR(100) NOT NULL,
+      otp_code     VARCHAR(6) NOT NULL,
+      expired_at   DATETIME NOT NULL,
+      created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_student_otp
+        FOREIGN KEY (student_id) REFERENCES internship_management.students(student_id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;`,
+  },
+
   // ── v6: Tambah status 'rejected' — dosen tolak pengajuan ─────────────────────
   {
     description: 'Add rejected status to internship_registrations ENUM',
@@ -273,18 +290,14 @@ const MIGRATIONS = [
 ];
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
+// Password default = NIM (plain text). Saat mahasiswa ganti password,
+// akan di-hash dengan bcrypt dan password_changed di-set ke 1.
 const SEEDS = `
 INSERT IGNORE INTO internship_management.students
-  (nim, student_name, class, email, password) VALUES
-  ('12345678','Budi Santoso', 'IF-45-01',
-   'budi.santoso@student.telkomuniversity.ac.id',
-   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy'),
-  ('23456789','Siti Rahayu',  'IF-45-02',
-   'siti.rahayu@student.telkomuniversity.ac.id',
-   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy'),
-  ('34567890','Ahmad Fauzan', 'SI-45-01',
-   'ahmad.fauzan@student.telkomuniversity.ac.id',
-   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy');
+  (nim, student_name, class, email, is_verified, password_changed, password) VALUES
+  ('12345678', 'Budi Santoso', 'IF-45-01', NULL, 0, 0, '12345678'),
+  ('23456789', 'Siti Rahayu',  'IF-45-02', NULL, 0, 0, '23456789'),
+  ('34567890', 'Ahmad Fauzan', 'SI-45-01', NULL, 0, 0, '34567890');
 `;
 
 // ─── Runner ───────────────────────────────────────────────────────────────────

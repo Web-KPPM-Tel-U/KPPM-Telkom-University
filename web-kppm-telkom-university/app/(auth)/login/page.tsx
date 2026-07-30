@@ -66,7 +66,7 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<TabRole>('mahasiswa');
 
   // ── Mahasiswa state
-  const [mahasiswaEmail, setMahasiswaEmail] = useState('');
+  const [mahasiswaNim, setMahasiswaNim] = useState('');
   const [mahasiswaPassword, setMahasiswaPassword] = useState('');
   const [showMahasiswaPassword, setShowMahasiswaPassword] = useState(false);
 
@@ -104,17 +104,17 @@ export default function LoginPage() {
   const handleMahasiswaLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
-    if (!mahasiswaEmail.trim() || !mahasiswaPassword.trim()) { setError('Email dan password wajib diisi'); return; }
+    if (!mahasiswaNim.trim() || !mahasiswaPassword.trim()) { setError('NIM dan password wajib diisi'); return; }
     setIsLoading(true);
     try {
-      const res = await loginMahasiswa(mahasiswaEmail.trim(), mahasiswaPassword);
+      const res = await loginMahasiswa(mahasiswaNim.trim(), mahasiswaPassword);
       if (res.success && res.data) {
         setToken(res.data.token);
         setUser(res.data.user);
         setSuccess('Login berhasil. Mengalihkan...');
         setTimeout(() => router.push('/dashboard'), 700);
       } else {
-        setError(res.message || 'Email atau password salah.');
+        setError(res.message || 'NIM atau password salah.');
       }
     } catch {
       setError('Tidak dapat terhubung ke server. Pastikan backend berjalan.');
@@ -257,13 +257,14 @@ export default function LoginPage() {
             {activeTab === 'mahasiswa' && (
               <form id="form-mahasiswa" onSubmit={handleMahasiswaLogin} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Mahasiswa</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">NIM (Nomor Induk Mahasiswa)</label>
                   <input
-                    id="input-mahasiswa-email"
-                    type="email"
-                    value={mahasiswaEmail}
-                    onChange={(e) => setMahasiswaEmail(e.target.value)}
-                    placeholder="email@student.telkomuniversity.ac.id"
+                    id="input-mahasiswa-nim"
+                    type="text"
+                    value={mahasiswaNim}
+                    onChange={(e) => setMahasiswaNim(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Masukkan NIM Anda"
+                    maxLength={20}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
                   />
                 </div>
