@@ -77,6 +77,7 @@ const MIGRATIONS = [
       internship_end      DATE NOT NULL,
       toss_cover_letter_file VARCHAR(255) NOT NULL,
       mentor_name         VARCHAR(100) NOT NULL,
+      mentor_nip          VARCHAR(30)  NOT NULL DEFAULT '',
       mentor_position     VARCHAR(100) NOT NULL,
       mentor_email        VARCHAR(100) NOT NULL,
       mentor_phone        VARCHAR(20)  NOT NULL,
@@ -202,6 +203,14 @@ const MIGRATIONS = [
       CONSTRAINT fk_lecturer_otp
         FOREIGN KEY (nip) REFERENCES internship_management.lecturers(nip) ON DELETE CASCADE
     ) ENGINE=InnoDB;`,
+  },
+
+  // ── v4: Add mentor_nip column to internship_registrations ────────────────────
+  {
+    description: 'Add mentor_nip column to internship_registrations (if missing)',
+    sql: `ALTER TABLE internship_management.internship_registrations
+          ADD COLUMN mentor_nip VARCHAR(30) NOT NULL DEFAULT '' AFTER mentor_name;`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME — kolom sudah ada
   },
 
 ];

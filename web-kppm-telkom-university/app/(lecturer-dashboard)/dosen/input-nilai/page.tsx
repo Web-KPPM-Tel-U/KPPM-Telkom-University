@@ -717,12 +717,7 @@ export default function DosenInputNilaiPage() {
         <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Form Penilaian Pembimbing Akademik (PA) — KPPM Telkom University</p>
       </div>
 
-      {students.length > 0 && approvedStudents.length < students.length && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-2xl px-4 py-3 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
-          <span>i</span>
-          <span>Hanya mahasiswa dengan status <strong>Disetujui</strong> yang dapat dinilai. {students.length - approvedStudents.length} mahasiswa lainnya masih menunggu persetujuan.</span>
-        </div>
-      )}
+
 
       {approvedStudents.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-10 text-center">
