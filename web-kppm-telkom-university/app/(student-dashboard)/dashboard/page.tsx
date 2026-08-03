@@ -64,6 +64,88 @@ const LoadingSpinner = () => (
   </div>
 );
 
+const AcademicIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+  </svg>
+);
+
+// ─── Helpers ────────────────────────────────────────────────────────────────────
+
+type GreetingPeriod = 'pagi' | 'siang' | 'sore' | 'malam';
+
+function getGreetingInfo(hour: number): { text: string; period: GreetingPeriod } {
+  if (hour < 11) return { text: 'Selamat Pagi',  period: 'pagi'  };
+  if (hour < 15) return { text: 'Selamat Siang', period: 'siang' };
+  if (hour < 18) return { text: 'Selamat Sore',  period: 'sore'  };
+  return          { text: 'Selamat Malam', period: 'malam' };
+}
+
+function GreetingIcon({ period }: { period: GreetingPeriod }) {
+  if (period === 'pagi') {
+    return (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="4.5" fill="rgba(255,255,255,0.92)" stroke="white" strokeWidth="0.5"/>
+        <line x1="12" y1="2"    x2="12" y2="4.5"   stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="12" y1="19.5" x2="12" y2="22"    stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="2"  y1="12"   x2="4.5"  y2="12"  stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="19.5" y1="12" x2="22"   y2="12"  stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="4.93" y1="4.93"  x2="6.7"   y2="6.7"   stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="17.3" y1="17.3"  x2="19.07" y2="19.07" stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="19.07" y1="4.93" x2="17.3"  y2="6.7"   stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="6.7"   y1="17.3" x2="4.93"  y2="19.07" stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+  if (period === 'siang') {
+    return (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="5.5" fill="rgba(255,255,255,0.95)" stroke="white" strokeWidth="0.5"/>
+        <line x1="12" y1="1.5" x2="12" y2="4"     stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="12" y1="20"  x2="12" y2="22.5"  stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="1.5" y1="12" x2="4"   y2="12"   stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="20"  y1="12" x2="22.5" y2="12"  stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="4.22" y1="4.22" x2="6"    y2="6"     stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="18"   y1="18"   x2="19.78" y2="19.78" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="19.78" y1="4.22" x2="18"  y2="6"     stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="6"     y1="18"   x2="4.22" y2="19.78" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+  if (period === 'sore') {
+    return (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="2" y1="16" x2="22" y2="16" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M6 16 A6 6 0 0 1 18 16" fill="rgba(255,255,255,0.7)"/>
+        <path d="M6 16 A6 6 0 0 1 18 16" stroke="white" strokeWidth="1.2" fill="none"/>
+        <line x1="12"   y1="4"   x2="12"  y2="7"   stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="4.93" y1="7.5" x2="6.7" y2="9.2" stroke="rgba(255,255,255,0.75)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="19.07" y1="7.5" x2="17.3" y2="9.2" stroke="rgba(255,255,255,0.75)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="2"    y1="12" x2="4.5" y2="12" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="19.5" y1="12" x2="22"  y2="12" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+        fill="rgba(255,255,255,0.85)"
+        stroke="white"
+        strokeWidth="1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function getCurrentDate(): string {
+  return new Date().toLocaleDateString('id-ID', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+}
+
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -129,26 +211,22 @@ const ProgressStepper = ({ steps, currentStep }: { steps: KppmStep[]; currentSte
   );
 };
 
-// ─── Status Card ──────────────────────────────────────────────────────────────
-
-const StatusCard = ({ label, value, color }: { label: string; value: string; color: string }) => (
-  <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
-    <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">{label}</p>
-    <p className={`text-2xl font-bold ${color}`}>{value}</p>
-  </div>
-);
-
 // ─── Main Dashboard Page ──────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
+  const [greeting, setGreeting] = useState<{ text: string; period: GreetingPeriod }>({ text: 'Selamat Datang', period: 'pagi' });
+  const [currentDate, setCurrentDate] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<{title: string; message: string} | null>(null);
 
   useEffect(() => {
     const token = getToken();
     if (!token) { router.replace('/login'); return; }
+    const hour = new Date().getHours();
+    setGreeting(getGreetingInfo(hour));
+    setCurrentDate(getCurrentDate());
 
     const fetchDashboard = async () => {
       try {
@@ -200,37 +278,58 @@ export default function DashboardPage() {
 
   const profile = data?.profile;
   const kppm = data?.kppm_status;
+  const initials = profile?.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'MH';
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      {/* ── Page Header ── */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-          Selamat Datang, {profile?.name}
-        </h1>
-        <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">
-          NIM: {profile?.nim} &middot; Kelas: {profile?.class}
-        </p>
-      </div>
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+      {/* ── Hero Banner ── */}
+      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-3xl p-6 md:p-8 text-white overflow-hidden shadow-xl">
+        {/* Decorative circles */}
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full" />
+        <div className="absolute top-8 -right-4 w-32 h-32 bg-white/5 rounded-full" />
+        <div className="absolute -bottom-8 right-16 w-24 h-24 bg-white/5 rounded-full" />
+        <div className="absolute bottom-0 left-0 w-full h-px bg-white/10" />
 
-      {/* ── Status Card ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <StatusCard
-          label="Status KPPM"
-          value={{
-            belum_daftar:     'Belum Mendaftar',
-            pending_approval: 'Menunggu Verifikasi',
-            approved:         'Disetujui',
-            cancelled:        'Dibatalkan',
-          }[kppm?.status ?? 'belum_daftar'] ?? 'Belum Mendaftar'}
-          color={{
-            belum_daftar:     'text-gray-700 dark:text-slate-300',
-            pending_approval: 'text-yellow-600 dark:text-yellow-400',
-            approved:         'text-green-600 dark:text-green-400',
-            cancelled:        'text-gray-400 dark:text-slate-500',
-          }[kppm?.status ?? 'belum_daftar'] ?? 'text-gray-700 dark:text-slate-300'}
-        />
-        <StatusCard label="Program Studi" value={profile?.prodi || '-'} color="text-[#CC0000] dark:text-red-400" />
+        <div className="relative flex flex-col md:flex-row items-start md:items-center gap-5">
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-2xl md:text-3xl font-bold shadow-lg">
+              {initials}
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white shadow" title="Online" />
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <GreetingIcon period={greeting.period} />
+              <span className="text-red-200 text-sm font-medium">{greeting.text}</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight truncate">
+              {profile?.name || 'Mahasiswa'}
+            </h1>
+            <p className="text-red-100/80 text-sm mt-1.5 flex items-center gap-2.5 flex-wrap">
+              <span className="flex items-center gap-1.5 font-semibold"><AcademicIcon /><span>NIM {profile?.nim || '-'}</span></span>
+              <span className="w-px h-3.5 bg-red-200/30" />
+              <span>Kelas: <strong className="text-white font-semibold">{profile?.class || '-'}</strong></span>
+              <span className="w-px h-3.5 bg-red-200/30" />
+              <span className="text-white font-medium">{profile?.prodi || 'Program Studi'}</span>
+            </p>
+          </div>
+
+          {/* Date badge */}
+          <div className="flex-shrink-0 hidden md:block">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl px-4 py-3 text-center">
+              <p className="text-red-200 text-[10px] font-semibold uppercase tracking-widest mb-0.5">Hari ini</p>
+              <p className="text-white text-xs font-bold leading-snug max-w-[140px]">{currentDate}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="relative mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
+          <p className="text-red-100/60 text-xs">Portal Mahasiswa — Sistem Manajemen KPPM Telkom University</p>
+        </div>
       </div>
 
       {/* ── Main Grid ── */}

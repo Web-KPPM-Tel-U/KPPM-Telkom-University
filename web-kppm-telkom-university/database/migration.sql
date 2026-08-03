@@ -19,11 +19,12 @@ CREATE TABLE IF NOT EXISTS students (
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS lecturers (
-    lecturer_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-
-    nip VARCHAR(30) NOT NULL UNIQUE,
+    nip VARCHAR(30) NOT NULL PRIMARY KEY,
     lecturer_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NULL DEFAULT NULL,
     password VARCHAR(255) NOT NULL,
+    is_verified TINYINT(1) NOT NULL DEFAULT 0,
+    password_changed TINYINT(1) NOT NULL DEFAULT 0,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -34,7 +35,7 @@ CREATE TABLE IF NOT EXISTS internship_registrations (
     registration_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
     nim VARCHAR(20) NOT NULL,
-    lecturer_id BIGINT NOT NULL,
+    lecturer_nip VARCHAR(30) NOT NULL,
 
     semester_code VARCHAR(20) NOT NULL,
 
@@ -56,19 +57,21 @@ CREATE TABLE IF NOT EXISTS internship_registrations (
     status ENUM(
         'pending_approval',
         'approved',
-        'cancelled'
+        'cancelled',
+        'rejected'
     ) DEFAULT 'pending_approval',
 
     submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     approved_at  DATETIME NULL,
     cancelled_at DATETIME NULL,
+    rejected_at  DATETIME NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
 
     -- Catatan: validasi duplikat pendaftaran per semester ditangani di level aplikasi
-    -- (mengecualikan pengajuan yang sudah berstatus 'cancelled')
+    -- (mengecualikan pengajuan yang sudah berstatus 'cancelled' atau 'rejected')
 
     CONSTRAINT fk_registration_student
         FOREIGN KEY (nim)
@@ -76,8 +79,8 @@ CREATE TABLE IF NOT EXISTS internship_registrations (
         ON DELETE CASCADE,
 
     CONSTRAINT fk_registration_lecturer
-        FOREIGN KEY (lecturer_id)
-        REFERENCES lecturers(lecturer_id)
+        FOREIGN KEY (lecturer_nip)
+        REFERENCES lecturers(nip)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS internship_documents (
@@ -184,12 +187,42 @@ CREATE TABLE IF NOT EXISTS mentor_scores (
 -- Hash: bcrypt cost 10
 -- ─────────────────────────────────────────────────────────────────────────────
 
+-- Lecturer OTPs
+CREATE TABLE IF NOT EXISTS student_otps (
+    otp_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nim          VARCHAR(20) NOT NULL,
+    email_target VARCHAR(100) NOT NULL,
+    otp_code     VARCHAR(6) NOT NULL,
+    expired_at   DATETIME NOT NULL,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_student_otp
+        FOREIGN KEY (nim) REFERENCES students(nim) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS lecturer_otps (
+    otp_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nip          VARCHAR(30) NOT NULL,
+    email_target VARCHAR(100) NOT NULL,
+    otp_code     VARCHAR(6) NOT NULL,
+    expired_at   DATETIME NOT NULL,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_lecturer_otp
+        FOREIGN KEY (nip) REFERENCES lecturers(nip) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SEED DATA (menggunakan INSERT IGNORE — aman dijalankan berulang kali)
+-- Password semua akun: password = NIM/NIP masing-masing (plain text, akan di-hash saat ganti password)
+-- ─────────────────────────────────────────────────────────────────────────────
+
 -- Mahasiswa
 INSERT IGNORE INTO students (nim, student_name, class, email, is_verified, password_changed, password) VALUES
-    ('12345678', 'Budi Santoso',  'IF-45-01', NULL, 0, 0, '12345678'),
-    ('23456789', 'Siti Rahayu',   'IF-45-02', NULL, 0, 0, '23456789'),
-    ('34567890', 'Ahmad Fauzan',  'SI-45-01', NULL, 0, 0, '34567890');
+    ('1301213001', 'Reynaldy Pratama', 'IF-46-01', NULL, 0, 0, '1301213001'),
+    ('1301213002', 'Budi Santoso',     'IF-46-02', NULL, 0, 0, '1301213002'),
+    ('1301213003', 'Siti Rahayu',      'SI-46-01', NULL, 0, 0, '1301213003');
 
--- Dosen (Ditunda karena masih fokus service mahasiswa)
--- INSERT IGNORE INTO lecturers (nip, lecturer_name, password) VALUES ...
-
+-- Dosen (password default = NIP)
+INSERT IGNORE INTO lecturers (nip, lecturer_name, email, password, is_verified, password_changed) VALUES
+    ('198001012005011001', 'Dr. Bambang Supriyanto, M.T.', NULL, '198001012005011001', 0, 0),
+    ('198205152009121002', 'Dra. Siti Aminah, M.Kom.',     NULL, '198205152009121002', 0, 0),
+    ('197803232003121003', 'Ir. Hendra Kusuma, M.T., Ph.D.', NULL, '197803232003121003', 0, 0);

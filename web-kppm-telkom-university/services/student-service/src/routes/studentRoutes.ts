@@ -3,7 +3,7 @@ import { getProfile, getDashboard, changePassword, getMyGrades } from '../contro
 import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload } from '../controllers/kppmController';
 import { getMentorDashboard } from '../controllers/mentorController';
 import { submitMentorGrade, getMentorGrade, getAllMentorGrades } from '../controllers/mentorGradesController';
-import { submitLecturerGrade, getLecturerGrade } from '../controllers/lecturerGradesController';
+import { submitLecturerGrade, getLecturerGrade, getLecturerStudentFullGrades } from '../controllers/lecturerGradesController';
 import { verifyToken } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -33,6 +33,7 @@ router.get('/lecturer/students',                        verifyToken, getLecturer
 router.patch('/lecturer/registrations/:id/status',      verifyToken, updateRegistrationStatus);
 router.get('/lecturer/grades/:registration_id',          verifyToken, getLecturerGrade);
 router.post('/lecturer/grades/:registration_id',         verifyToken, submitLecturerGrade);
+router.get('/lecturer/student-grades/:registration_id',  verifyToken, getLecturerStudentFullGrades);
 
 // ─── Mentor Routes ───────────────────────────────────────────────────────────
 // GET  /student/mentor/dashboard           — data mahasiswa yang dibimbing

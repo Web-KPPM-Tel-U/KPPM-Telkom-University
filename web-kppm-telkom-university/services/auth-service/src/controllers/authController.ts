@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { Request, Response } from 'express';
 import pool from '../config/db';
-import { sendOtpEmail, sendStudentVerifyOtpEmail } from '../services/emailService';
+import { sendOtpEmail, sendStudentVerifyOtpEmail, sendLecturerVerifyOtpEmail } from '../services/emailService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'kppm-telkom-secret-dev-2024';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
@@ -20,11 +20,12 @@ interface StudentRow {
 }
 
 interface LecturerRow {
-  lecturer_id: number;
   nip: string;
   lecturer_name: string;
-  email: string;
+  email: string | null;
   password: string;
+  is_verified: number;
+  password_changed: number;
 }
 
 // ─── Student Login (menggunakan NIM) ─────────────────────────────────────────
@@ -68,6 +69,7 @@ export const studentLogin = async (req: Request, res: Response): Promise<void> =
       sub: student.nim,          // NIM sebagai identifier utama
       nim: student.nim,
       name: student.student_name,
+      class: student.class,
       role: 'student',
       is_verified: isVerified,
       password_changed: passwordChanged,
@@ -184,6 +186,7 @@ export const studentVerifyEmail = async (req: Request, res: Response): Promise<v
 
   let studentNim: string;
   let name: string;
+  let studentClass: string;
   let passwordChanged: boolean;
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
@@ -193,6 +196,7 @@ export const studentVerifyEmail = async (req: Request, res: Response): Promise<v
     }
     studentNim = decoded.nim;
     name = decoded.name;
+    studentClass = decoded.class;
     passwordChanged = decoded.password_changed === true;
   } catch {
     res.status(401).json({ success: false, message: 'Token tidak valid' });
@@ -236,6 +240,7 @@ export const studentVerifyEmail = async (req: Request, res: Response): Promise<v
       sub: studentNim,
       nim: studentNim,
       name,
+      class: studentClass,
       role: 'student',
       is_verified: true,
       password_changed: passwordChanged,
@@ -250,6 +255,7 @@ export const studentVerifyEmail = async (req: Request, res: Response): Promise<v
         user: {
           nim: studentNim,
           name,
+          class: studentClass,
           email,
           role: 'student',
           is_verified: true,
@@ -275,6 +281,7 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
 
   let studentNim: string;
   let name: string;
+  let studentClass: string;
   let isVerified: boolean;
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
@@ -284,6 +291,7 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
     }
     studentNim = decoded.nim;
     name = decoded.name;
+    studentClass = decoded.class;
     isVerified = decoded.is_verified === true;
   } catch {
     res.status(401).json({ success: false, message: 'Token tidak valid' });
@@ -335,6 +343,7 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
       sub: studentNim,
       nim: studentNim,
       name,
+      class: studentClass,
       role: 'student',
       is_verified: isVerified,
       password_changed: true,
@@ -349,6 +358,7 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
         user: {
           nim: studentNim,
           name,
+          class: studentClass,
           email: freshEmail,
           role: 'student',
           is_verified: isVerified,
@@ -364,21 +374,21 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
 
 // ─── Lecturer Login ───────────────────────────────────────────────────────────
 export const lecturerLogin = async (req: Request, res: Response): Promise<void> => {
-  const { email, password } = req.body;
+  const { nip, password } = req.body;
 
-  if (!email || !password) {
-    res.status(400).json({ success: false, message: 'Email dan password wajib diisi' });
+  if (!nip || !password) {
+    res.status(400).json({ success: false, message: 'NIP dan password wajib diisi' });
     return;
   }
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT lecturer_id, nip, lecturer_name, email, password FROM lecturers WHERE email = ?',
-      [email]
+      'SELECT nip, lecturer_name, email, password, is_verified, password_changed FROM lecturers WHERE nip = ?',
+      [nip]
     );
 
     if (!rows || rows.length === 0) {
-      res.status(401).json({ success: false, message: 'Email atau password salah' });
+      res.status(401).json({ success: false, message: 'NIP atau password salah' });
       return;
     }
 
@@ -392,16 +402,21 @@ export const lecturerLogin = async (req: Request, res: Response): Promise<void> 
     }
 
     if (!passwordValid) {
-      res.status(401).json({ success: false, message: 'Email atau password salah' });
+      res.status(401).json({ success: false, message: 'NIP atau password salah' });
       return;
     }
 
+    const isVerified      = lecturer.is_verified === 1;
+    const passwordChanged = lecturer.password_changed === 1;
+
     const payload = {
-      sub: lecturer.lecturer_id,
+      sub: lecturer.nip,
       nip: lecturer.nip,
       name: lecturer.lecturer_name,
       email: lecturer.email,
       role: 'lecturer',
+      is_verified: isVerified,
+      password_changed: passwordChanged,
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as any);
@@ -412,11 +427,13 @@ export const lecturerLogin = async (req: Request, res: Response): Promise<void> 
       data: {
         token,
         user: {
-          id: lecturer.lecturer_id,
+          id: lecturer.nip,
           nip: lecturer.nip,
           name: lecturer.lecturer_name,
           email: lecturer.email,
           role: 'lecturer',
+          is_verified: isVerified,
+          password_changed: passwordChanged,
         },
       },
     });
@@ -534,6 +551,165 @@ export const logout = (_req: Request, res: Response): void => {
   res.status(200).json({ success: true, message: 'Logout berhasil' });
 };
 
+// ─── Lecturer: Send Verify OTP ────────────────────────────────────────────────
+export const lecturerSendVerifyOtp = async (req: Request, res: Response): Promise<void> => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader?.split(' ')[1];
+
+  if (!token) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+    return;
+  }
+
+  let lecturerNip: string;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    if (decoded.role !== 'lecturer') {
+      res.status(403).json({ success: false, message: 'Akses ditolak' });
+      return;
+    }
+    lecturerNip = decoded.nip;
+  } catch {
+    res.status(401).json({ success: false, message: 'Token tidak valid' });
+    return;
+  }
+
+  const { email } = req.body;
+  if (!email) {
+    res.status(400).json({ success: false, message: 'Email wajib diisi' });
+    return;
+  }
+
+  try {
+    // Cek apakah email sudah dipakai oleh dosen lain
+    const [existing] = await pool.execute<any[]>(
+      'SELECT nip FROM lecturers WHERE email = ? AND nip != ?',
+      [email, lecturerNip]
+    );
+    if (existing && existing.length > 0) {
+      res.status(409).json({ success: false, message: 'Email ini sudah terdaftar oleh akun dosen lain' });
+      return;
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    await pool.execute('DELETE FROM lecturer_otps WHERE nip = ?', [lecturerNip]);
+    await pool.execute(
+      'INSERT INTO lecturer_otps (nip, email_target, otp_code, expired_at) VALUES (?, ?, ?, ?)',
+      [lecturerNip, email, otp, expiredAt]
+    );
+
+    try {
+      await sendLecturerVerifyOtpEmail(email, otp);
+      console.log(`[Auth Service] OTP verifikasi dosen dikirim ke: ${email}`);
+    } catch (emailErr: any) {
+      console.error(`[Auth Service] Gagal kirim email ke ${email}:`, emailErr.message);
+      console.log(`[Auth Service] FALLBACK OTP dosen untuk ${email}: ${otp}`);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Kode OTP telah dikirim ke ${email}. Silakan cek inbox Anda.`,
+    });
+  } catch (err: any) {
+    console.error('[Auth Service] lecturerSendVerifyOtp error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Lecturer: Verify Email ───────────────────────────────────────────────────
+export const lecturerVerifyEmail = async (req: Request, res: Response): Promise<void> => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader?.split(' ')[1];
+
+  if (!token) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+    return;
+  }
+
+  let lecturerNip: string;
+  let lecturerName: string;
+  let passwordChanged: boolean;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    if (decoded.role !== 'lecturer') {
+      res.status(403).json({ success: false, message: 'Akses ditolak' });
+      return;
+    }
+    lecturerNip   = decoded.nip;
+    lecturerName  = decoded.name;
+    passwordChanged = decoded.password_changed === true;
+  } catch {
+    res.status(401).json({ success: false, message: 'Token tidak valid' });
+    return;
+  }
+
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    res.status(400).json({ success: false, message: 'Email dan OTP wajib diisi' });
+    return;
+  }
+
+  try {
+    const [rows] = await pool.execute<any[]>(
+      `SELECT otp_id, email_target, otp_code, expired_at
+       FROM lecturer_otps
+       WHERE nip = ? AND email_target = ? AND otp_code = ?
+       ORDER BY created_at DESC LIMIT 1`,
+      [lecturerNip, email, otp]
+    );
+
+    if (!rows || rows.length === 0) {
+      res.status(401).json({ success: false, message: 'OTP salah atau tidak ditemukan' });
+      return;
+    }
+
+    const otpRow = rows[0];
+    if (new Date() > new Date(otpRow.expired_at)) {
+      await pool.execute('DELETE FROM lecturer_otps WHERE otp_id = ?', [otpRow.otp_id]);
+      res.status(401).json({ success: false, message: 'OTP sudah kadaluarsa. Kirim OTP baru.' });
+      return;
+    }
+
+    await pool.execute('DELETE FROM lecturer_otps WHERE otp_id = ?', [otpRow.otp_id]);
+    await pool.execute(
+      'UPDATE lecturers SET email = ?, is_verified = 1 WHERE nip = ?',
+      [email, lecturerNip]
+    );
+
+    const newPayload = {
+      sub: lecturerNip,
+      nip: lecturerNip,
+      name: lecturerName,
+      email,
+      role: 'lecturer',
+      is_verified: true,
+      password_changed: passwordChanged,
+    };
+    const newToken = jwt.sign(newPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as any);
+
+    res.status(200).json({
+      success: true,
+      message: 'Email berhasil diverifikasi',
+      data: {
+        token: newToken,
+        user: {
+          nip: lecturerNip,
+          name: lecturerName,
+          email,
+          role: 'lecturer',
+          is_verified: true,
+          password_changed: passwordChanged,
+        },
+      },
+    });
+  } catch (err: any) {
+    console.error('[Auth Service] lecturerVerifyEmail error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
 // ─── Lecturer: Change Password ────────────────────────────────────────────────
 export const changeLecturerPassword = async (req: Request, res: Response): Promise<void> => {
   const authHeader = req.headers['authorization'];
@@ -544,14 +720,18 @@ export const changeLecturerPassword = async (req: Request, res: Response): Promi
     return;
   }
 
-  let lecturerId: number;
+  let lecturerNip: string;
+  let lecturerName: string;
+  let isVerified: boolean;
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as unknown as { sub: number; role: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as unknown as { sub: string; nip: string; name: string; role: string; is_verified: boolean };
     if (decoded.role !== 'lecturer') {
       res.status(403).json({ success: false, message: 'Akses ditolak' });
       return;
     }
-    lecturerId = decoded.sub;
+    lecturerNip  = decoded.nip;
+    lecturerName = decoded.name;
+    isVerified   = decoded.is_verified === true;
   } catch {
     res.status(401).json({ success: false, message: 'Token tidak valid' });
     return;
@@ -574,8 +754,8 @@ export const changeLecturerPassword = async (req: Request, res: Response): Promi
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT password FROM lecturers WHERE lecturer_id = ?',
-      [lecturerId]
+      'SELECT password, email FROM lecturers WHERE nip = ?',
+      [lecturerNip]
     );
 
     if (!rows || rows.length === 0) {
@@ -584,6 +764,7 @@ export const changeLecturerPassword = async (req: Request, res: Response): Promi
     }
 
     const storedPassword = rows[0].password;
+    const freshEmail     = rows[0].email;
 
     let isCurrentPasswordValid = false;
     if (storedPassword.startsWith('$2')) {
@@ -599,11 +780,36 @@ export const changeLecturerPassword = async (req: Request, res: Response): Promi
 
     const hashedNew = await bcrypt.hash(newPassword, 10);
     await pool.execute(
-      'UPDATE lecturers SET password = ? WHERE lecturer_id = ?',
-      [hashedNew, lecturerId]
+      'UPDATE lecturers SET password = ?, password_changed = 1 WHERE nip = ?',
+      [hashedNew, lecturerNip]
     );
 
-    res.status(200).json({ success: true, message: 'Password berhasil diubah' });
+    const newPayload = {
+      sub: lecturerNip,
+      nip: lecturerNip,
+      name: lecturerName,
+      email: freshEmail,
+      role: 'lecturer',
+      is_verified: isVerified,
+      password_changed: true,
+    };
+    const newToken = jwt.sign(newPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as any);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password berhasil diubah',
+      data: {
+        token: newToken,
+        user: {
+          nip: lecturerNip,
+          name: lecturerName,
+          email: freshEmail,
+          role: 'lecturer',
+          is_verified: isVerified,
+          password_changed: true,
+        },
+      },
+    });
   } catch (err: any) {
     console.error('[Auth Service] changeLecturerPassword error:', err.message);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan internal pada server.' });

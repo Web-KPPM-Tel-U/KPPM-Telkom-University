@@ -5,7 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'kppm-telkom-secret-dev-2024';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
-    sub: string | number;  // nim (mahasiswa, string) atau lecturer_id/registration_id (number)
+    sub: string | number;  // nim (mahasiswa, string) atau nip (dosen, string)
     nim?: string;          // NIM mahasiswa (hanya ada di JWT mahasiswa)
     nip?: string;          // NIP dosen (hanya ada di JWT dosen)
     name: string;

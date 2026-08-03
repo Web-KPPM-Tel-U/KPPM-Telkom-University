@@ -24,11 +24,13 @@ export interface StudentUser {
 }
 
 export interface LecturerUser {
-  id: number;
+  id: string;
   nip: string;
   name: string;
-  email: string;
+  email: string | null;
   role: 'lecturer';
+  is_verified: boolean;
+  password_changed: boolean;
 }
 
 export interface MentorUser {
@@ -99,16 +101,16 @@ export const loginMahasiswa = async (
 };
 
 /**
- * Login Dosen dengan Email dan Password
+ * Login Dosen dengan NIP dan Password
  */
 export const loginDosen = async (
-  email: string,
+  nip: string,
   password: string
 ): Promise<ApiResponse<LoginResponse>> => {
   const res = await fetch(`${API_BASE_URL}/auth/lecturer/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ nip, password }),
   });
   return res.json();
 };
@@ -215,6 +217,50 @@ export const verifyStudentEmail = async (
   return res.json();
 };
 
+/**
+ * Kirim OTP ke email dosen untuk verifikasi akun
+ */
+export const sendLecturerVerifyOtp = async (
+  email: string
+): Promise<ApiResponse<null>> => {
+  const res = await fetch(`${API_BASE_URL}/auth/lecturer/send-verify-otp`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ email }),
+  });
+  return res.json();
+};
+
+/**
+ * Verifikasi OTP email dosen, simpan email ke database
+ */
+export const verifyLecturerEmail = async (
+  email: string,
+  otp: string
+): Promise<ApiResponse<{ token: string; user: LecturerUser }>> => {
+  const res = await fetch(`${API_BASE_URL}/auth/lecturer/verify-email`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ email, otp }),
+  });
+  return res.json();
+};
+
+/**
+ * Ganti password dosen
+ */
+export const changeLecturerPassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<ApiResponse<{ token: string; user: LecturerUser }>> => {
+  const res = await fetch(`${API_BASE_URL}/auth/lecturer/change-password`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  return res.json();
+};
+
 // ─── KPPM Registration API ────────────────────────────────────────────────────
 
 export interface KppmRegistration {
@@ -314,9 +360,8 @@ export const cancelKppmRegistration = async (
 // ─── Lecturers API ────────────────────────────────────────────────────────────
 
 export interface Lecturer {
-  lecturer_id: number;
-  lecturer_name: string;
   nip: string;
+  lecturer_name: string;
 }
 
 /**
@@ -338,21 +383,6 @@ export const getLecturerProfile = (): LecturerUser | null => {
   const user = getUser();
   if (user && user.role === 'lecturer') return user as LecturerUser;
   return null;
-};
-
-/**
- * Ganti password dosen
- */
-export const changeLecturerPassword = async (
-  currentPassword: string,
-  newPassword: string
-): Promise<ApiResponse<null>> => {
-  const res = await fetch(`${API_BASE_URL}/auth/lecturer/change-password`, {
-    method: 'PATCH',
-    headers: authHeaders(),
-    body: JSON.stringify({ currentPassword, newPassword }),
-  });
-  return res.json();
 };
 
 // ─── Lecturer Students API ────────────────────────────────────────────────────
@@ -631,6 +661,30 @@ export const getLecturerGrade = async (
   registrationId: number
 ): Promise<ApiResponse<LecturerGradeData | null>> => {
   const res = await fetch(`${API_BASE_URL}/student/lecturer/grades/${registrationId}`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
+
+// ─── Lecturer: Full Student Grades (PA + Mentor) ──────────────────────────────
+
+export interface StudentFullGradesData {
+  registration_id: number;
+  student_name: string;
+  nim: string;
+  company_name: string;
+  semester_code: string;
+  lecturer_grades: (MyLecturerGrades & { updated_at: string }) | null;
+  mentor_grades: (MyMentorGrades & { updated_at: string }) | null;
+}
+
+/**
+ * Ambil nilai lengkap (PA + Mentor) mahasiswa bimbingan — hanya untuk dosen
+ */
+export const getLecturerStudentFullGrades = async (
+  registrationId: number
+): Promise<ApiResponse<StudentFullGradesData | null>> => {
+  const res = await fetch(`${API_BASE_URL}/student/lecturer/student-grades/${registrationId}`, {
     headers: authHeaders(),
   });
   return res.json();

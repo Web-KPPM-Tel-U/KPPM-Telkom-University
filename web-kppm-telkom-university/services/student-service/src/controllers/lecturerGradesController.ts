@@ -16,15 +16,15 @@ const SCORE_FIELDS = Object.keys(BOBOT);
 
 // ─── Helper: verifikasi dosen punya akses ke registration_id ini ──────────────
 async function verifyLecturerAccess(
-  lecturerId: number,
+  lecturerNip: string,
   registrationId: number
 ): Promise<{ allowed: boolean; row?: any }> {
   const [rows] = await pool.execute<any[]>(
     `SELECT ir.registration_id, s.nim, s.student_name, ir.company_name, ir.semester_code
      FROM internship_registrations ir
      JOIN students s ON ir.nim = s.nim
-     WHERE ir.registration_id = ? AND ir.lecturer_id = ? AND ir.status = 'approved'`,
-    [registrationId, lecturerId]
+     WHERE ir.registration_id = ? AND ir.lecturer_nip = ? AND ir.status = 'approved'`,
+    [registrationId, lecturerNip]
   );
   return { allowed: rows.length > 0, row: rows[0] };
 }
@@ -32,11 +32,11 @@ async function verifyLecturerAccess(
 // ─── Submit / Update Nilai Dosen ─────────────────────────────────────────────
 // POST /student/lecturer/grades/:registration_id
 export const submitLecturerGrade = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const lecturerId = Number(req.user?.sub);
-  const role       = req.user?.role;
+  const lecturerNip = String(req.user?.sub);
+  const role        = req.user?.role;
   const registrationId = Number(req.params.registration_id);
 
-  if (!lecturerId || isNaN(lecturerId)) {
+  if (!lecturerNip) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
@@ -51,7 +51,7 @@ export const submitLecturerGrade = async (req: AuthenticatedRequest, res: Respon
     return;
   }
 
-  const { allowed, row } = await verifyLecturerAccess(lecturerId, registrationId);
+  const { allowed, row } = await verifyLecturerAccess(lecturerNip, registrationId);
   if (!allowed) {
     res.status(403).json({ success: false, message: 'Anda tidak berhak menilai mahasiswa ini atau status bukan approved' });
     return;
@@ -138,14 +138,110 @@ export const submitLecturerGrade = async (req: AuthenticatedRequest, res: Respon
   }
 };
 
+// ─── Get Full Nilai Mahasiswa (PA + Mentor) — Untuk Dosen ────────────────────
+// GET /student/lecturer/student-grades/:registration_id
+export const getLecturerStudentFullGrades = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const lecturerNip = String(req.user?.sub);
+  const role        = req.user?.role;
+  const registrationId = Number(req.params.registration_id);
+
+  if (!lecturerNip) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+    return;
+  }
+  if (role !== 'lecturer') {
+    res.status(403).json({ success: false, message: 'Akses ditolak. Hanya untuk dosen.' });
+    return;
+  }
+  if (isNaN(registrationId)) {
+    res.status(400).json({ success: false, message: 'registration_id tidak valid' });
+    return;
+  }
+
+  // Verifikasi dosen punya akses ke mahasiswa ini
+  const { allowed, row: reg } = await verifyLecturerAccess(lecturerNip, registrationId);
+  if (!allowed) {
+    res.status(403).json({ success: false, message: 'Anda tidak berhak mengakses data ini' });
+    return;
+  }
+
+  try {
+    // Ambil nilai PA
+    const [lecturerRows] = await pool.execute<any[]>(
+      'SELECT * FROM lecturer_scores WHERE registration_id = ?',
+      [registrationId]
+    );
+    let lecturerGrades = null;
+    if (lecturerRows.length > 0) {
+      const ls = lecturerRows[0];
+      const scores = {
+        commitment:     Number(ls.plo05_clo01_commitment),
+        planning:       Number(ls.plo07_clo02_planning),
+        guidance:       Number(ls.plo05_clo04_guidance),
+        presentation:   Number(ls.plo05_clo04_presentation),
+        report:         Number(ls.plo05_clo04_report),
+        identification: Number(ls.plo01_clo05_identification),
+      };
+      const total = Object.keys(BOBOT).reduce(
+        (sum, f) => sum + (BOBOT[f] / 100) * scores[f as keyof typeof scores], 0
+      );
+      lecturerGrades = { ...scores, total: parseFloat(total.toFixed(2)), updated_at: ls.updated_at };
+    }
+
+    // Ambil nilai Mentor
+    const MENTOR_BOBOT: Record<string, number> = {
+      attendance: 5, discipline: 5, commitment: 5, planning: 5,
+      teamwork: 10, guidance: 5, report: 5, problem_solving: 5,
+    };
+    const [mentorRows] = await pool.execute<any[]>(
+      'SELECT * FROM mentor_scores WHERE registration_id = ?',
+      [registrationId]
+    );
+    let mentorGrades = null;
+    if (mentorRows.length > 0) {
+      const ms = mentorRows[0];
+      const mentorScores = {
+        attendance:     Number(ms.attendance),
+        discipline:     Number(ms.discipline),
+        commitment:     Number(ms.commitment),
+        planning:       Number(ms.planning),
+        teamwork:       Number(ms.teamwork),
+        guidance:       Number(ms.guidance),
+        report:         Number(ms.report),
+        problem_solving:Number(ms.problem_solving),
+      };
+      const mentorTotal = Object.keys(MENTOR_BOBOT).reduce(
+        (sum, f) => sum + (MENTOR_BOBOT[f] / 100) * mentorScores[f as keyof typeof mentorScores], 0
+      );
+      mentorGrades = { ...mentorScores, total: parseFloat(mentorTotal.toFixed(2)), updated_at: ms.updated_at };
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        registration_id: registrationId,
+        student_name: reg.student_name,
+        nim: reg.nim,
+        company_name: reg.company_name,
+        semester_code: reg.semester_code,
+        lecturer_grades: lecturerGrades,
+        mentor_grades:   mentorGrades,
+      },
+    });
+  } catch (err: any) {
+    console.error('[Lecturer Grades] getLecturerStudentFullGrades error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server' });
+  }
+};
+
 // ─── Get Nilai Satu Mahasiswa ─────────────────────────────────────────────────
 // GET /student/lecturer/grades/:registration_id
 export const getLecturerGrade = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const lecturerId = Number(req.user?.sub);
-  const role       = req.user?.role;
+  const lecturerNip = String(req.user?.sub);
+  const role        = req.user?.role;
   const registrationId = Number(req.params.registration_id);
 
-  if (!lecturerId || isNaN(lecturerId)) {
+  if (!lecturerNip) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
@@ -155,7 +251,7 @@ export const getLecturerGrade = async (req: AuthenticatedRequest, res: Response)
     return;
   }
 
-  const { allowed } = await verifyLecturerAccess(lecturerId, registrationId);
+  const { allowed } = await verifyLecturerAccess(lecturerNip, registrationId);
   if (!allowed) {
     res.status(403).json({ success: false, message: 'Anda tidak berhak mengakses nilai ini' });
     return;

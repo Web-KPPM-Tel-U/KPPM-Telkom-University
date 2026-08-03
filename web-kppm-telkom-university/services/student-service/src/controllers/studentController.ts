@@ -292,7 +292,7 @@ export const getMyGrades = async (req: AuthenticatedRequest, res: Response): Pro
               ir.submitted_at, ir.approved_at,
               l.lecturer_name AS dosen_name
        FROM internship_registrations ir
-       JOIN lecturers l ON ir.lecturer_id = l.lecturer_id
+       JOIN lecturers l ON ir.lecturer_nip = l.nip
        WHERE ir.nim = ? AND ir.status = 'approved'
        ORDER BY ir.approved_at DESC
        LIMIT 1`,
