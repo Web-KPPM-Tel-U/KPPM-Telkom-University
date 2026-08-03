@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getToken, getMyGrades } from '@/lib/api';
+import { getToken, getMyGrades, getUser } from '@/lib/api';
 import type { MyGradesData, MyMentorGrades, MyLecturerGrades } from '@/lib/api';
+import ExportNilaiPDF from '@/components/ExportNilaiPDF';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type View = 'list' | 'detail';
@@ -410,9 +411,35 @@ export default function LihatNilaiPage() {
 
       {/* Nilai Pembimbing Lapangan */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
-        <div>
-          <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100">Nilai Pembimbing Lapangan</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Dinilai oleh: {reg.mentor_name} · {reg.mentor_position}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100">Nilai Pembimbing Lapangan</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Dinilai oleh: {reg.mentor_name} · {reg.mentor_position}</p>
+          </div>
+          {mentorGrades && (() => {
+            const user = getUser();
+            const studentUser = user?.role === 'student' ? user : null;
+            return (
+              <ExportNilaiPDF
+                mode="mentor"
+                studentName={studentUser?.name ?? '-'}
+                nim={studentUser?.nim ?? '-'}
+                companyName={reg.company_name}
+                internshipPosition={reg.internship_position}
+                semesterCode={reg.semester_code}
+                internshipStart={reg.internship_start}
+                internshipEnd={reg.internship_end}
+                lecturerName={reg.dosen_name}
+                lecturerNip={reg.dosen_nip ?? ''}
+                mentorName={reg.mentor_name}
+                mentorNip={reg.mentor_nip ?? ''}
+                mentorPosition={reg.mentor_position}
+                paGrades={lecturerGrades ? { ...lecturerGrades } : null}
+                mentorGrades={{ ...mentorGrades }}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors"
+              />
+            );
+          })()}
         </div>
         {mentorGrades ? (
           <MentorGradeTable grades={mentorGrades} />
@@ -426,9 +453,35 @@ export default function LihatNilaiPage() {
 
       {/* Nilai Pembimbing Akademik */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
-        <div>
-          <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100">Nilai Pembimbing Akademik</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Dinilai oleh: {reg.dosen_name}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100">Nilai Pembimbing Akademik</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Dinilai oleh: {reg.dosen_name}</p>
+          </div>
+          {lecturerGrades && (() => {
+            const user = getUser();
+            const studentUser = user?.role === 'student' ? user : null;
+            return (
+              <ExportNilaiPDF
+                mode="pa"
+                studentName={studentUser?.name ?? '-'}
+                nim={studentUser?.nim ?? '-'}
+                companyName={reg.company_name}
+                internshipPosition={reg.internship_position}
+                semesterCode={reg.semester_code}
+                internshipStart={reg.internship_start}
+                internshipEnd={reg.internship_end}
+                lecturerName={reg.dosen_name}
+                lecturerNip={reg.dosen_nip ?? ''}
+                mentorName={reg.mentor_name}
+                mentorNip={reg.mentor_nip ?? ''}
+                mentorPosition={reg.mentor_position}
+                paGrades={{ ...lecturerGrades }}
+                mentorGrades={mentorGrades ? { ...mentorGrades } : null}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors"
+              />
+            );
+          })()}
         </div>
         {lecturerGrades ? (
           <LecturerGradeTable grades={lecturerGrades} />

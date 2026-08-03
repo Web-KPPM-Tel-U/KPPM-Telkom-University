@@ -217,6 +217,7 @@ export default function IsiDataKppmPage() {
     tanggalMulai: '',
     tanggalAkhir: '',
     mentorName: '',
+    mentorNip: '',
     mentorPosition: '',
     mentorEmail: '',
     mentorPhone: '',
@@ -314,7 +315,7 @@ export default function IsiDataKppmPage() {
   };
 
   const resetForm = () => {
-    setForm({ kodeSemester: '', whatsapp: '', perusahaan: '', posisiDivisi: '', tanggalMulai: '', tanggalAkhir: '', mentorName: '', mentorPosition: '', mentorEmail: '', mentorPhone: '' });
+    setForm({ kodeSemester: '', whatsapp: '', perusahaan: '', posisiDivisi: '', tanggalMulai: '', tanggalAkhir: '', mentorName: '', mentorNip: '', mentorPosition: '', mentorEmail: '', mentorPhone: '' });
     setUploadedFile(null);
     setSelectedLecturerId('');
     setSubmitError('');
@@ -338,6 +339,7 @@ export default function IsiDataKppmPage() {
     if (!form.tanggalMulai)          errors['tanggalMulai']   = 'required';
     if (!form.tanggalAkhir)          errors['tanggalAkhir']   = 'required';
     if (!form.mentorName.trim())     errors['mentorName']     = 'required';
+    if (!form.mentorNip.trim())      errors['mentorNip']      = 'required';
     if (!form.mentorPosition.trim()) errors['mentorPosition'] = 'required';
     if (!form.mentorEmail.trim())    errors['mentorEmail']    = 'required';
     if (!form.mentorPhone.trim())    errors['mentorPhone']    = 'required';
@@ -466,10 +468,11 @@ export default function IsiDataKppmPage() {
       formData.append('tanggal_mulai',   form.tanggalMulai);
       formData.append('tanggal_akhir',   form.tanggalAkhir);
       formData.append('mentor_name',     form.mentorName);
+      formData.append('mentor_nip',      form.mentorNip);
       formData.append('mentor_position', form.mentorPosition);
       formData.append('mentor_email',    form.mentorEmail);
       formData.append('mentor_phone',    form.mentorPhone);
-      formData.append('lecturer_nip',     selectedLecturerId);
+      formData.append('lecturer_nip',    selectedLecturerId);
       if (uploadedFile) formData.append('surat_toss', uploadedFile);
 
       const res = await submitKppmRegistration(formData);
@@ -504,8 +507,8 @@ export default function IsiDataKppmPage() {
   const progress = (() => {
     const fields = [
       form.kodeSemester, form.whatsapp, form.perusahaan, form.posisiDivisi,
-      form.tanggalMulai, form.tanggalAkhir, form.mentorName, form.mentorPosition,
-      form.mentorEmail, form.mentorPhone, uploadedFile ? 'ok' : '',
+      form.tanggalMulai, form.tanggalAkhir, form.mentorName, form.mentorNip,
+      form.mentorPosition, form.mentorEmail, form.mentorPhone, uploadedFile ? 'ok' : '',
     ];
     return Math.round((fields.filter(Boolean).length / fields.length) * 100);
   })();
@@ -1058,6 +1061,9 @@ export default function IsiDataKppmPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Nama Pembimbing Lapang / Mentor" required hasError={!!fieldErrors['mentorName']}>
                 <Input id="field-mentor-name" placeholder="Nama lengkap Pembimbing Lapang / Mentor" value={form.mentorName} hasError={!!fieldErrors['mentorName']} onChange={(e) => handleChange('mentorName', e.target.value)} icon={<UserIcon />} />
+              </FormField>
+              <FormField label="NIP Pembimbing Lapang / Mentor" required hasError={!!fieldErrors['mentorNip']} hint={!fieldErrors['mentorNip'] ? 'Nomor Induk Pegawai pembimbing lapang (hanya angka)' : undefined}>
+                <Input id="field-mentor-nip" placeholder="Contoh: 198501012010011001" value={form.mentorNip} hasError={!!fieldErrors['mentorNip']} inputMode="numeric" onChange={(e) => handleChange('mentorNip', e.target.value.replace(/\D/g, ''))} />
               </FormField>
               <FormField label="Posisi / Jabatan Pembimbing Lapang / Mentor" required hasError={!!fieldErrors['mentorPosition']}>
                 <Input id="field-mentor-position" placeholder="Contoh: Senior Software Engineer" value={form.mentorPosition} hasError={!!fieldErrors['mentorPosition']} onChange={(e) => handleChange('mentorPosition', e.target.value)} />

@@ -407,6 +407,7 @@ export interface LecturerStudentEntry {
   rejected_at: string | null;
   whatsapp_number: string;
   mentor_name: string;
+  mentor_nip: string;
   mentor_position: string;
   mentor_email: string;
   mentor_phone: string;
@@ -601,8 +602,10 @@ export interface MyGradesData {
     internship_end: string;
     semester_code: string;
     mentor_name: string;
+    mentor_nip: string;
     mentor_position: string;
     dosen_name: string;
+    dosen_nip: string;
     submitted_at: string;
     approved_at: string;
   };

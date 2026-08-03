@@ -224,11 +224,12 @@ export default function DosenDashboardPage() {
         const res = await getLecturerStudents(1000, 0);
         if (res.success && res.data) {
           const students = res.data;
+          const uniqueStudents = new Set(students.map((s: any) => s.nim));
           setStats({
-            total: students.length,
-            pending: students.filter(s => s.status === 'pending_approval').length,
-            approved: students.filter(s => s.status === 'approved').length,
-            graded: students.filter(s => s.is_graded === 1).length,
+            total: uniqueStudents.size,
+            pending: students.filter((s: any) => s.status === 'pending_approval').length,
+            approved: students.filter((s: any) => s.status === 'approved').length,
+            graded: students.filter((s: any) => s.is_graded === 1).length,
           });
         }
       } catch (err) {

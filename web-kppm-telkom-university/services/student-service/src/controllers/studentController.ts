@@ -288,9 +288,10 @@ export const getMyGrades = async (req: AuthenticatedRequest, res: Response): Pro
     const [regRows] = await pool.execute<any[]>(
       `SELECT ir.registration_id, ir.company_name, ir.internship_position,
               ir.internship_start, ir.internship_end, ir.semester_code,
-              ir.mentor_name, ir.mentor_position, ir.mentor_email,
+              ir.mentor_name, ir.mentor_nip, ir.mentor_position, ir.mentor_email,
+              ir.lecturer_nip,
               ir.submitted_at, ir.approved_at,
-              l.lecturer_name AS dosen_name
+              l.lecturer_name AS dosen_name, l.nip AS dosen_nip
        FROM internship_registrations ir
        JOIN lecturers l ON ir.lecturer_nip = l.nip
        WHERE ir.nim = ? AND ir.status = 'approved'
@@ -380,8 +381,10 @@ export const getMyGrades = async (req: AuthenticatedRequest, res: Response): Pro
           internship_end:     reg.internship_end,
           semester_code:      reg.semester_code,
           mentor_name:        reg.mentor_name,
+          mentor_nip:         reg.mentor_nip ?? '',
           mentor_position:    reg.mentor_position,
           dosen_name:         reg.dosen_name,
+          dosen_nip:          reg.dosen_nip ?? '',
           submitted_at:       reg.submitted_at,
           approved_at:        reg.approved_at,
         },
