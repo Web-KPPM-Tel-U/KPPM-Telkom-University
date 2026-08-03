@@ -5,6 +5,8 @@ import {
   studentVerifyEmail,
   changeStudentPassword,
   lecturerLogin,
+  lecturerSendVerifyOtp,
+  lecturerVerifyEmail,
   changeLecturerPassword,
   mentorSendOtp,
   mentorVerifyOtp,
@@ -21,6 +23,8 @@ router.patch('/student/change-password', changeStudentPassword);
 
 // ─── Dosen ────────────────────────────────────────────────────────────────────
 router.post('/lecturer/login', lecturerLogin);
+router.post('/lecturer/send-verify-otp',  lecturerSendVerifyOtp);
+router.post('/lecturer/verify-email',     lecturerVerifyEmail);
 router.patch('/lecturer/change-password', changeLecturerPassword);
 
 // ─── Mentor ───────────────────────────────────────────────────────────────────

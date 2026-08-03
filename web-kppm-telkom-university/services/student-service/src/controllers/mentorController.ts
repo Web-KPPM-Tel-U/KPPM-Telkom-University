@@ -38,7 +38,7 @@ export const getMentorDashboard = async (req: AuthenticatedRequest, res: Respons
          l.lecturer_name AS pembimbing_akademik
        FROM internship_registrations ir
        JOIN students s ON ir.nim = s.nim
-       LEFT JOIN lecturers l ON ir.lecturer_id = l.lecturer_id
+       LEFT JOIN lecturers l ON ir.lecturer_nip = l.nip
        WHERE ir.mentor_email = ? AND ir.status = 'approved'
        ORDER BY ir.approved_at DESC`,
       [mentorEmail]

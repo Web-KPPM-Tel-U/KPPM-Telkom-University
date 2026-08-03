@@ -12,15 +12,15 @@ const path = require('path');
 
 // Resolve dependencies dari student-service/node_modules
 const SERVICE_DIR = path.join(__dirname, '..', 'services', 'student-service');
-const mysql  = require(path.join(SERVICE_DIR, 'node_modules', 'mysql2', 'promise'));
+const mysql = require(path.join(SERVICE_DIR, 'node_modules', 'mysql2', 'promise'));
 require(path.join(SERVICE_DIR, 'node_modules', 'dotenv')).config({
   path: path.join(SERVICE_DIR, '.env'),
 });
 
 const DB_CONFIG = {
-  host    : process.env.DB_HOST     || '127.0.0.1',
-  port    : parseInt(process.env.DB_PORT || '3306', 10),
-  user    : process.env.DB_USER     || 'root',
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: parseInt(process.env.DB_PORT || '3306', 10),
+  user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   multipleStatements: true,
 };
@@ -53,13 +53,14 @@ const MIGRATIONS = [
   {
     description: 'Create lecturers table',
     sql: `CREATE TABLE IF NOT EXISTS internship_management.lecturers (
-      lecturer_id   BIGINT AUTO_INCREMENT PRIMARY KEY,
-      nip           VARCHAR(30)  NOT NULL UNIQUE,
-      lecturer_name VARCHAR(100) NOT NULL,
-      email         VARCHAR(100) NOT NULL DEFAULT '',
-      password      VARCHAR(255) NOT NULL,
-      created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      nip              VARCHAR(30)  NOT NULL PRIMARY KEY,
+      lecturer_name    VARCHAR(100) NOT NULL,
+      email            VARCHAR(100) NULL DEFAULT NULL,
+      password         VARCHAR(255) NOT NULL,
+      is_verified      TINYINT(1)   NOT NULL DEFAULT 0,
+      password_changed TINYINT(1)   NOT NULL DEFAULT 0,
+      created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB;`,
   },
   {
@@ -67,7 +68,7 @@ const MIGRATIONS = [
     sql: `CREATE TABLE IF NOT EXISTS internship_management.internship_registrations (
       registration_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
       nim                 VARCHAR(20)  NOT NULL,
-      lecturer_id         BIGINT NOT NULL,
+      lecturer_nip        VARCHAR(30)  NOT NULL,
       semester_code       VARCHAR(20)  NOT NULL,
       whatsapp_number     VARCHAR(20)  NOT NULL,
       company_name        VARCHAR(150) NOT NULL,
@@ -79,16 +80,17 @@ const MIGRATIONS = [
       mentor_position     VARCHAR(100) NOT NULL,
       mentor_email        VARCHAR(100) NOT NULL,
       mentor_phone        VARCHAR(20)  NOT NULL,
-      status ENUM('pending_approval','approved','cancelled') DEFAULT 'pending_approval',
+      status ENUM('pending_approval','approved','cancelled','rejected') DEFAULT 'pending_approval',
       submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       approved_at  DATETIME NULL,
       cancelled_at DATETIME NULL,
+      rejected_at  DATETIME NULL,
       created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       CONSTRAINT fk_registration_student
         FOREIGN KEY (nim) REFERENCES internship_management.students(nim) ON DELETE CASCADE,
       CONSTRAINT fk_registration_lecturer
-        FOREIGN KEY (lecturer_id) REFERENCES internship_management.lecturers(lecturer_id)
+        FOREIGN KEY (lecturer_nip) REFERENCES internship_management.lecturers(nip)
     ) ENGINE=InnoDB;`,
   },
   {
@@ -172,66 +174,7 @@ const MIGRATIONS = [
     ) ENGINE=InnoDB;`,
   },
 
-  // ── v2: Tambah kolom cancelled_at (aman jika sudah ada) ──────────────────────
-  {
-    description: 'Add cancelled_at column (if missing)',
-    sql: `ALTER TABLE internship_management.internship_registrations
-          ADD COLUMN cancelled_at DATETIME NULL AFTER approved_at;`,
-    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME — kolom sudah ada
-  },
-
-  // ── v2: Pastikan ENUM punya nilai cancelled ───────────────────────────────────
-  {
-    description: 'Ensure status ENUM includes cancelled',
-    sql: `ALTER TABLE internship_management.internship_registrations
-          MODIFY COLUMN status
-          ENUM('pending_approval','approved','cancelled') DEFAULT 'pending_approval';`,
-  },
-
-  // (v3 block removed as the table is now created correctly from scratch without uq_student_semester)
-
-  // ── v4: Tambah kolom email ke tabel lecturers (untuk login dosen pakai email) ─
-  {
-    description: 'Add email column to lecturers (if missing)',
-    sql: `ALTER TABLE internship_management.lecturers
-          ADD COLUMN email VARCHAR(100) NOT NULL DEFAULT '' AFTER lecturer_name;`,
-    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME — kolom sudah ada
-  },
-  {
-    description: 'Populate email for existing lecturers',
-    sql: `UPDATE internship_management.lecturers
-          SET email = CONCAT(nip, '@telkomuniversity.ac.id')
-          WHERE email = '';`,
-  },
-  {
-    description: 'Add unique index on lecturers.email (if missing)',
-    sql: `ALTER TABLE internship_management.lecturers
-          ADD UNIQUE INDEX uq_lecturer_email (email);`,
-    ignoreErrorCode: 1061, // ER_DUP_KEYNAME — index sudah ada
-  },
-
-
-  // ── v5: Pastikan kolom email ada di tabel lecturers (untuk integrasi dashboard dosen) ─
-  {
-    description: 'Add email column to lecturers CREATE TABLE (if missing)',
-    sql: `ALTER TABLE internship_management.lecturers
-          ADD COLUMN email VARCHAR(100) NOT NULL DEFAULT '' AFTER lecturer_name;`,
-    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME — kolom sudah ada
-  },
-  {
-    description: 'Populate email for lecturers with empty email',
-    sql: `UPDATE internship_management.lecturers
-          SET email = CONCAT(nip, '@telkomuniversity.ac.id')
-          WHERE email = '';`,
-  },
-  {
-    description: 'Add unique index on lecturers.email (v5, if missing)',
-    sql: `ALTER TABLE internship_management.lecturers
-          ADD UNIQUE INDEX uq_lecturer_email_v5 (email);`,
-    ignoreErrorCode: 1061, // ER_DUP_KEYNAME — index sudah ada
-  },
-
-  // ── v5b: Tabel student_otps untuk verifikasi email mahasiswa ───────────────────
+  // ── v2: Tabel student_otps untuk verifikasi email mahasiswa ──────────────────
   {
     description: 'Create student_otps table',
     sql: `CREATE TABLE IF NOT EXISTS internship_management.student_otps (
@@ -246,18 +189,19 @@ const MIGRATIONS = [
     ) ENGINE=InnoDB;`,
   },
 
-  // ── v6: Tambah status 'rejected' — dosen tolak pengajuan ─────────────────────
+  // ── v3: Tabel lecturer_otps untuk verifikasi email dosen ──────────────────────
   {
-    description: 'Add rejected status to internship_registrations ENUM',
-    sql: `ALTER TABLE internship_management.internship_registrations
-          MODIFY COLUMN status
-          ENUM('pending_approval','approved','cancelled','rejected') DEFAULT 'pending_approval';`,
-  },
-  {
-    description: 'Add rejected_at column (if missing)',
-    sql: `ALTER TABLE internship_management.internship_registrations
-          ADD COLUMN rejected_at DATETIME NULL AFTER cancelled_at;`,
-    ignoreErrorCode: 1060,
+    description: 'Create lecturer_otps table',
+    sql: `CREATE TABLE IF NOT EXISTS internship_management.lecturer_otps (
+      otp_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+      nip          VARCHAR(30) NOT NULL,
+      email_target VARCHAR(100) NOT NULL,
+      otp_code     VARCHAR(6) NOT NULL,
+      expired_at   DATETIME NOT NULL,
+      created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_lecturer_otp
+        FOREIGN KEY (nip) REFERENCES internship_management.lecturers(nip) ON DELETE CASCADE
+    ) ENGINE=InnoDB;`,
   },
 
 ];
@@ -273,10 +217,10 @@ INSERT IGNORE INTO internship_management.students
   ('1301213003', 'Siti Rahayu',      'SI-46-01', NULL, 0, 0, '1301213003');
 
 INSERT IGNORE INTO internship_management.lecturers
-  (nip, lecturer_name, email, password) VALUES
-  ('198001012005011001', 'Dr. Bambang Supriyanto, M.T.', '198001012005011001@telkomuniversity.ac.id', 'password123'),
-  ('198205152009121002', 'Dra. Siti Aminah, M.Kom.', '198205152009121002@telkomuniversity.ac.id', 'password123'),
-  ('197803232003121003', 'Ir. Hendra Kusuma, M.T., Ph.D.', '197803232003121003@telkomuniversity.ac.id', 'password123');
+  (nip, lecturer_name, email, password, is_verified, password_changed) VALUES
+  ('198001012005011001', 'Dr. Bambang Supriyanto, M.T.', NULL, '198001012005011001', 0, 0),
+  ('198205152009121002', 'Dra. Siti Aminah, M.Kom.',     NULL, '198205152009121002', 0, 0),
+  ('197803232003121003', 'Ir. Hendra Kusuma, M.T., Ph.D.', NULL, '197803232003121003', 0, 0);
 `;
 
 // ─── Runner ───────────────────────────────────────────────────────────────────

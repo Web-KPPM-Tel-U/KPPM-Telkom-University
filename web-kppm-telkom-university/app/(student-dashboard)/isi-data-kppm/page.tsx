@@ -433,7 +433,7 @@ export default function IsiDataKppmPage() {
         mentor_position: 'mentorPosition',
         mentor_email:    'mentorEmail',
         mentor_phone:    'mentorPhone',
-        lecturer_id:     'lecturerId',
+        lecturer_nip:     'lecturerId',
       };
       Object.entries(backendToFrontend).forEach(([backKey, frontKey]) => {
         if (msg.includes(backKey)) errs[frontKey] = '';
@@ -469,7 +469,7 @@ export default function IsiDataKppmPage() {
       formData.append('mentor_position', form.mentorPosition);
       formData.append('mentor_email',    form.mentorEmail);
       formData.append('mentor_phone',    form.mentorPhone);
-      formData.append('lecturer_id',     selectedLecturerId);
+      formData.append('lecturer_nip',     selectedLecturerId);
       if (uploadedFile) formData.append('surat_toss', uploadedFile);
 
       const res = await submitKppmRegistration(formData);
@@ -799,13 +799,13 @@ export default function IsiDataKppmPage() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                 </svg>
-                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">Data Mentor Lapangan</span>
+                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">Data Pembimbing Lapang / Mentor</span>
               </div>
               <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                <DetailField label="Nama Mentor" value={detailData.mentor_name} />
-                <DetailField label="Jabatan" value={detailData.mentor_position} />
-                <DetailField label="Email" value={detailData.mentor_email} />
-                <DetailField label="No. Telepon" value={detailData.mentor_phone} />
+                <DetailField label="Nama Pembimbing Lapang / Mentor" value={detailData.mentor_name} />
+                <DetailField label="Jabatan Pembimbing Lapang / Mentor" value={detailData.mentor_position} />
+                <DetailField label="Email Pembimbing Lapang / Mentor" value={detailData.mentor_email} />
+                <DetailField label="No. Telepon Pembimbing Lapang / Mentor" value={detailData.mentor_phone} />
               </div>
             </div>
 
@@ -1052,18 +1052,18 @@ export default function IsiDataKppmPage() {
                 </svg>
               }
               title="Data Pembimbing Lapang / Mentor"
-              subtitle="Pembimbing dari perusahaan atau instansi tempat KP"
+              subtitle="Pembimbing Lapang / Mentor dari perusahaan atau instansi tempat KP"
               color="#7C3AED"
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Nama Pembimbing Lapang / Mentor" required hasError={!!fieldErrors['mentorName']}>
-                <Input id="field-mentor-name" placeholder="Nama lengkap pembimbing" value={form.mentorName} hasError={!!fieldErrors['mentorName']} onChange={(e) => handleChange('mentorName', e.target.value)} icon={<UserIcon />} />
+                <Input id="field-mentor-name" placeholder="Nama lengkap Pembimbing Lapang / Mentor" value={form.mentorName} hasError={!!fieldErrors['mentorName']} onChange={(e) => handleChange('mentorName', e.target.value)} icon={<UserIcon />} />
               </FormField>
-              <FormField label="Posisi / Jabatan Pembimbing" required hasError={!!fieldErrors['mentorPosition']}>
+              <FormField label="Posisi / Jabatan Pembimbing Lapang / Mentor" required hasError={!!fieldErrors['mentorPosition']}>
                 <Input id="field-mentor-position" placeholder="Contoh: Senior Software Engineer" value={form.mentorPosition} hasError={!!fieldErrors['mentorPosition']} onChange={(e) => handleChange('mentorPosition', e.target.value)} />
               </FormField>
               <FormField
-                label="Email Pembimbing"
+                label="Email Pembimbing Lapang / Mentor"
                 required
                 hasError={!!fieldErrors['mentorEmail']}
                 errorMsg={fieldErrors['mentorEmail']}
@@ -1079,7 +1079,7 @@ export default function IsiDataKppmPage() {
                 />
               </FormField>
               <FormField
-                label="No. Telepon Pembimbing"
+                label="No. Telepon Pembimbing Lapang / Mentor"
                 required
                 hasError={!!fieldErrors['mentorPhone']}
                 errorMsg={fieldErrors['mentorPhone']}
@@ -1129,7 +1129,7 @@ export default function IsiDataKppmPage() {
                       {isLoadingLecturers ? 'Memuat dosen...' : '— Pilih dosen pembimbing —'}
                     </option>
                     {lecturers.map((l) => (
-                      <option key={l.lecturer_id} value={l.lecturer_id}>
+                      <option key={l.nip} value={l.nip}>
                         {l.lecturer_name}
                       </option>
                     ))}

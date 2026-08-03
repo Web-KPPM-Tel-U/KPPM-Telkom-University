@@ -81,7 +81,7 @@ export const submitRegistration = async (
     mentor_position,
     mentor_email,
     mentor_phone,
-    lecturer_id,
+    lecturer_nip,
   } = req.body;
 
   // Validasi field wajib
@@ -96,7 +96,7 @@ export const submitRegistration = async (
     mentor_position,
     mentor_email,
     mentor_phone,
-    lecturer_id,
+    lecturer_nip,
   };
 
   const missingFields = Object.entries(requiredFields)
@@ -194,10 +194,10 @@ export const submitRegistration = async (
       return;
     }
 
-    // Validasi lecturer_id — pastikan dosen ada di DB
+    // Validasi lecturer_nip — pastikan dosen ada di DB
     const [lecturerRows] = await pool.execute<any[]>(
-      'SELECT lecturer_id, lecturer_name FROM lecturers WHERE lecturer_id = ?',
-      [lecturer_id]
+      'SELECT nip, lecturer_name FROM lecturers WHERE nip = ?',
+      [lecturer_nip]
     );
 
     if (!lecturerRows || lecturerRows.length === 0) {
@@ -208,12 +208,12 @@ export const submitRegistration = async (
       return;
     }
 
-    const assignedLecturerId = lecturerRows[0].lecturer_id;
+    const assignedLecturerNip = lecturerRows[0].nip;
 
     // Insert pendaftaran ke tabel internship_registrations
     const [result] = await pool.execute<any>(
       `INSERT INTO internship_registrations
-         (nim, lecturer_id, semester_code, whatsapp_number,
+         (nim, lecturer_nip, semester_code, whatsapp_number,
           company_name, internship_position,
           internship_start, internship_end,
           toss_cover_letter_file,
@@ -222,7 +222,7 @@ export const submitRegistration = async (
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_approval', NOW())`,
       [
         nim,
-        assignedLecturerId,
+        assignedLecturerNip,
         kode_semester.trim(),
         whatsapp.trim(),
         perusahaan.trim(),
@@ -244,7 +244,7 @@ export const submitRegistration = async (
       data: {
         registration_id:    result.insertId,
         status:             'pending_approval',
-        assigned_lecturer:  assignedLecturerId,
+        assigned_lecturer:  assignedLecturerNip,
         submitted_at:       new Date().toISOString(),
       },
     });
@@ -353,7 +353,7 @@ export const getRegistrationDetail = async (
               l.lecturer_name AS pembimbing_akademik,
               s.nim, s.student_name, s.class AS student_class, s.email AS student_email
        FROM internship_registrations r
-       LEFT JOIN lecturers l ON l.lecturer_id = r.lecturer_id
+       LEFT JOIN lecturers l ON l.nip = r.lecturer_nip
        LEFT JOIN students  s ON s.nim  = r.nim
        WHERE r.registration_id = ? AND r.nim = ?`,
       [registrationId, nim]
@@ -383,7 +383,7 @@ export const getLecturers = async (
 ): Promise<void> => {
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT lecturer_id, lecturer_name, nip FROM lecturers ORDER BY lecturer_name ASC'
+      'SELECT nip, lecturer_name FROM lecturers ORDER BY lecturer_name ASC'
     );
     res.status(200).json({ success: true, data: rows });
   } catch (err: any) {
@@ -492,10 +492,10 @@ export const getLecturerStudents = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
-  const lecturerId = req.user?.sub;
-  const role       = req.user?.role;
+  const lecturerNip = req.user?.sub;
+  const role        = req.user?.role;
 
-  if (!lecturerId) {
+  if (!lecturerNip) {
     res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
     return;
   }
@@ -537,17 +537,17 @@ export const getLecturerStudents = async (
        FROM internship_registrations r
        JOIN students s ON s.nim = r.nim
        LEFT JOIN lecturer_scores ls ON ls.registration_id = r.registration_id
-       WHERE r.lecturer_id = ?
+       WHERE r.lecturer_nip = ?
        ORDER BY r.submitted_at DESC
        LIMIT ? OFFSET ?`,
-      [lecturerId, limit, offset]
+      [lecturerNip, limit, offset]
     );
 
     const [countRows] = await pool.execute<any[]>(
       `SELECT COUNT(*) AS total
        FROM internship_registrations
-       WHERE lecturer_id = ?`,
-      [lecturerId]
+       WHERE lecturer_nip = ?`,
+      [lecturerNip]
     );
 
     res.status(200).json({
@@ -572,20 +572,20 @@ export const updateRegistrationStatus = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
-  const lecturerId     = req.user?.sub;
+  const lecturerNip    = req.user?.sub;
   const role           = req.user?.role;
   const registrationId = Number(req.params.id);
   const { action }     = req.body as { action: 'approved' | 'cancelled' };
 
-  if (!lecturerId) { res.status(401).json({ success: false, message: 'Tidak terautentikasi.' }); return; }
+  if (!lecturerNip) { res.status(401).json({ success: false, message: 'Tidak terautentikasi.' }); return; }
   if (role !== 'lecturer') { res.status(403).json({ success: false, message: 'Akses ditolak. Hanya untuk dosen.' }); return; }
   if (isNaN(registrationId)) { res.status(400).json({ success: false, message: 'ID pendaftaran tidak valid.' }); return; }
   if (!['approved', 'rejected'].includes(action)) { res.status(400).json({ success: false, message: 'Aksi tidak valid.' }); return; }
 
   try {
     const [rows] = await pool.execute<any[]>(
-      `SELECT registration_id, status FROM internship_registrations WHERE registration_id = ? AND lecturer_id = ?`,
-      [registrationId, lecturerId]
+      `SELECT registration_id, status FROM internship_registrations WHERE registration_id = ? AND lecturer_nip = ?`,
+      [registrationId, lecturerNip]
     );
     if (!rows || rows.length === 0) {
       res.status(404).json({ success: false, message: 'Pengajuan tidak ditemukan.' });

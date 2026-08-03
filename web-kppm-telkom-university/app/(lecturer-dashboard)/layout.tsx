@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { getUser, logout, getToken } from '@/lib/api';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import LecturerOnboardingWizard from '@/components/LecturerOnboardingWizard';
 
 const MenuIcon = () => (
   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -185,6 +186,9 @@ export default function LecturerDashboardLayout({ children }: { children: React.
         </aside>
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+
+      {/* ── Onboarding Wizard (tampil otomatis jika belum verifikasi/ganti password) ── */}
+      <LecturerOnboardingWizard />
     </div>
   );
 }
