@@ -815,3 +815,67 @@ export const changeLecturerPassword = async (req: Request, res: Response): Promi
     res.status(500).json({ success: false, message: 'Terjadi kesalahan internal pada server.' });
   }
 };
+
+// ─── Admin / PIC Login ──────────────────────────────────────────────────────────────
+export const adminLogin = async (req: Request, res: Response): Promise<void> => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400).json({ success: false, message: 'Email dan password wajib diisi' });
+    return;
+  }
+
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT admin_id, username, email, password, full_name, role, is_active FROM admin_users WHERE email = ?',
+      [email]
+    );
+
+    if (!rows || rows.length === 0) {
+      res.status(401).json({ success: false, message: 'Email atau password salah' });
+      return;
+    }
+
+    const admin = rows[0];
+
+    if (!admin.is_active) {
+      res.status(403).json({ success: false, message: 'Akun admin tidak aktif. Hubungi administrator.' });
+      return;
+    }
+
+    const passwordValid = await bcrypt.compare(password, admin.password);
+    if (!passwordValid) {
+      res.status(401).json({ success: false, message: 'Email atau password salah' });
+      return;
+    }
+
+    const payload = {
+      sub:       String(admin.admin_id),
+      admin_id:  admin.admin_id,
+      username:  admin.username,
+      email:     admin.email,
+      name:      admin.full_name,
+      role:      admin.role as 'admin' | 'pic',
+    };
+
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' } as any);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login admin berhasil',
+      data: {
+        token,
+        user: {
+          admin_id:  admin.admin_id,
+          username:  admin.username,
+          email:     admin.email,
+          name:      admin.full_name,
+          role:      admin.role as 'admin' | 'pic',
+        },
+      },
+    });
+  } catch (err: any) {
+    console.error('[Auth Service] adminLogin error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server. Silakan coba lagi.' });
+  }
+};

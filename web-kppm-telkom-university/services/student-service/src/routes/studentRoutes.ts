@@ -1,12 +1,34 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { getProfile, getDashboard, changePassword, getMyGrades } from '../controllers/studentController';
 import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload } from '../controllers/kppmController';
 import { getMentorDashboard } from '../controllers/mentorController';
 import { submitMentorGrade, getMentorGrade, getAllMentorGrades } from '../controllers/mentorGradesController';
 import { submitLecturerGrade, getLecturerGrade, getLecturerStudentFullGrades } from '../controllers/lecturerGradesController';
-import { verifyToken } from '../middleware/authMiddleware';
+import { getAdminStats, getAdminLecturers, getAdminStudents, getAdminSemesters, injectStudents, injectLecturers } from '../controllers/adminController';
+import { verifyToken, verifyAdminToken } from '../middleware/authMiddleware';
 
 const router = Router();
+
+// Multer in-memory untuk inject CSV/XLSX (max 5 MB)
+const uploadInMemory = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/octet-stream',
+    ];
+    const ext = file.originalname.toLowerCase();
+    if (allowed.includes(file.mimetype) || ext.endsWith('.csv') || ext.endsWith('.xlsx') || ext.endsWith('.xls')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Hanya file CSV atau XLSX yang diizinkan.'));
+    }
+  },
+});
 
 // ─── Student Routes ───────────────────────────────────────────────────────────
 router.get('/profile',   verifyToken, getProfile);
@@ -45,5 +67,18 @@ router.get('/mentor/grades',                 verifyToken, getAllMentorGrades);
 router.get('/mentor/grades/:registration_id', verifyToken, getMentorGrade);
 router.post('/mentor/grades/:registration_id', verifyToken, submitMentorGrade);
 
-export default router;
+// ─── Admin / PIC Routes ─────────────────────────────────────
+// GET  /admin/stats               — statistik ringkasan
+// GET  /admin/lecturers           — daftar semua dosen
+// GET  /admin/students            — daftar semua mahasiswa
+// GET  /admin/semesters           — daftar kode semester
+// POST /admin/inject/students     — import mahasiswa dari CSV/XLSX
+// POST /admin/inject/lecturers    — import dosen dari CSV/XLSX
+router.get('/admin/stats',                   verifyAdminToken, getAdminStats);
+router.get('/admin/lecturers',               verifyAdminToken, getAdminLecturers);
+router.get('/admin/students',                verifyAdminToken, getAdminStudents);
+router.get('/admin/semesters',               verifyAdminToken, getAdminSemesters);
+router.post('/admin/inject/students',  verifyAdminToken, uploadInMemory.single('file'), injectStudents);
+router.post('/admin/inject/lecturers', verifyAdminToken, uploadInMemory.single('file'), injectLecturers);
 
+export default router;
