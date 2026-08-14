@@ -44,9 +44,9 @@ const ClipboardIcon = () => (
 
 // ─── KPPM Logo Mark ───────────────────────────────────────────────────────────
 const KPPMLogoMark = () => (
-  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M4 5h3v10H4V5zm4 0h3l3 5-3 5h-3l3-5-3-5z" fill="#CC0000" />
+  <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#CC0000" width="20" height="20">
+      <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
     </svg>
   </div>
 );
@@ -103,16 +103,16 @@ export default function MentorDashboardLayout({ children }: { children: React.Re
           TOPBAR
           ══════════════════════════════════ */}
       <header
-        className="bg-[#CC0000] dark:bg-slate-900 h-16 flex items-center px-4 gap-3 z-30 flex-shrink-0 transition-colors duration-300"
-        style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.22), 0 1px 0 rgba(0,0,0,0.08)' }}
+        className="-mb-[1px] bg-[#CC0000] dark:bg-slate-900 h-16 flex items-center px-4 gap-3 z-30 flex-shrink-0 transition-colors duration-300"
+        style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.22)' }}
       >
 
         {/* Logo + Name */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <KPPMLogoMark />
           <div className="hidden sm:block">
-            <p className="text-white font-bold text-base leading-tight">SISTEM MANAJEMEN KPPM</p>
-            <p className="text-red-200 text-xs leading-tight">Telkom University</p>
+            <p className="text-white font-black text-[17px] leading-tight tracking-wide">SISTEM MANAJEMEN KPPM</p>
+            <p className="text-red-200 text-[12px] font-bold leading-tight tracking-wider uppercase mt-0.5">Telkom University — Pembimbing Lapangan</p>
           </div>
         </div>
 
@@ -185,7 +185,7 @@ export default function MentorDashboardLayout({ children }: { children: React.Re
           className={`relative bg-white dark:bg-slate-900 flex-shrink-0 transition-all duration-300 overflow-hidden z-20 border-r border-[#ebebeb] dark:border-slate-700/60 flex flex-col ${sidebarOpen ? 'w-64' : 'w-[84px]'}`}
           style={{ boxShadow: '2px 0 12px rgba(0,0,0,0.05)' }}
         >
-          <div className="p-3 border-b border-gray-100 dark:border-slate-800">
+          <div className="p-3 border-b border-gray-100 dark:border-slate-800 transition-colors duration-300">
             <div className="relative flex items-center p-2 rounded-2xl border border-gray-200/60 dark:border-slate-700/60 bg-gray-50 dark:bg-slate-800/40 transition-all duration-300 overflow-hidden justify-start">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-[#CC0000]/10 dark:bg-red-500/20 text-[#CC0000] dark:text-red-400 flex items-center justify-center font-bold text-sm flex-shrink-0" style={{ boxShadow: 'inset 0 0 0 1px rgba(204,0,0,0.1)' }}>
@@ -234,7 +234,7 @@ export default function MentorDashboardLayout({ children }: { children: React.Re
             })}
           </nav>
           
-          <div className="p-3 flex flex-col gap-1 border-t border-gray-100 dark:border-slate-800">
+          <div className="p-3 flex flex-col gap-1 border-t border-gray-100 dark:border-slate-800 transition-colors duration-300">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle Sidebar" className="relative flex items-center px-4 py-3 rounded-xl text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800/40 hover:text-gray-700 dark:hover:text-slate-200 font-medium transition-all duration-150">
               <span className="flex-shrink-0 flex items-center justify-center w-[28px] [&>svg]:w-[22px] [&>svg]:h-[22px]">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
