@@ -6,7 +6,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// ─── Multer Storage Config ────────────────────────────────────────────────────
+// ─── Multer Storage Config (TOSS Cover Letter) ───────────────────────────────
 
 const uploadDir = path.join(__dirname, '../../uploads/toss');
 if (!fs.existsSync(uploadDir)) {
@@ -38,6 +38,40 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+});
+
+// ─── Multer Storage Config (KP Results Documents) ────────────────────────────
+
+const kpResultsUploadDir = path.join(__dirname, '../../uploads/kp-results');
+if (!fs.existsSync(kpResultsUploadDir)) {
+  fs.mkdirSync(kpResultsUploadDir, { recursive: true });
+}
+
+const kpResultsStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, kpResultsUploadDir),
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(null, `kp-${uniqueSuffix}${path.extname(file.originalname)}`);
+  },
+});
+
+const kpResultsFileFilter = (
+  _req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  const allowed = ['application/pdf', 'image/jpeg', 'image/png'];
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Format file tidak didukung. Gunakan PDF, JPG, atau PNG.'));
+  }
+};
+
+export const uploadKpDocuments = multer({
+  storage: kpResultsStorage,
+  fileFilter: kpResultsFileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB per file
 });
 
 // ─── Submit Pendaftaran KPPM ──────────────────────────────────────────────────
@@ -616,6 +650,319 @@ export const updateRegistrationStatus = async (
     }
   } catch (err: any) {
     console.error('[KPPM] updateRegistrationStatus error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Get KP Results Status ────────────────────────────────────────────────────
+
+/**
+ * GET /student/kppm/results
+ * Cek eligibility upload dan ambil data yang sudah diupload (jika ada).
+ * Returns:
+ *   - eligible: boolean
+ *   - reason: string (jika tidak eligible)
+ *   - registration: data registrasi KP
+ *   - documents: data dokumen yang sudah diupload (null jika belum)
+ *   - grades_status: { mentor: boolean, lecturer: boolean }
+ */
+export const getKpResults = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const nim = req.user?.nim || String(req.user?.sub || '');
+  if (!nim) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+    return;
+  }
+
+  try {
+    // Ambil pendaftaran KP yang sudah disetujui (JOIN students untuk data mahasiswa)
+    const [regRows] = await pool.execute<any[]>(
+      `SELECT ir.registration_id, ir.company_name, ir.internship_position,
+              ir.internship_start, ir.internship_end, ir.semester_code,
+              ir.mentor_name, ir.mentor_position, ir.mentor_email, ir.mentor_phone,
+              ir.whatsapp_number,
+              s.nim AS student_nim, s.student_name, s.class AS student_class, s.email AS student_email,
+              l.lecturer_name AS dosen_name, l.nip AS dosen_nip
+       FROM internship_registrations ir
+       JOIN lecturers l ON ir.lecturer_nip = l.nip
+       JOIN students  s ON ir.nim = s.nim
+       WHERE ir.nim = ? AND ir.status = 'approved'
+       ORDER BY ir.approved_at DESC
+       LIMIT 1`,
+      [nim]
+    );
+
+    if (regRows.length === 0) {
+      res.status(200).json({
+        success: true,
+        data: {
+          eligible: false,
+          reason: 'no_approved_registration',
+          message: 'Belum ada pendaftaran KPPM yang disetujui.',
+          registration: null,
+          documents: null,
+          grades_status: { mentor: false, lecturer: false },
+        },
+      });
+      return;
+    }
+
+    const reg = regRows[0];
+
+    // Cek nilai mentor
+    const [mentorRows] = await pool.execute<any[]>(
+      'SELECT mentor_score_id FROM mentor_scores WHERE registration_id = ? LIMIT 1',
+      [reg.registration_id]
+    );
+    const hasMentorGrade = mentorRows.length > 0;
+
+    // Cek nilai dosen PA
+    const [lecturerRows] = await pool.execute<any[]>(
+      'SELECT lecturer_score_id FROM lecturer_scores WHERE registration_id = ? LIMIT 1',
+      [reg.registration_id]
+    );
+    const hasLecturerGrade = lecturerRows.length > 0;
+
+    const eligible = hasMentorGrade && hasLecturerGrade;
+
+    let reason = '';
+    if (!hasMentorGrade && !hasLecturerGrade) {
+      reason = 'no_grades';
+    } else if (!hasMentorGrade) {
+      reason = 'no_mentor_grade';
+    } else if (!hasLecturerGrade) {
+      reason = 'no_lecturer_grade';
+    }
+
+    // Ambil dokumen yang sudah diupload (jika ada)
+    const [docRows] = await pool.execute<any[]>(
+      'SELECT * FROM internship_documents WHERE registration_id = ? LIMIT 1',
+      [reg.registration_id]
+    );
+    const documents = docRows.length > 0 ? {
+      document_id:                   docRows[0].document_id,
+      certificate_file:              docRows[0].certificate_file,
+      field_supervisor_score_file:   docRows[0].field_supervisor_score_file,
+      academic_supervisor_score_file:docRows[0].academic_supervisor_score_file,
+      implementation_agreement_file: docRows[0].implementation_agreement_file,
+      created_at:                    docRows[0].created_at,
+      updated_at:                    docRows[0].updated_at,
+    } : null;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        eligible,
+        reason,
+        registration: {
+          registration_id:    reg.registration_id,
+          // Data mahasiswa
+          student_nim:        reg.student_nim,
+          student_name:       reg.student_name,
+          student_class:      reg.student_class,
+          student_email:      reg.student_email,
+          whatsapp_number:    reg.whatsapp_number,
+          // Data KP
+          company_name:       reg.company_name,
+          internship_position:reg.internship_position,
+          internship_start:   reg.internship_start,
+          internship_end:     reg.internship_end,
+          semester_code:      reg.semester_code,
+          // Data mentor / pembimbing lapang
+          mentor_name:        reg.mentor_name,
+          mentor_position:    reg.mentor_position,
+          mentor_email:       reg.mentor_email,
+          mentor_phone:       reg.mentor_phone,
+          // Data dosen PA
+          dosen_name:         reg.dosen_name,
+        },
+        documents,
+        grades_status: {
+          mentor:   hasMentorGrade,
+          lecturer: hasLecturerGrade,
+        },
+      },
+    });
+  } catch (err: any) {
+    console.error('[KPPM] getKpResults error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Upload KP Results ────────────────────────────────────────────────────────
+
+/**
+ * POST /student/kppm/results
+ * Body (multipart/form-data):
+ *   - certificate_file              : File (PDF/JPG/PNG, max 5MB) — Wajib
+ *   - field_supervisor_score_file   : File (PDF/JPG/PNG, max 5MB) — Wajib
+ *   - academic_supervisor_score_file: File (PDF/JPG/PNG, max 5MB) — Wajib
+ *   - implementation_agreement_file : File (PDF/JPG/PNG, max 5MB) — Opsional
+ */
+export const uploadKpResults = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const nim = req.user?.nim || String(req.user?.sub || '');
+  if (!nim) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+    return;
+  }
+
+  try {
+    // Ambil registration yang approved
+    const [regRows] = await pool.execute<any[]>(
+      `SELECT registration_id FROM internship_registrations
+       WHERE nim = ? AND status = 'approved'
+       ORDER BY approved_at DESC LIMIT 1`,
+      [nim]
+    );
+
+    if (regRows.length === 0) {
+      res.status(400).json({ success: false, message: 'Tidak ada pendaftaran KPPM yang disetujui.' });
+      return;
+    }
+
+    const registrationId = regRows[0].registration_id;
+
+    // Verifikasi eligibility: kedua pembimbing harus sudah memberikan nilai
+    const [mentorRows] = await pool.execute<any[]>(
+      'SELECT mentor_score_id FROM mentor_scores WHERE registration_id = ? LIMIT 1',
+      [registrationId]
+    );
+    const [lecturerRows] = await pool.execute<any[]>(
+      'SELECT lecturer_score_id FROM lecturer_scores WHERE registration_id = ? LIMIT 1',
+      [registrationId]
+    );
+
+    if (mentorRows.length === 0 || lecturerRows.length === 0) {
+      res.status(403).json({
+        success: false,
+        message: 'Kedua pembimbing harus memberikan nilai sebelum dapat mengupload dokumen hasil KP.',
+      });
+      return;
+    }
+
+    // Ambil file yang diupload
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+    const certificateFile            = files?.certificate_file?.[0];
+    const fieldSupervisorScoreFile   = files?.field_supervisor_score_file?.[0];
+    const academicSupervisorScoreFile = files?.academic_supervisor_score_file?.[0];
+    const implementationAgreementFile = files?.implementation_agreement_file?.[0];
+
+    // Validasi file wajib
+    if (!certificateFile) {
+      res.status(400).json({ success: false, message: 'File sertifikat/surat selesai magang wajib diupload.' });
+      return;
+    }
+    if (!fieldSupervisorScoreFile) {
+      res.status(400).json({ success: false, message: 'Scan penilaian pembimbing lapang wajib diupload.' });
+      return;
+    }
+    if (!academicSupervisorScoreFile) {
+      res.status(400).json({ success: false, message: 'Scan penilaian pembimbing akademik wajib diupload.' });
+      return;
+    }
+
+    const certPath     = `kp-results/${certificateFile.filename}`;
+    const fieldPath    = `kp-results/${fieldSupervisorScoreFile.filename}`;
+    const acadPath     = `kp-results/${academicSupervisorScoreFile.filename}`;
+    const iaPath       = implementationAgreementFile
+      ? `kp-results/${implementationAgreementFile.filename}`
+      : null;
+
+    // Cek apakah sudah ada dokumen sebelumnya
+    const [existingDocs] = await pool.execute<any[]>(
+      'SELECT document_id FROM internship_documents WHERE registration_id = ? LIMIT 1',
+      [registrationId]
+    );
+
+    if (existingDocs.length > 0) {
+      // Update dokumen yang sudah ada
+      await pool.execute(
+        `UPDATE internship_documents
+         SET certificate_file = ?,
+             field_supervisor_score_file = ?,
+             academic_supervisor_score_file = ?,
+             implementation_agreement_file = ?
+         WHERE registration_id = ?`,
+        [certPath, fieldPath, acadPath, iaPath, registrationId]
+      );
+      res.status(200).json({ success: true, message: 'Dokumen hasil KP berhasil diperbarui.' });
+    } else {
+      // Insert dokumen baru
+      await pool.execute(
+        `INSERT INTO internship_documents
+         (registration_id, certificate_file, field_supervisor_score_file, academic_supervisor_score_file, implementation_agreement_file)
+         VALUES (?, ?, ?, ?, ?)`,
+        [registrationId, certPath, fieldPath, acadPath, iaPath]
+      );
+      res.status(201).json({ success: true, message: 'Dokumen hasil KP berhasil diupload.' });
+    }
+  } catch (err: any) {
+    console.error('[KPPM] uploadKpResults error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Get KP Results Mahasiswa Bimbingan (untuk Dosen) ─────────────────────────
+
+/**
+ * GET /student/lecturer/kp-results
+ * Mengembalikan semua mahasiswa approved beserta status dokumen hasil KP mereka.
+ * Requires JWT dengan role 'lecturer'.
+ */
+export const getLecturerKpResults = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const lecturerNip = req.user?.sub;
+  const role        = req.user?.role;
+
+  if (!lecturerNip) {
+    res.status(401).json({ success: false, message: 'Tidak terautentikasi.' });
+    return;
+  }
+  if (role !== 'lecturer') {
+    res.status(403).json({ success: false, message: 'Akses ditolak. Hanya untuk dosen.' });
+    return;
+  }
+
+  try {
+    const [rows] = await pool.execute<any[]>(
+      `SELECT
+         r.registration_id,
+         s.nim,
+         s.student_name,
+         s.class          AS student_class,
+         s.email          AS student_email,
+         r.whatsapp_number,
+         r.company_name,
+         r.internship_position,
+         r.internship_start,
+         r.internship_end,
+         r.semester_code,
+         r.approved_at,
+         r.mentor_name,
+         r.mentor_position,
+         r.mentor_email,
+         r.mentor_phone,
+         d.document_id,
+         d.certificate_file,
+         d.field_supervisor_score_file,
+         d.academic_supervisor_score_file,
+         d.implementation_agreement_file,
+         d.created_at     AS uploaded_at,
+         d.updated_at     AS updated_at
+       FROM internship_registrations r
+       JOIN students s ON s.nim = r.nim
+       LEFT JOIN internship_documents d ON d.registration_id = r.registration_id
+       WHERE r.lecturer_nip = ?
+         AND r.status = 'approved'
+       ORDER BY d.updated_at DESC, r.registration_id DESC`,
+      [lecturerNip]
+    );
+
+    res.status(200).json({ success: true, data: rows });
+  } catch (err: any) {
+    console.error('[KPPM] getLecturerKpResults error:', err.message);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
 };
