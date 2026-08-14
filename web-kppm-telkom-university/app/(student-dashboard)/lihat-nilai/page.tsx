@@ -245,7 +245,7 @@ export default function LihatNilaiPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h1 className="text-base font-bold text-gray-900 dark:text-gray-100">Rekap Nilai KPPM</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Rekap Nilai KPPM</h1>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Nilai dari pembimbing akademik dan mentor perusahaan</p>
           </div>
           <nav className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
@@ -383,7 +383,7 @@ export default function LihatNilaiPage() {
           </button>
           <span className="text-gray-300 dark:text-gray-600">|</span>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Detail Rekap Nilai</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Rekap Nilai</h1>
             <p className="text-gray-500 text-sm mt-0.5">Nilai dari pembimbing lapangan dan pembimbing akademik</p>
           </div>
         </div>

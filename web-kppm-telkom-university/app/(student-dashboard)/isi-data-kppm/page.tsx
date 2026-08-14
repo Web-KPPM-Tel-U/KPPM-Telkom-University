@@ -557,7 +557,7 @@ export default function IsiDataKppmPage() {
             <polyline points="20,6 9,17 4,12" />
           </svg>
         </div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">Pendaftaran Berhasil Dikirim</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Pendaftaran Berhasil Dikirim</h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 max-w-sm">
           Data KP/Magang Anda telah dikirim dan sedang menunggu verifikasi dari pembimbing akademik.
         </p>
@@ -652,7 +652,7 @@ export default function IsiDataKppmPage() {
             </button>
             <span className="text-gray-300 dark:text-gray-600">|</span>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Detail Pendaftaran KP / Magang</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Pendaftaran KP / Magang</h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Informasi lengkap pengajuan KPPM</p>
             </div>
           </div>
@@ -884,7 +884,7 @@ export default function IsiDataKppmPage() {
             </button>
             <span className="text-gray-300 dark:text-gray-600">|</span>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Formulir Pendaftaran KP / Magang</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Formulir Pendaftaran KP / Magang</h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Lengkapi semua data sebelum mengirim</p>
             </div>
           </div>
@@ -1270,7 +1270,7 @@ export default function IsiDataKppmPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-base font-bold text-gray-900 dark:text-gray-100">Pendaftaran KP / Magang</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Pendaftaran KP / Magang</h1>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Riwayat pengajuan KPPM Anda</p>
         </div>
         <nav className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5">

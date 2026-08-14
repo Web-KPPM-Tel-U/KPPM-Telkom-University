@@ -143,7 +143,7 @@ export default function DosenPengaturanPage() {
 
       {/* ── Page title ── */}
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100">Pengaturan</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Pengaturan</h1>
         <p className="text-gray-400 dark:text-slate-500 text-sm mt-0.5">Kelola profil dan keamanan akun Anda</p>
       </div>
 

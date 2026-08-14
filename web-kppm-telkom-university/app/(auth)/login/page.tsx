@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   loginMahasiswa,
@@ -43,18 +43,112 @@ const SuccessIcon = () => (
   </svg>
 );
 
-// ─── KPPM Logo ────────────────────────────────────────────────────────────────
+// ─── Left Panel Illustration ───────────────────────────────────────────────────
 
-const KPPMLogo = () => (
-  <div className="flex flex-col items-center gap-3 mb-6">
-    <div className="w-14 h-14 bg-[#CC0000] rounded-2xl flex items-center justify-center shadow-md">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <path d="M7 8h5v16H7V8zm6 0h5l5 8-5 8h-5l5-8-5-8z" fill="white" />
-      </svg>
+const LeftIllustration = () => (
+  <div className="relative w-full h-full flex flex-col items-center justify-center px-10 py-12 overflow-hidden backdrop-blur-sm"
+       style={{ background: 'linear-gradient(135deg, rgba(180,0,0,0.82) 0%, rgba(100,0,0,0.88) 60%, rgba(50,0,0,0.92) 100%)' }}>
+
+    {/* Decorative circles */}
+    <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
+    <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-white/5" />
+    <div className="absolute top-1/3 -right-10 w-40 h-40 rounded-full bg-red-400/20" />
+
+    {/* Grid lines decoration */}
+    <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice">
+      {[...Array(8)].map((_, i) => (
+        <line key={`v${i}`} x1={i * 60} y1="0" x2={i * 60} y2="600" stroke="white" strokeWidth="0.5" />
+      ))}
+      {[...Array(12)].map((_, i) => (
+        <line key={`h${i}`} x1="0" y1={i * 55} x2="400" y2={i * 55} stroke="white" strokeWidth="0.5" />
+      ))}
+    </svg>
+
+    {/* Main SVG Illustration */}
+    <svg viewBox="0 0 320 275" fill="none" className="w-full max-w-xs relative z-10 drop-shadow-2xl">
+      {/* Laptop base */}
+      <rect x="60" y="200" width="200" height="12" rx="6" fill="#fff" fillOpacity="0.15" />
+      <rect x="75" y="115" width="170" height="90" rx="8" fill="#fff" fillOpacity="0.18" />
+      <rect x="80" y="119" width="160" height="82" rx="6" fill="#fff" fillOpacity="0.10" />
+      {/* Screen content lines */}
+      <rect x="90" y="128" width="80" height="5" rx="2.5" fill="white" fillOpacity="0.5" />
+      <rect x="90" y="138" width="55" height="4" rx="2" fill="white" fillOpacity="0.3" />
+      <rect x="90" y="148" width="100" height="3" rx="1.5" fill="white" fillOpacity="0.25" />
+      <rect x="90" y="155" width="70" height="3" rx="1.5" fill="white" fillOpacity="0.25" />
+      <rect x="90" y="165" width="120" height="20" rx="4" fill="#fff" fillOpacity="0.15" />
+      <rect x="95" y="170" width="40" height="5" rx="2.5" fill="white" fillOpacity="0.5" />
+      {/* Laptop keyboard */}
+      <rect x="75" y="206" width="170" height="6" rx="3" fill="#fff" fillOpacity="0.08" />
+
+      {/* Floating document card top-right */}
+      <rect x="215" y="80" width="80" height="60" rx="8" fill="white" fillOpacity="0.15" />
+      <rect x="222" y="90" width="45" height="4" rx="2" fill="white" fillOpacity="0.6" />
+      <rect x="222" y="99" width="55" height="3" rx="1.5" fill="white" fillOpacity="0.35" />
+      <rect x="222" y="107" width="38" height="3" rx="1.5" fill="white" fillOpacity="0.35" />
+      <rect x="222" y="118" width="60" height="12" rx="4" fill="#fff" fillOpacity="0.2" />
+      <rect x="228" y="121" width="25" height="4" rx="2" fill="white" fillOpacity="0.7" />
+
+      {/* Floating badge — "Approved" */}
+      <rect x="22" y="150" width="75" height="34" rx="10" fill="white" fillOpacity="0.15" />
+      <circle cx="38" cy="167" r="7" fill="#4ade80" fillOpacity="0.9" />
+      <polyline points="34,167 37,171 43,163" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="49" y="162" width="38" height="4" rx="2" fill="white" fillOpacity="0.7" />
+      <rect x="49" y="169" width="25" height="3" rx="1.5" fill="white" fillOpacity="0.4" />
+
+      {/* Person silhouette */}
+      {/* Head */}
+      <circle cx="160" cy="75" r="28" fill="#fff" fillOpacity="0.15" />
+      <circle cx="160" cy="72" r="16" fill="#fff" fillOpacity="0.25" />
+      {/* Graduation cap */}
+      <rect x="145" y="54" width="30" height="4" rx="2" fill="white" fillOpacity="0.8" />
+      <polygon points="160,46 178,56 160,60 142,56" fill="white" fillOpacity="0.9" />
+      <line x1="178" y1="56" x2="182" y2="64" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="182" cy="65" r="2.5" fill="white" fillOpacity="0.8" />
+      {/* Body */}
+      <path d="M136 103 Q160 96 184 103 L190 200 H130 Z" fill="#fff" fillOpacity="0.13" />
+      {/* Arms */}
+      <path d="M136 115 Q110 130 105 155" stroke="white" strokeWidth="8" strokeLinecap="round" fillOpacity="0" fill="none" opacity="0.2" />
+      <path d="M184 115 Q205 135 200 160" stroke="white" strokeWidth="8" strokeLinecap="round" fillOpacity="0" fill="none" opacity="0.2" />
+
+      {/* Floating stat pill */}
+      <rect x="195" y="175" width="90" height="32" rx="10" fill="white" fillOpacity="0.15" />
+      <rect x="203" y="183" width="30" height="4" rx="2" fill="white" fillOpacity="0.5" />
+      <rect x="203" y="190" width="50" height="5" rx="2.5" fill="white" fillOpacity="0.8" />
+      <rect x="255" y="182" width="22" height="18" rx="5" fill="#fff" fillOpacity="0.2" />
+
+      {/* Small floating icons */}
+      <rect x="28" y="90" width="36" height="36" rx="10" fill="white" fillOpacity="0.12" />
+      <path d="M38 108 h16 M38 102 h10 M38 114 h14" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+
+      <rect x="255" y="140" width="36" height="36" rx="10" fill="white" fillOpacity="0.12" />
+      <circle cx="273" cy="155" r="6" stroke="white" strokeWidth="1.8" />
+      <path d="M273 149 V146 M273 164 V161 M267 155 H264 M282 155 H279" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+
+      {/* Bottom decoration dots */}
+      <circle cx="80" cy="265" r="5" fill="white" fillOpacity="0.3" />
+      <circle cx="100" cy="270" r="3" fill="white" fillOpacity="0.2" />
+      <circle cx="220" cy="260" r="4" fill="white" fillOpacity="0.25" />
+      <circle cx="240" cy="272" r="6" fill="white" fillOpacity="0.15" />
+    </svg>
+
+    {/* Text */}
+    <div className="relative z-10 text-center mt-2">
+      <p className="text-white font-bold text-xl leading-snug">
+        Kelola Kerja Praktek<br />
+        <span className="text-red-200">lebih mudah</span> dan terstruktur
+      </p>
+      <p className="text-red-200/80 text-sm mt-3 leading-relaxed max-w-xs">
+        Platform terpadu untuk mahasiswa, dosen, dan pembimbing lapangan Telkom University
+      </p>
     </div>
-    <div className="text-center">
-      <p className="font-bold text-gray-900 text-base leading-tight">SISTEM MANAJEMEN KPPM</p>
-      <p className="text-gray-400 text-xs mt-0.5">Telkom University</p>
+
+    {/* Feature pills */}
+    <div className="relative z-10 flex flex-wrap justify-center gap-2 mt-5">
+      {['Pendaftaran KP', 'Monitoring', 'Penilaian'].map((f) => (
+        <span key={f} className="px-3 py-1 rounded-full bg-white/10 text-white/80 text-xs font-medium border border-white/15">
+          {f}
+        </span>
+      ))}
     </div>
   </div>
 );
@@ -64,6 +158,7 @@ type TabRole = 'mahasiswa' | 'dosen' | 'mentor';
 export default function LoginPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabRole>('mahasiswa');
+  const slideDirectionRef = useRef<1 | -1>(1);
 
   // ── Mahasiswa state
   const [mahasiswaNim, setMahasiswaNim] = useState('');
@@ -86,12 +181,10 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Redirect jika sudah login
   useEffect(() => {
     if (getToken()) router.replace('/dashboard');
   }, [router]);
 
-  // Countdown OTP
   useEffect(() => {
     if (otpCountdown <= 0) return;
     const timer = setTimeout(() => setOtpCountdown((c) => c - 1), 1000);
@@ -100,7 +193,64 @@ export default function LoginPage() {
 
   const clearMessages = () => { setError(''); setSuccess(''); };
 
-  // ── Handler: Login Mahasiswa ─────────────────────────────────────────────────
+  // ── Vanta.js TOPOLOGY background
+  const vantaRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const vantaEffect = useRef<any>(null);
+
+  useEffect(() => {
+    const loadScript = (src: string) =>
+      new Promise<void>((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = () => resolve();
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+
+    (async () => {
+      try {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js');
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.min.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.topology.min.js');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const W = window as any;
+        if (vantaRef.current && W.VANTA && !vantaEffect.current) {
+          vantaEffect.current = W.VANTA.TOPOLOGY({
+            el: vantaRef.current,
+            p5: W.p5,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200,
+            minWidth: 200,
+            scale: 1.0,
+            scaleMobile: 1.0,
+            color: 0xcd4b4b,
+            backgroundColor: 0xffffff,
+          });
+        }
+      } catch (e) {
+        console.warn('Vanta.js failed to load', e);
+      }
+    })();
+
+    return () => {
+      if (vantaEffect.current) { vantaEffect.current.destroy(); vantaEffect.current = null; }
+    };
+  }, []);
+
+
+  const handleTabChange = (key: TabRole) => {
+    if (key === activeTab) return;
+    const oldIdx = tabs.findIndex(t => t.key === activeTab);
+    const newIdx = tabs.findIndex(t => t.key === key);
+    slideDirectionRef.current = newIdx > oldIdx ? 1 : -1;
+    setActiveTab(key);
+    clearMessages();
+  };
+
   const handleMahasiswaLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
@@ -123,7 +273,6 @@ export default function LoginPage() {
     }
   };
 
-  // ── Handler: Login Dosen ─────────────────────────────────────────────────────
   const handleDosenLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
@@ -146,7 +295,6 @@ export default function LoginPage() {
     }
   };
 
-  // ── Handler: Kirim OTP ───────────────────────────────────────────────────────
   const handleSendOtp = async () => {
     clearMessages();
     if (!mentorEmail.trim()) { setError('Email wajib diisi'); return; }
@@ -167,7 +315,6 @@ export default function LoginPage() {
     }
   };
 
-  // ── Handler: Verify OTP ──────────────────────────────────────────────────────
   const handleMentorLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
@@ -195,230 +342,236 @@ export default function LoginPage() {
     { key: 'dosen', label: 'Pembimbing Akademik' },
     { key: 'mentor', label: 'Mentor' },
   ];
+  const tabIndex = tabs.findIndex(t => t.key === activeTab);
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden bg-white">
-      {/* HD Background Image (Perfect Red & White Pattern Mapping) */}
-      <div className="absolute inset-0 z-0 bg-[#CC0000] overflow-hidden">
-        {/* mix-blend-screen maps the grayscale image perfectly to Red (shadows) and White (highlights).
-            We rotate the image 180deg to move its natural dark shadow to the bottom, where it is completely hidden by the white fade overlay. */}
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=100&w=3000&auto=format&fit=crop')] bg-cover bg-center grayscale contrast-150 mix-blend-screen rotate-180"></div>
-        
-        {/* Uniform white overlay to soften the entire image */}
-        <div className="absolute inset-0 bg-white/30"></div>
-        {/* Smooth white fade covering the bottom half so the form remains clean and highly readable */}
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/70 to-transparent"></div>
-      </div>
-      <div className="w-full max-w-md z-10">
-        {/* ── Card ── */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+      {/* Vanta.js FOG animated background */}
+      <div ref={vantaRef} className="absolute inset-0 z-0" />
 
-          {/* ── Card Header — Logo + Nama ── */}
-          <div className="px-8 pt-8 pb-6 border-b border-gray-100">
-            <KPPMLogo />
-            <h1 className="text-xl font-bold text-gray-900 text-center">Masuk ke KPPM</h1>
-            <p className="text-gray-400 text-sm text-center mt-1">Pilih role Anda untuk melanjutkan</p>
+      {/* Outer card — split layout */}
+      <div className="relative z-10 w-full max-w-5xl flex rounded-3xl overflow-hidden" style={{ minHeight: '600px', boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 32px 80px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.35)' }}>
+
+        {/* ── LEFT PANEL — Illustration ── */}
+        <div className="hidden lg:flex lg:w-5/12 flex-shrink-0">
+          <LeftIllustration />
+        </div>
+
+        {/* ── RIGHT PANEL — Form ── */}
+        <div className="flex-1 bg-white flex flex-col justify-start px-10 pt-12 pb-8">
+
+          {/* Logo + title */}
+          <div className="mb-7">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 bg-[#CC0000] rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                  <path d="M7 8h5v16H7V8zm6 0h5l5 8-5 8h-5l5-8-5-8z" fill="white" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-sm leading-tight">SISTEM MANAJEMEN KPPM</p>
+                <p className="text-gray-400 text-xs">Telkom University</p>
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Selamat Datang</h1>
+            <p className="text-gray-400 text-sm mt-1">Pilih role dan masuk ke akun Anda</p>
           </div>
 
-          {/* ── Tab Switcher ── */}
-          <div className="flex border-b border-gray-100">
+          {/* Tab switcher — sliding indicator */}
+          <div className="relative flex bg-gray-100 rounded-xl p-1 mb-6">
+            {/* Sliding white pill */}
+            <div
+              className="absolute rounded-lg bg-white shadow-sm transition-all duration-300 ease-in-out"
+              style={{
+                top: '4px',
+                bottom: '4px',
+                width: 'calc((100% - 8px) / 3)',
+                left: `calc(4px + ${tabIndex} * (100% - 8px) / 3)`,
+              }}
+            />
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 id={`tab-${tab.key}`}
-                onClick={() => { setActiveTab(tab.key); clearMessages(); }}
-                className={`flex-1 py-2.5 px-3 text-sm font-semibold transition-all duration-200 border-b-2 text-center leading-snug min-h-[48px] flex items-center justify-center ${activeTab === tab.key
-                    ? 'border-[#CC0000] text-[#CC0000] bg-red-50/60'
-                    : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                  }`}
+                onClick={() => handleTabChange(tab.key)}
+                className={`relative z-10 flex-1 py-2 px-2 text-xs font-semibold rounded-lg transition-colors duration-200 text-center leading-snug ${
+                  activeTab === tab.key
+                    ? 'text-[#CC0000]'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
               >
                 {tab.label}
               </button>
             ))}
           </div>
 
-          {/* ── Form Area ── */}
-          <div className="px-8 py-7">
-            {/* Pesan Error / Sukses */}
-            {error && (
-              <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-start gap-2.5">
-                <span className="mt-0.5 flex-shrink-0 text-red-500"><AlertIcon /></span>
-                <span>{error}</span>
+          {/* Messages */}
+          {error && (
+            <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-start gap-2.5">
+              <span className="mt-0.5 flex-shrink-0 text-red-500"><AlertIcon /></span>
+              <span>{error}</span>
+            </div>
+          )}
+          {success && (
+            <div className="mb-5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm flex items-start gap-2.5">
+              <span className="mt-0.5 flex-shrink-0 text-green-500"><SuccessIcon /></span>
+              <span>{success}</span>
+            </div>
+          )}
+
+          {/* ── Animated form container ── */}
+          <style>{`
+            @keyframes kppmFadeIn {
+              from { opacity: 0; transform: translateY(10px); }
+              to   { opacity: 1; transform: translateY(0);    }
+            }
+          `}</style>
+          <div
+            key={activeTab}
+            style={{ animation: 'kppmFadeIn 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both', minHeight: '200px' }}
+          >
+
+          {/* ── Tab: Mahasiswa ── */}
+          {activeTab === 'mahasiswa' && (
+            <form id="form-mahasiswa" onSubmit={handleMahasiswaLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">NIM</label>
+                <input
+                  id="input-mahasiswa-nim"
+                  type="text"
+                  value={mahasiswaNim}
+                  onChange={(e) => setMahasiswaNim(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Contoh: 1301213001"
+                  maxLength={20}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
+                />
               </div>
-            )}
-            {success && (
-              <div className="mb-5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm flex items-start gap-2.5">
-                <span className="mt-0.5 flex-shrink-0 text-green-500"><SuccessIcon /></span>
-                <span>{success}</span>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+                <div className="relative">
+                  <input
+                    id="input-mahasiswa-password"
+                    type={showMahasiswaPassword ? 'text' : 'password'}
+                    value={mahasiswaPassword}
+                    onChange={(e) => setMahasiswaPassword(e.target.value)}
+                    placeholder="Masukkan password Anda"
+                    className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
+                  />
+                  <button type="button" onClick={() => setShowMahasiswaPassword((v) => !v)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showMahasiswaPassword ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                </div>
+                <div className="text-right mt-1.5">
+                  <a href="#" className="text-[#CC0000] text-xs hover:underline font-medium">Lupa Password?</a>
+                </div>
               </div>
-            )}
+              <button id="btn-login-mahasiswa" type="submit" disabled={isLoading}
+                className="w-full bg-[#CC0000] hover:bg-[#A30000] disabled:bg-[#CC0000]/50 text-white font-bold py-3.5 rounded-xl transition-all text-sm tracking-wide shadow-sm hover:shadow-md">
+                {isLoading ? 'Memproses...' : 'Masuk'}
+              </button>
+            </form>
+          )}
 
-            {/* ── Tab: Mahasiswa ── */}
-            {activeTab === 'mahasiswa' && (
-              <form id="form-mahasiswa" onSubmit={handleMahasiswaLogin} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">NIM (Nomor Induk Mahasiswa)</label>
+          {/* ── Tab: Dosen ── */}
+          {activeTab === 'dosen' && (
+            <form id="form-dosen" onSubmit={handleDosenLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">NIP</label>
+                <input
+                  id="input-dosen-nip"
+                  type="text"
+                  value={dosenNip}
+                  onChange={(e) => setDosenNip(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Masukkan NIP Anda"
+                  maxLength={30}
+                  autoComplete="username"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+                <div className="relative">
                   <input
-                    id="input-mahasiswa-nim"
-                    type="text"
-                    value={mahasiswaNim}
-                    onChange={(e) => setMahasiswaNim(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Masukkan NIM Anda"
-                    maxLength={20}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
+                    id="input-dosen-password"
+                    type={showDosenPassword ? 'text' : 'password'}
+                    value={dosenPassword}
+                    onChange={(e) => setDosenPassword(e.target.value)}
+                    placeholder="Masukkan password"
+                    className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
                   />
+                  <button type="button" onClick={() => setShowDosenPassword((v) => !v)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showDosenPassword ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
-                  <div className="relative">
-                    <input
-                      id="input-mahasiswa-password"
-                      type={showMahasiswaPassword ? 'text' : 'password'}
-                      value={mahasiswaPassword}
-                      onChange={(e) => setMahasiswaPassword(e.target.value)}
-                      placeholder="Masukkan password"
-                      className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowMahasiswaPassword((v) => !v)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showMahasiswaPassword ? <EyeOffIcon /> : <EyeIcon />}
-                    </button>
-                  </div>
-                  <div className="text-right mt-1.5">
-                    <a href="#" className="text-[#CC0000] text-xs hover:underline font-medium">
-                      Lupa Password?
-                    </a>
-                  </div>
-                </div>
-                <button
-                  id="btn-login-mahasiswa"
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-[#CC0000] hover:bg-[#A30000] disabled:bg-[#CC0000]/50 text-white font-bold py-3.5 rounded-xl transition-all duration-200 text-sm tracking-wide"
-                >
-                  {isLoading ? 'Memproses...' : 'Masuk'}
-                </button>
-              </form>
-            )}
+              </div>
+              <button id="btn-login-dosen" type="submit" disabled={isLoading}
+                className="w-full bg-[#CC0000] hover:bg-[#A30000] disabled:bg-[#CC0000]/50 text-white font-bold py-3.5 rounded-xl transition-all text-sm tracking-wide shadow-sm hover:shadow-md">
+                {isLoading ? 'Memproses...' : 'Masuk sebagai Pembimbing Akademik'}
+              </button>
+            </form>
+          )}
 
-            {/* ── Tab: Dosen ── */}
-            {activeTab === 'dosen' && (
-              <form id="form-dosen" onSubmit={handleDosenLogin} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">NIP (Nomor Induk Pegawai)</label>
+          {/* ── Tab: Mentor ── */}
+          {activeTab === 'mentor' && (
+            <form id="form-mentor" onSubmit={handleMentorLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Mentor</label>
+                <div className="flex gap-2">
                   <input
-                    id="input-dosen-nip"
-                    type="text"
-                    value={dosenNip}
-                    onChange={(e) => setDosenNip(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Masukkan NIP Anda"
-                    maxLength={30}
-                    autoComplete="username"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
+                    id="input-mentor-email"
+                    type="email"
+                    value={mentorEmail}
+                    onChange={(e) => { setMentorEmail(e.target.value); setOtpSent(false); }}
+                    placeholder="email@perusahaan.com"
+                    disabled={isLoading}
+                    className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white disabled:opacity-60"
                   />
+                  <button id="btn-send-otp" type="button" onClick={handleSendOtp}
+                    disabled={isLoading || otpCountdown > 0}
+                    className="px-4 py-3 bg-[#CC0000] hover:bg-[#A30000] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-sm transition-all whitespace-nowrap">
+                    {isLoading ? '...' : otpCountdown > 0 ? `${otpCountdown}s` : 'Kirim OTP'}
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
-                  <div className="relative">
+              </div>
+              {otpSent && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Kode OTP (6 Digit)</label>
                     <input
-                      id="input-dosen-password"
-                      type={showDosenPassword ? 'text' : 'password'}
-                      value={dosenPassword}
-                      onChange={(e) => setDosenPassword(e.target.value)}
-                      placeholder="Masukkan password"
-                      className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white"
+                      id="input-mentor-otp"
+                      type="text"
+                      value={mentorOtp}
+                      onChange={(e) => setMentorOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="000000"
+                      maxLength={6}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all text-center text-xl font-mono tracking-[0.5em] bg-gray-50 focus:bg-white"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowDosenPassword((v) => !v)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showDosenPassword ? <EyeOffIcon /> : <EyeIcon />}
-                    </button>
+                    <p className="text-xs text-gray-400 mt-1.5 text-center">OTP berlaku 5 menit</p>
                   </div>
+                  <button id="btn-verify-otp" type="submit"
+                    disabled={isLoading || mentorOtp.length !== 6}
+                    className="w-full bg-[#CC0000] hover:bg-[#A30000] disabled:bg-[#CC0000]/50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all text-sm tracking-wide">
+                    {isLoading ? 'Memverifikasi...' : 'Verifikasi & Masuk'}
+                  </button>
+                </>
+              )}
+              {!otpSent && (
+                <p className="text-center text-xs text-gray-400">
+                  Klik &quot;Kirim OTP&quot; untuk menerima kode verifikasi via email
+                </p>
+              )}
+            </form>
+          )}
 
-                </div>
-                <button
-                  id="btn-login-dosen"
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-[#CC0000] hover:bg-[#A30000] disabled:bg-[#CC0000]/50 text-white font-bold py-3.5 rounded-xl transition-all duration-200 text-sm tracking-wide"
-                >
-                  {isLoading ? 'Memproses...' : 'Masuk sebagai Pembimbing Akademik'}
-                </button>
-              </form>
-            )}
+          </div>{/* end animated form wrapper */}
 
-            {/* ── Tab: Mentor ── */}
-            {activeTab === 'mentor' && (
-              <form id="form-mentor" onSubmit={handleMentorLogin} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Mentor</label>
-                  <div className="flex gap-2">
-                    <input
-                      id="input-mentor-email"
-                      type="email"
-                      value={mentorEmail}
-                      onChange={(e) => { setMentorEmail(e.target.value); setOtpSent(false); }}
-                      placeholder="email@perusahaan.com"
-                      disabled={isLoading}
-                      className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all bg-gray-50 focus:bg-white disabled:opacity-60"
-                    />
-                    <button
-                      id="btn-send-otp"
-                      type="button"
-                      onClick={handleSendOtp}
-                      disabled={isLoading || otpCountdown > 0}
-                      className="px-4 py-3 bg-[#CC0000] hover:bg-[#A30000] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-sm transition-all whitespace-nowrap"
-                    >
-                      {isLoading ? '...' : otpCountdown > 0 ? `${otpCountdown}s` : 'Kirim OTP'}
-                    </button>
-                  </div>
-                </div>
-
-                {otpSent && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Kode OTP (6 Digit)</label>
-                      <input
-                        id="input-mentor-otp"
-                        type="text"
-                        value={mentorOtp}
-                        onChange={(e) => setMentorOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        placeholder="000000"
-                        maxLength={6}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all text-center text-xl font-mono tracking-[0.5em] bg-gray-50 focus:bg-white"
-                      />
-                      <p className="text-xs text-gray-400 mt-1.5 text-center">OTP berlaku 5 menit</p>
-                    </div>
-                    <button
-                      id="btn-verify-otp"
-                      type="submit"
-                      disabled={isLoading || mentorOtp.length !== 6}
-                      className="w-full bg-[#CC0000] hover:bg-[#A30000] disabled:bg-[#CC0000]/50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all duration-200 text-sm tracking-wide"
-                    >
-                      {isLoading ? 'Memverifikasi...' : 'Verifikasi & Masuk'}
-                    </button>
-                  </>
-                )}
-
-                {!otpSent && (
-                  <p className="text-center text-xs text-gray-400">
-                    Klik &quot;Kirim OTP&quot; untuk menerima kode verifikasi via email
-                  </p>
-                )}
-              </form>
-            )}
-          </div>
+          {/* Footer */}
+          <p className="text-center text-xs text-gray-300 mt-auto pt-6">
+            &copy; {new Date().getFullYear()} Telkom University &mdash; Sistem Manajemen KPPM
+          </p>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-400 mt-5">
-          &copy; {new Date().getFullYear()} Telkom University &mdash; Sistem Manajemen KPPM
-        </p>
       </div>
     </div>
   );

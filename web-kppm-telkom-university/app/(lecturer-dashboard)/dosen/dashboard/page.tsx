@@ -163,36 +163,6 @@ function StatCard({
   );
 }
 
-// ─── Quick Action Card ──────────────────────────────────────────────────────────
-
-function ActionCard({
-  href, icon, label, desc, tag, color, iconBg,
-}: {
-  href: string; icon: React.ReactNode; label: string; desc: string;
-  tag?: string; color: string; iconBg: string;
-}) {
-  return (
-    <a href={href}
-      className="group bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-5 flex items-center gap-4 hover:border-[#CC0000]/30 dark:hover:border-red-500/30 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
-    >
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg} group-hover:scale-110 transition-transform duration-300`}>
-        <span className={color}>{icon}</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#CC0000] dark:group-hover:text-red-400 transition-colors">{label}</p>
-          {tag && (
-            <span className="text-[10px] font-semibold text-[#CC0000] dark:text-red-400 bg-red-50 dark:bg-red-500/10 px-1.5 py-0.5 rounded-full">{tag}</span>
-          )}
-        </div>
-        <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{desc}</p>
-      </div>
-      <span className="text-gray-300 dark:text-slate-600 group-hover:text-[#CC0000] dark:group-hover:text-red-400 group-hover:translate-x-1 transition-all flex-shrink-0">
-        <ArrowRightIcon />
-      </span>
-    </a>
-  );
-}
 
 // ─── Main Page ──────────────────────────────────────────────────────────────────
 
@@ -329,30 +299,7 @@ export default function DosenDashboardPage() {
         </div>
       </div>
 
-      {/* ── Quick Actions ── */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest">Aksi Cepat</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <ActionCard
-            href="/dosen/mahasiswa"
-            icon={<UsersIcon size={22} />}
-            label="Data Mahasiswa Bimbingan"
-            desc="Lihat, kelola & setujui pendaftaran KPPM mahasiswa"
-            color="text-blue-600 dark:text-blue-400"
-            iconBg="bg-blue-50 dark:bg-blue-950"
-          />
-          <ActionCard
-            href="/dosen/input-nilai"
-            icon={<GradeIcon size={22} />}
-            label="Input Nilai Mahasiswa"
-            desc="Berikan penilaian akhir Kerja Praktik / Magang"
-            color="text-purple-600 dark:text-purple-400"
-            iconBg="bg-purple-50 dark:bg-purple-950"
-          />
-        </div>
-      </div>
+
 
 
     </div>
