@@ -73,8 +73,8 @@ function downloadTemplate(type: TabType) {
   if (type === 'mahasiswa') {
     sheetName = 'Data Mahasiswa';
     data = [
-      { nim: '1234567890', student_name: 'Budi Santoso', class: 'IF-46-01', email: 'budi@student.telkomuniversity.ac.id' },
-      { nim: '0987654321', student_name: 'Siti Rahayu', class: 'IF-46-02', email: '' },
+      { nim: '1234567890', student_name: 'Budi Santoso', class: 'IF-46-01' },
+      { nim: '0987654321', student_name: 'Siti Rahayu', class: 'IF-46-02' },
     ];
   } else {
     sheetName = 'Data Dosen';
@@ -458,7 +458,6 @@ const STUDENT_COLUMNS = [
   { key: 'nim', label: 'NIM', required: true, desc: 'Nomor Induk Mahasiswa — dijadikan password default' },
   { key: 'student_name', label: 'Nama', required: true, desc: 'Nama lengkap mahasiswa' },
   { key: 'class', label: 'Kelas', required: true, desc: 'Kode kelas, misal: IF-46-01' },
-  { key: 'email', label: 'Email', required: false, desc: 'Email mahasiswa (opsional)' },
 ];
 
 const LECTURER_COLUMNS = [

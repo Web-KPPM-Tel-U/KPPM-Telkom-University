@@ -72,3 +72,33 @@ export const verifyAdminToken = (
   }
 };
 
+/**
+ * Middleware: Verifikasi JWT khusus PIC
+ * Hanya mengizinkan role 'pic'
+ */
+export const verifyPicToken = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ success: false, message: 'Token tidak ditemukan' });
+    return;
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as unknown as AuthenticatedRequest['user'];
+    if (decoded?.role !== 'pic') {
+      res.status(403).json({ success: false, message: 'Akses ditolak. Hanya untuk PIC.' });
+      return;
+    }
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ success: false, message: 'Token tidak valid atau sudah kadaluarsa' });
+  }
+};

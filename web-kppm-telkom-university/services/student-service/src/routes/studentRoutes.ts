@@ -5,7 +5,7 @@ import { submitRegistration, getRegistrations, getRegistrationDetail, getLecture
 import { getMentorDashboard } from '../controllers/mentorController';
 import { submitMentorGrade, getMentorGrade, getAllMentorGrades } from '../controllers/mentorGradesController';
 import { submitLecturerGrade, getLecturerGrade, getLecturerStudentFullGrades } from '../controllers/lecturerGradesController';
-import { getAdminStats, getAdminLecturers, getAdminStudents, getAdminSemesters, injectStudents, injectLecturers } from '../controllers/adminController';
+import { getAdminStats, getAdminLecturers, getAdminStudents, getAdminSemesters, injectStudents, injectLecturers, updateLecturer, toggleLecturerStatus, toggleStudentStatus } from '../controllers/adminController';
 import { verifyToken, verifyAdminToken } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -90,5 +90,8 @@ router.get('/admin/students',                verifyAdminToken, getAdminStudents)
 router.get('/admin/semesters',               verifyAdminToken, getAdminSemesters);
 router.post('/admin/inject/students',  verifyAdminToken, uploadInMemory.single('file'), injectStudents);
 router.post('/admin/inject/lecturers', verifyAdminToken, uploadInMemory.single('file'), injectLecturers);
+router.patch('/admin/lecturers/:nip',               verifyAdminToken, updateLecturer);
+router.patch('/admin/lecturers/:nip/toggle-status', verifyAdminToken, toggleLecturerStatus);
+router.patch('/admin/students/:nim/toggle-status',  verifyAdminToken, toggleStudentStatus);
 
 export default router;

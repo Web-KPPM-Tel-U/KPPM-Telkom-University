@@ -823,6 +823,37 @@ export const getAdminSemesters = async (): Promise<ApiResponse<any[]>> => {
   return res.json();
 };
 
+/**
+ * Update data dosen (nama, email) — hanya PIC
+ */
+export const updateAdminLecturer = async (
+  nip: string,
+  data: { lecturer_name?: string; email?: string }
+): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/lecturers/${nip}`, {
+    method: 'PATCH',
+    headers: adminAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const toggleAdminLecturerStatus = async (nip: string): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/lecturers/${nip}/toggle-status`, {
+    method: 'PATCH',
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
+export const toggleAdminStudentStatus = async (nim: string): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/students/${nim}/toggle-status`, {
+    method: 'PATCH',
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
 // ─── Admin: Inject Data ───────────────────────────────────────────────────────
 
 export interface InjectResult {

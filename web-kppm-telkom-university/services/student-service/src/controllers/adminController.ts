@@ -338,3 +338,138 @@ export const injectLecturers = async (
     data: result,
   });
 };
+
+// ─── Admin/PIC: Update Dosen ──────────────────────────────────────────────────
+
+/**
+ * PATCH /admin/lecturers/:nip
+ * PIC dapat mengubah nama dan email dosen. NIP tidak dapat diubah (Primary Key).
+ */
+export const updateLecturer = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { nip } = req.params;
+  const { lecturer_name, email } = req.body as { lecturer_name?: string; email?: string };
+
+  if (!lecturer_name?.trim() && email === undefined) {
+    res.status(400).json({ success: false, message: 'Tidak ada data yang akan diubah.' });
+    return;
+  }
+
+  try {
+    // Cek apakah dosen ada
+    const [rows] = await pool.execute<any[]>(
+      'SELECT nip FROM lecturers WHERE nip = ?',
+      [nip]
+    );
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Dosen tidak ditemukan.' });
+      return;
+    }
+
+    // Build query dinamis — hanya update field yang dikirim
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (lecturer_name?.trim()) {
+      fields.push('lecturer_name = ?');
+      values.push(lecturer_name.trim());
+    }
+    if (email !== undefined) {
+      fields.push('email = ?');
+      values.push(email?.trim() || null);
+    }
+
+    values.push(nip);
+    await pool.execute(
+      `UPDATE lecturers SET ${fields.join(', ')}, updated_at = NOW() WHERE nip = ?`,
+      values
+    );
+
+    const [updated] = await pool.execute<any[]>(
+      'SELECT nip, lecturer_name, email, is_verified, password_changed, updated_at FROM lecturers WHERE nip = ?',
+      [nip]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Data dosen berhasil diperbarui.',
+      data: updated[0],
+    });
+  } catch (err: any) {
+    console.error('[Admin] updateLecturer error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Admin: Toggle Account Status ─────────────────────────────────────────────
+
+/**
+ * PATCH /admin/lecturers/:nip/toggle-status
+ * Aktifkan atau nonaktifkan akun dosen
+ */
+export const toggleLecturerStatus = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { nip } = req.params;
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT nip, is_active FROM lecturers WHERE nip = ?',
+      [nip]
+    );
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Dosen tidak ditemukan.' });
+      return;
+    }
+    const newStatus = rows[0].is_active === 1 ? 0 : 1;
+    await pool.execute(
+      'UPDATE lecturers SET is_active = ?, updated_at = NOW() WHERE nip = ?',
+      [newStatus, nip]
+    );
+    res.status(200).json({
+      success: true,
+      message: newStatus === 1 ? 'Akun dosen berhasil diaktifkan.' : 'Akun dosen berhasil dinonaktifkan.',
+      data: { nip, is_active: newStatus },
+    });
+  } catch (err: any) {
+    console.error('[Admin] toggleLecturerStatus error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+/**
+ * PATCH /admin/students/:nim/toggle-status
+ * Aktifkan atau nonaktifkan akun mahasiswa
+ */
+export const toggleStudentStatus = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { nim } = req.params;
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT nim, is_active FROM students WHERE nim = ?',
+      [nim]
+    );
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Mahasiswa tidak ditemukan.' });
+      return;
+    }
+    const newStatus = rows[0].is_active === 1 ? 0 : 1;
+    await pool.execute(
+      'UPDATE students SET is_active = ?, updated_at = NOW() WHERE nim = ?',
+      [newStatus, nim]
+    );
+    res.status(200).json({
+      success: true,
+      message: newStatus === 1 ? 'Akun mahasiswa berhasil diaktifkan.' : 'Akun mahasiswa berhasil dinonaktifkan.',
+      data: { nim, is_active: newStatus },
+    });
+  } catch (err: any) {
+    console.error('[Admin] toggleStudentStatus error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+

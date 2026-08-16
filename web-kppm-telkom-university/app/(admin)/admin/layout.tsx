@@ -62,8 +62,8 @@ const KPPMLogoMark = () => (
 
 const navItems = [
   { href: '/admin/dashboard',  label: 'Dashboard',        icon: <DashboardIcon />, enabled: true  },
-  { href: '/admin/dosen',      label: 'Kelola Dosen',     icon: <AcademicIcon />,  enabled: false },
-  { href: '/admin/mahasiswa',  label: 'Kelola Mahasiswa', icon: <UsersIcon />,     enabled: false },
+  { href: '/admin/dosen',      label: 'Kelola Dosen',     icon: <AcademicIcon />,  enabled: true  },
+  { href: '/admin/mahasiswa',  label: 'Kelola Mahasiswa', icon: <UsersIcon />,     enabled: true  },
   { href: '/admin/semester',   label: 'Kelola Semester',  icon: <CalendarIcon />,  enabled: false },
   { href: '/admin/injeksi',    label: 'Injeksi CSV/XLSX', icon: <UploadIcon />,    enabled: true  },
 ];
