@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getToken, getUser,
@@ -44,6 +44,69 @@ function getGrade(total: number): { label: string; color: string } {
   if (total >= 55) return { label: 'C', color: 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30' };
   if (total >= 40) return { label: 'D', color: 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/30' };
   return { label: 'E', color: 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/30' };
+}
+
+// ─── Custom Select ────────────────────────────────────────────────────────────
+function CustomSelect({
+  value,
+  onChange,
+  options,
+  icon,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: { value: string; label: string }[];
+  icon?: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value) || options[0];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full sm:w-auto min-w-[180px] flex items-center justify-between gap-3 px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-[#CC0000]/50 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20 focus:border-[#CC0000]"
+      >
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className="truncate">{selectedOption.label}</span>
+        </div>
+        <svg className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+      </button>
+
+      <div className={`absolute z-10 right-0 top-full mt-2 w-full min-w-[200px] bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden transition-all duration-200 origin-top-right ${isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'}`}>
+        <div className="py-1.5 p-1.5 flex flex-col gap-1">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors flex items-center justify-between ${value === opt.value ? 'bg-[#CC0000]/10 text-[#CC0000] font-bold dark:bg-red-900/30 dark:text-red-400' : 'text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 font-medium'}`}
+            >
+              {opt.label}
+              {value === opt.value && (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ─── Grade Form Modal ─────────────────────────────────────────────────────────
@@ -261,20 +324,13 @@ function MenteeRow({
   gradeMap: Record<number, number | null>;
   onOpenForm: (m: MentorMentee) => void;
 }) {
-  const avatarColors = [
-    'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
-    'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
-    'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
-    'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
-    'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300',
-  ];
   const initials = mentee.student.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const total = gradeMap[mentee.registration_id];
   const hasGrade = total !== null && total !== undefined;
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all p-5 flex items-center gap-4">
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${avatarColors[idx % avatarColors.length]}`}>
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#CC0000] text-white shadow-sm">
         {initials}
       </div>
 
@@ -321,6 +377,56 @@ export default function MentorGradesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeMentee, setActiveMentee] = useState<MentorMentee | null>(null);
+
+  // Filter & Sort State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'graded' | 'ungraded'>('all');
+  const [sortBy, setSortBy] = useState<'name-asc' | 'name-desc' | 'nim-asc' | 'grade-desc' | 'grade-asc'>('name-asc');
+
+  const totalStudents = data?.mentees.length || 0;
+  const gradedStudents = data?.mentees.filter(m => gradeMap[m.registration_id] !== null && gradeMap[m.registration_id] !== undefined).length || 0;
+  const pendingStudents = totalStudents - gradedStudents;
+  
+  const gradedValues = data?.mentees
+    .map(m => gradeMap[m.registration_id])
+    .filter((val): val is number => val !== null && val !== undefined) || [];
+  const averageTotalGrade = gradedValues.length > 0 
+    ? gradedValues.reduce((a, b) => a + b, 0) / gradedValues.length 
+    : 0;
+
+  const processedMentees = useMemo(() => {
+    if (!data) return [];
+    let result = [...data.mentees];
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(m => 
+        m.student.name.toLowerCase().includes(q) || 
+        m.student.nim.toLowerCase().includes(q)
+      );
+    }
+
+    if (filterStatus !== 'all') {
+      result = result.filter(m => {
+        const hasGrade = gradeMap[m.registration_id] !== null && gradeMap[m.registration_id] !== undefined;
+        return filterStatus === 'graded' ? hasGrade : !hasGrade;
+      });
+    }
+
+    result.sort((a, b) => {
+      if (sortBy === 'name-asc') return a.student.name.localeCompare(b.student.name);
+      if (sortBy === 'name-desc') return b.student.name.localeCompare(a.student.name);
+      if (sortBy === 'nim-asc') return a.student.nim.localeCompare(b.student.nim);
+      if (sortBy === 'grade-desc' || sortBy === 'grade-asc') {
+        const gradeA = gradeMap[a.registration_id] ?? -1;
+        const gradeB = gradeMap[b.registration_id] ?? -1;
+        return sortBy === 'grade-desc' ? gradeB - gradeA : gradeA - gradeB;
+      }
+      return 0;
+    });
+
+    return result;
+  }, [data, gradeMap, searchQuery, filterStatus, sortBy]);
 
   const loadGrades = async (mentees: MentorMentee[]) => {
     const map: Record<number, number | null> = {};
@@ -393,9 +499,118 @@ export default function MentorGradesPage() {
 
       {/* Header */}
       <div>
+        <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-2">
+            <li>
+              <span className="text-gray-500 dark:text-slate-400">Mentor</span>
+            </li>
+            <li>
+              <span className="text-gray-400 dark:text-slate-500 mx-1">/</span>
+            </li>
+            <li>
+              <span className="text-gray-900 dark:text-slate-100 font-semibold">Input Nilai</span>
+            </li>
+          </ol>
+        </nav>
         <h1 className="text-2xl font-extrabold text-gray-900 dark:text-slate-100">Input Nilai Mahasiswa</h1>
         <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Form Penilaian Pembimbing Lapang KPPM — Fakultas Rekayasa Industri</p>
       </div>
+
+      {/* Statistik */}
+      {totalStudents > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card Total */}
+          <div className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 dark:bg-blue-900/20 rounded-bl-full -mr-8 -mt-8 transition-transform duration-500 group-hover:scale-110" />
+            <div className="relative z-10 flex items-start justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-1">Total Mentee</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-extrabold text-gray-900 dark:text-slate-100 tracking-tight">{totalStudents}</span>
+                  <span className="text-sm font-semibold text-gray-400 dark:text-slate-500">orang</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Card Sudah Dinilai */}
+          <div className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 dark:bg-green-900/20 rounded-bl-full -mr-8 -mt-8 transition-transform duration-500 group-hover:scale-110" />
+            <div className="relative z-10 flex items-start justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-1">Sudah Dinilai</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-extrabold text-green-600 dark:text-green-400 tracking-tight">{gradedStudents}</span>
+                  <span className="text-sm font-semibold text-gray-400 dark:text-slate-500">orang</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Card Belum Dinilai */}
+          <div className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 dark:bg-amber-900/20 rounded-bl-full -mr-8 -mt-8 transition-transform duration-500 group-hover:scale-110" />
+            <div className="relative z-10 flex items-start justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-1">Belum Dinilai</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-extrabold text-amber-600 dark:text-amber-500 tracking-tight">{pendingStudents}</span>
+                  <span className="text-sm font-semibold text-gray-400 dark:text-slate-500">orang</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Controls */}
+      {data && data.mentees.length > 0 && (
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input 
+              type="text" 
+              placeholder="Cari nama atau NIM..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20 focus:border-[#CC0000] transition-all"
+            />
+          </div>
+          <div className="flex gap-3">
+            <CustomSelect
+              value={filterStatus}
+              onChange={(v) => setFilterStatus(v as any)}
+              icon={<svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>}
+              options={[
+                { value: 'all', label: 'Semua Status' },
+                { value: 'graded', label: 'Sudah Dinilai' },
+                { value: 'ungraded', label: 'Belum Dinilai' }
+              ]}
+            />
+            <CustomSelect
+              value={sortBy}
+              onChange={(v) => setSortBy(v as any)}
+              icon={<svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>}
+              options={[
+                { value: 'name-asc', label: 'Nama (A-Z)' },
+                { value: 'name-desc', label: 'Nama (Z-A)' },
+                { value: 'nim-asc', label: 'NIM (Kecil-Besar)' },
+                { value: 'grade-desc', label: 'Nilai (Tertinggi)' },
+                { value: 'grade-asc', label: 'Nilai (Terendah)' }
+              ]}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Daftar mahasiswa */}
       {data && data.mentees.length === 0 ? (
@@ -403,9 +618,14 @@ export default function MentorGradesPage() {
           <p className="text-gray-500 dark:text-slate-400 font-semibold text-sm">Tidak ada mahasiswa yang perlu dinilai</p>
           <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">Mahasiswa akan muncul setelah pendaftaran disetujui.</p>
         </div>
+      ) : processedMentees.length === 0 ? (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-10 text-center">
+          <p className="text-gray-500 dark:text-slate-400 font-semibold text-sm">Pencarian tidak ditemukan</p>
+          <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">Coba ubah kata kunci atau filter status.</p>
+        </div>
       ) : (
         <div className="space-y-3">
-          {data?.mentees.map((mentee, idx) => (
+          {processedMentees.map((mentee, idx) => (
             <MenteeRow
               key={mentee.registration_id}
               mentee={mentee}

@@ -70,6 +70,14 @@ function ExternalLinkIcon() {
   );
 }
 
+function EyeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 // ─── Grade Status Badge ───────────────────────────────────────────────────────
 function GradeStatusBadge({ done, label }: { done: boolean; label: string }) {
   return (
@@ -114,11 +122,10 @@ function FileDropZone({ file, required, label, description, onFileChange, error 
         onDrop={handleDrop}
         onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
-        className={`cursor-pointer border-2 border-dashed rounded-xl transition-all duration-200 ${
-          isDragging ? 'border-[#CC0000] bg-red-50 dark:bg-red-900/10'
-          : file ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-900/10'
-          : error ? 'border-red-300 dark:border-red-800 bg-red-50/20'
-          : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-white dark:hover:bg-gray-800/60'}`}
+        className={`cursor-pointer border-2 border-dashed rounded-xl transition-all duration-200 ${isDragging ? 'border-[#CC0000] bg-red-50 dark:bg-red-900/10'
+            : file ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-900/10'
+              : error ? 'border-red-300 dark:border-red-800 bg-red-50/20'
+                : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-white dark:hover:bg-gray-800/60'}`}
       >
         <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={e => onFileChange(e.target.files?.[0] ?? null)} />
         {file ? (
@@ -152,8 +159,9 @@ function FileDropZone({ file, required, label, description, onFileChange, error 
 }
 
 // ─── Uploaded Document Card ───────────────────────────────────────────────────
-function UploadedDocCard({ label, filePath, optional }: { label: string; filePath: string | null; optional?: boolean }) {
+function UploadedDocCard({ label, filePath, optional, onView }: { label: string; filePath: string | null; optional?: boolean; onView?: (url: string, label: string) => void }) {
   const exists = !!filePath;
+  const url = filePath ? `${API_BASE_URL}/uploads/${filePath}` : '';
   return (
     <div className={`flex items-center gap-3 p-3.5 rounded-xl border ${exists
       ? 'bg-emerald-50/60 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800'
@@ -166,9 +174,15 @@ function UploadedDocCard({ label, filePath, optional }: { label: string; filePat
         {optional && !exists && <span className="ml-1 text-xs text-gray-400 font-normal">(Tidak diupload)</span>}
       </p>
       {exists && filePath && (
-        <a href={`${API_BASE_URL}/uploads/${filePath}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs font-semibold text-[#CC0000] hover:text-red-700 transition-colors">
-          Lihat <ExternalLinkIcon />
-        </a>
+        onView ? (
+          <button type="button" onClick={() => onView(url, label)} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors border border-blue-200 dark:border-blue-800">
+            <EyeIcon /> Lihat
+          </button>
+        ) : (
+          <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors border border-blue-200 dark:border-blue-800">
+            <EyeIcon /> Lihat
+          </a>
+        )
       )}
     </div>
   );
@@ -213,10 +227,10 @@ function InfoGrid({ reg }: { reg: NonNullable<KpResultsData['registration']> }) 
           title="Data Mahasiswa"
           icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>}
         />
-        <Row label="NIM"          value={reg.student_nim} />
+        <Row label="NIM" value={reg.student_nim} />
         <Row label="Nama Lengkap" value={reg.student_name} />
-        <Row label="Kelas"        value={reg.student_class} />
-        <Row label="Email"        value={reg.student_email ?? '-'} />
+        <Row label="Kelas" value={reg.student_class} />
+        <Row label="Email" value={reg.student_email ?? '-'} />
         <Row label="No. WhatsApp" value={reg.whatsapp_number} />
       </div>
 
@@ -226,10 +240,10 @@ function InfoGrid({ reg }: { reg: NonNullable<KpResultsData['registration']> }) 
           title="Data KP / Magang"
           icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>}
         />
-        <Row label="Perusahaan Tempat KP"      value={reg.company_name} />
+        <Row label="Perusahaan Tempat KP" value={reg.company_name} />
         <Row label="Posisi / Divisi Penempatan" value={reg.internship_position} />
-        <Row label="Durasi KP"                  value={`${fmtDate(reg.internship_start)} – ${fmtDate(reg.internship_end)} (${calcDuration(reg.internship_start, reg.internship_end)})`} />
-        <Row label="Semester"                   value={reg.semester_code} />
+        <Row label="Durasi KP" value={`${fmtDate(reg.internship_start)} – ${fmtDate(reg.internship_end)} (${calcDuration(reg.internship_start, reg.internship_end)})`} />
+        <Row label="Semester" value={reg.semester_code} />
       </div>
 
       {/* ── Pembimbing Lapang ── */}
@@ -238,9 +252,9 @@ function InfoGrid({ reg }: { reg: NonNullable<KpResultsData['registration']> }) 
           title="Pembimbing Lapang / Mentor"
           icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>}
         />
-        <Row label="Nama Pembimbing Lapang"    value={reg.mentor_name} />
-        <Row label="Posisi / Jabatan"          value={reg.mentor_position} />
-        <Row label="Email Pembimbing Lapang"   value={reg.mentor_email} />
+        <Row label="Nama Pembimbing Lapang" value={reg.mentor_name} />
+        <Row label="Posisi / Jabatan" value={reg.mentor_position} />
+        <Row label="Email Pembimbing Lapang" value={reg.mentor_email} />
         <Row label="No. Telp Pembimbing Lapang" value={reg.mentor_phone} />
       </div>
 
@@ -251,26 +265,41 @@ function InfoGrid({ reg }: { reg: NonNullable<KpResultsData['registration']> }) 
 // ─── Page Header ──────────────────────────────────────────────────────────────
 function PageHeader({ subtitle }: { subtitle?: string }) {
   return (
-    <div className="mb-6 flex items-center justify-between">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Upload Hasil KP</h1>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{subtitle ?? 'Unggah dokumen hasil kerja praktik Anda'}</p>
-      </div>
-      <nav className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
-        <span className="text-gray-500 dark:text-gray-400">Pendaftaran KP</span>
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300"><polyline points="9,18 15,12 9,6" /></svg>
-        <span className="text-[#CC0000] font-semibold">Upload Hasil KP</span>
+    <div className="mb-6">
+      <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-2">
+          <li>
+            <span className="text-gray-500 dark:text-slate-400">Mahasiswa</span>
+          </li>
+          <li>
+            <span className="text-gray-400 dark:text-slate-500 mx-1">/</span>
+          </li>
+          <li>
+            <span className="text-gray-900 dark:text-slate-100 font-semibold">Upload Hasil KP</span>
+          </li>
+        </ol>
       </nav>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Upload Hasil KP</h1>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{subtitle ?? 'Unggah dokumen hasil kerja praktik Anda'}</p>
+        </div>
+        <nav className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+          <span className="text-gray-500 dark:text-gray-400">Pendaftaran KP</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300"><polyline points="9,18 15,12 9,6" /></svg>
+          <span className="text-[#CC0000] font-semibold">Upload Hasil KP</span>
+        </nav>
+      </div>
     </div>
   );
 }
 
 // ─── Slot definitions ────────────────────────────────────────────────────────
 const SLOT_DEFS: Omit<FileSlot, 'file' | 'error'>[] = [
-  { fieldName: 'certificate_file',               label: 'Sertifikat / Surat Selesai Magang',     required: true,  description: 'Sertifikat atau surat keterangan telah menyelesaikan magang dari perusahaan.' },
-  { fieldName: 'field_supervisor_score_file',    label: 'Scan Penilaian Pembimbing Lapang',      required: true,  description: 'Scan lembar penilaian yang ditandatangani pembimbing lapang perusahaan.' },
-  { fieldName: 'academic_supervisor_score_file', label: 'Scan Penilaian Pembimbing Akademik',    required: true,  description: 'Scan lembar penilaian yang ditandatangani dosen pembimbing akademik.' },
-  { fieldName: 'implementation_agreement_file',  label: 'Dokumen IA (Implementation Agreement)', required: false, description: 'Implementation Agreement antara mahasiswa dan perusahaan. Bersifat opsional.' },
+  { fieldName: 'certificate_file', label: 'Sertifikat / Surat Selesai Magang', required: true, description: 'Sertifikat atau surat keterangan telah menyelesaikan magang dari perusahaan.' },
+  { fieldName: 'field_supervisor_score_file', label: 'Scan Penilaian Pembimbing Lapang', required: true, description: 'Scan lembar penilaian yang ditandatangani pembimbing lapang perusahaan.' },
+  { fieldName: 'academic_supervisor_score_file', label: 'Scan Penilaian Pembimbing Akademik', required: true, description: 'Scan lembar penilaian yang ditandatangani dosen pembimbing akademik.' },
+  { fieldName: 'implementation_agreement_file', label: 'Dokumen IA (Implementation Agreement)', required: false, description: 'Implementation Agreement antara mahasiswa dan perusahaan. Bersifat opsional.' },
 ];
 
 const makeSlots = (): FileSlot[] => SLOT_DEFS.map(s => ({ ...s, file: null, error: '' }));
@@ -287,11 +316,13 @@ export default function UploadHasilKpPage() {
   const [submitError, setSubmitError] = useState('');
   // view: 'overview' = halaman KP aktif | 'form' = form upload | 'done' = sukses
   const [view, setView] = useState<'overview' | 'form' | 'done'>('overview');
+  const [activeDoc, setActiveDoc] = useState<{ url: string; label: string } | null>(null);
+  const [fileError, setFileError] = useState(false);
 
   useEffect(() => {
     if (!getToken()) { router.replace('/login'); return; }
     fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
@@ -384,7 +415,7 @@ export default function UploadHasilKpPage() {
 
   // ─── Not Eligible (no registration) ──────────────────────────────────────
   if (!data?.registration) return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
       <PageHeader subtitle="Daftar KP aktif & upload dokumen" />
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
         <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-5 flex items-center gap-4">
@@ -396,7 +427,7 @@ export default function UploadHasilKpPage() {
             <p className="text-amber-100 text-sm mt-0.5">Belum ada pendaftaran KPPM yang disetujui.</p>
           </div>
         </div>
-        <div className="p-6">
+        <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
           <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl">
             <div className="text-amber-500 mt-0.5 flex-shrink-0"><AlertCircleIcon /></div>
             <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
@@ -414,7 +445,7 @@ export default function UploadHasilKpPage() {
 
   // ─── OVERVIEW — KP Aktif ──────────────────────────────────────────────────
   if (view === 'overview') return (
-    <div className="p-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
       <PageHeader subtitle="Daftar KP aktif & upload dokumen" />
 
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
@@ -438,12 +469,12 @@ export default function UploadHasilKpPage() {
         <div className="p-6 space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-4">
             {[
-              { label: 'NIM',               value: reg!.student_nim },
-              { label: 'Nama Mahasiswa',    value: reg!.student_name },
-              { label: 'Kelas',             value: reg!.student_class },
+              { label: 'NIM', value: reg!.student_nim },
+              { label: 'Nama Mahasiswa', value: reg!.student_name },
+              { label: 'Kelas', value: reg!.student_class },
               { label: 'Pembimbing Lapang', value: reg!.mentor_name },
-              { label: 'Jabatan Mentor',    value: reg!.mentor_position },
-              { label: 'Dosen PA',          value: reg!.dosen_name },
+              { label: 'Jabatan Mentor', value: reg!.mentor_position },
+              { label: 'Dosen PA', value: reg!.dosen_name },
             ].map(({ label, value }) => (
               <div key={label} className="min-w-0">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
@@ -470,7 +501,7 @@ export default function UploadHasilKpPage() {
 
           {/* Status badges */}
           <div className="flex flex-wrap gap-2 flex-1">
-            <GradeStatusBadge done={data!.grades_status?.mentor   ?? false} label="Pembimbing Lapang" />
+            <GradeStatusBadge done={data!.grades_status?.mentor ?? false} label="Pembimbing Lapang" />
             <GradeStatusBadge done={data!.grades_status?.lecturer ?? false} label="Pembimbing Akademik" />
           </div>
 
@@ -513,7 +544,88 @@ export default function UploadHasilKpPage() {
 
   // ─── DONE — Dokumen sudah diupload ───────────────────────────────────────
   if (view === 'done' && docs) return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+      {activeDoc && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.75)' }}
+          onClick={() => { setActiveDoc(null); setFileError(false); }}
+        >
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            style={{ width: '90vw', maxWidth: 900, height: '88vh' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Viewer Header */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                </svg>
+                <span className="text-sm font-semibold text-gray-800">{activeDoc.label}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={activeDoc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#CC0000] border border-[#CC0000]/30 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                  Buka di Tab Baru
+                </a>
+                <button
+                  onClick={() => { setActiveDoc(null); setFileError(false); }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {/* Viewer Content */}
+            <div className="flex-1 overflow-hidden bg-gray-100 relative">
+              {fileError ? (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-gray-400">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                    <line x1="10" y1="13" x2="14" y2="17"/><line x1="14" y1="13" x2="10" y2="17"/>
+                  </svg>
+                  <p className="text-sm font-medium text-gray-400">File tidak ditemukan</p>
+                  <p className="text-xs text-gray-300">Dokumen mungkin sudah dihapus atau tidak tersedia</p>
+                </div>
+              ) : activeDoc.url.toLowerCase().endsWith('.pdf') ? (
+                <iframe
+                  src={activeDoc.url}
+                  className="w-full h-full border-0"
+                  title={activeDoc.label}
+                  onLoad={(e) => {
+                    try {
+                      const doc = (e.target as HTMLIFrameElement).contentDocument;
+                      const body = doc?.body?.innerText?.trim();
+                      if (body && (body.startsWith('{') || body.startsWith('Route'))) {
+                        setFileError(true);
+                      }
+                    } catch { /* cross-origin, aman */ }
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center p-4">
+                  <img
+                    src={activeDoc.url}
+                    alt={activeDoc.label}
+                    className="max-w-full max-h-full object-contain rounded-lg shadow"
+                    onError={() => setFileError(true)}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <PageHeader subtitle="Daftar KP aktif & upload dokumen" />
       <div className="mb-5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
         <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 text-white">
@@ -539,10 +651,10 @@ export default function UploadHasilKpPage() {
           <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200">Dokumen yang Diupload</h2>
         </div>
         <div className="space-y-2.5">
-          <UploadedDocCard label="Sertifikat / Surat Selesai Magang"  filePath={docs.certificate_file} />
-          <UploadedDocCard label="Scan Penilaian Pembimbing Lapang"   filePath={docs.field_supervisor_score_file} />
-          <UploadedDocCard label="Scan Penilaian Pembimbing Akademik" filePath={docs.academic_supervisor_score_file} />
-          <UploadedDocCard label="Dokumen IA" filePath={docs.implementation_agreement_file} optional />
+          <UploadedDocCard label="Sertifikat / Surat Selesai Magang"  filePath={docs.certificate_file} onView={(url, lbl) => { setFileError(false); setActiveDoc({ url, label: lbl }); }} />
+          <UploadedDocCard label="Scan Penilaian Pembimbing Lapang"   filePath={docs.field_supervisor_score_file} onView={(url, lbl) => { setFileError(false); setActiveDoc({ url, label: lbl }); }} />
+          <UploadedDocCard label="Scan Penilaian Pembimbing Akademik" filePath={docs.academic_supervisor_score_file} onView={(url, lbl) => { setFileError(false); setActiveDoc({ url, label: lbl }); }} />
+          <UploadedDocCard label="Dokumen IA" filePath={docs.implementation_agreement_file} optional onView={(url, lbl) => { setFileError(false); setActiveDoc({ url, label: lbl }); }} />
         </div>
         <div className="flex gap-2 mt-4">
           <button
@@ -565,7 +677,7 @@ export default function UploadHasilKpPage() {
 
   // ─── FORM Upload ──────────────────────────────────────────────────────────
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
       <PageHeader subtitle="Daftar KP aktif & upload dokumen" />
 
       {/* Back button */}
