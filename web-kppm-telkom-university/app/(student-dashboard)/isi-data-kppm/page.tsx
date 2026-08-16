@@ -526,7 +526,7 @@ export default function IsiDataKppmPage() {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
         <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
           <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -551,7 +551,7 @@ export default function IsiDataKppmPage() {
 
   if (view === 'success') {
     return (
-      <div className="p-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 flex flex-col items-center justify-center min-h-[60vh] text-center">
         <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20,6 9,17 4,12" />
@@ -582,7 +582,7 @@ export default function IsiDataKppmPage() {
     const s = detailData ? statusConfig[detailData.status] : null;
 
     return (
-      <div className="p-5 md:p-6 max-w-4xl mx-auto">
+      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
 
         {/* Document Modal / Overlay */}
         {showDocModal && fileUrl && (
@@ -641,7 +641,21 @@ export default function IsiDataKppmPage() {
         )}
 
         {/* Page Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
+        
+        <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-2">
+            <li>
+              <span className="text-gray-500 dark:text-slate-400">Mahasiswa</span>
+            </li>
+            <li>
+              <span className="text-gray-400 dark:text-slate-500 mx-1">/</span>
+            </li>
+            <li>
+              <span className="text-gray-900 dark:text-slate-100 font-semibold">Isi Data KPPM</span>
+            </li>
+          </ol>
+        </nav>
+<div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => { setDetailData(null); setView('list'); }}
@@ -870,10 +884,24 @@ export default function IsiDataKppmPage() {
 
   if (view === 'form') {
     return (
-      <div className="p-5 md:p-6 max-w-4xl mx-auto">
+      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
 
         {/* Page Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
+        
+        <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-2">
+            <li>
+              <span className="text-gray-500 dark:text-slate-400">Mahasiswa</span>
+            </li>
+            <li>
+              <span className="text-gray-400 dark:text-slate-500 mx-1">/</span>
+            </li>
+            <li>
+              <span className="text-gray-900 dark:text-slate-100 font-semibold">Isi Data KPPM</span>
+            </li>
+          </ol>
+        </nav>
+<div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => { resetForm(); setView('list'); }}
@@ -1198,7 +1226,7 @@ export default function IsiDataKppmPage() {
   // ── List View (default) ────────────────────────────────────────────────────
 
   return (
-    <div className="p-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
 
       {/* ── Modal Konfirmasi Pembatalan ──────────────────────────────────── */}
       {cancelConfirm && (
@@ -1268,6 +1296,19 @@ export default function IsiDataKppmPage() {
       )}
 
       {/* Header */}
+            <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-2">
+          <li>
+            <span className="text-gray-500 dark:text-slate-400">Mahasiswa</span>
+          </li>
+          <li>
+            <span className="text-gray-400 dark:text-slate-500 mx-1">/</span>
+          </li>
+          <li>
+            <span className="text-gray-900 dark:text-slate-100 font-semibold">Isi Data KPPM</span>
+          </li>
+        </ol>
+      </nav>
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Pendaftaran KP / Magang</h1>

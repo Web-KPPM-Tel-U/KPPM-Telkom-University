@@ -83,7 +83,7 @@ function MentorGradeTable({ grades }: { grades: MyMentorGrades }) {
       <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-[11px] uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
+            <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
               <th className="px-4 py-2.5 text-center w-8">No</th>
               <th className="px-4 py-2.5 text-left">Indikator Penilaian</th>
               <th className="px-4 py-2.5 text-center w-20">Bobot (%)</th>
@@ -97,10 +97,10 @@ function MentorGradeTable({ grades }: { grades: MyMentorGrades }) {
               const contrib = (ind.bobot / 100) * val;
               return (
                 <tr key={ind.key} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-4 py-3 text-center text-gray-400 text-xs">{i + 1}</td>
-                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs leading-snug">{ind.label}</td>
+                  <td className="px-4 py-3 text-center text-gray-400 text-sm">{i + 1}</td>
+                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-sm leading-snug">{ind.label}</td>
                   <td className="px-4 py-3 text-center">
-                    <span className="text-xs font-bold text-[#CC0000] bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-lg">{ind.bobot}</span>
+                    <span className="text-sm font-bold text-[#CC0000] bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-lg">{ind.bobot}</span>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <ScoreBadge value={val} />
@@ -139,7 +139,7 @@ function LecturerGradeTable({ grades }: { grades: MyLecturerGrades }) {
       <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-[11px] uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
+            <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
               <th className="px-4 py-2.5 text-center w-8">No</th>
               <th className="px-4 py-2.5 text-left">Indikator Penilaian</th>
               <th className="px-4 py-2.5 text-center w-20">Bobot (%)</th>
@@ -153,10 +153,10 @@ function LecturerGradeTable({ grades }: { grades: MyLecturerGrades }) {
               const contrib = (ind.bobot / 100) * val;
               return (
                 <tr key={ind.key} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-4 py-3 text-center text-gray-400 text-xs">{i + 1}</td>
-                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs leading-snug">{ind.label}</td>
+                  <td className="px-4 py-3 text-center text-gray-400 text-sm">{i + 1}</td>
+                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-sm leading-snug">{ind.label}</td>
                   <td className="px-4 py-3 text-center">
-                    <span className="text-xs font-bold text-[#CC0000] bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-lg">{ind.bobot}</span>
+                    <span className="text-sm font-bold text-[#CC0000] bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-lg">{ind.bobot}</span>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <ScoreBadge value={val} />
@@ -218,7 +218,7 @@ export default function LihatNilaiPage() {
 
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-64">
+      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 flex items-center justify-center min-h-64">
         <div className="text-center">
           <div className="w-10 h-10 border-4 border-[#CC0000] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-gray-500 text-sm">Memuat data...</p>
@@ -229,7 +229,7 @@ export default function LihatNilaiPage() {
 
   if (error) {
     return (
-      <div className="p-6 max-w-lg mx-auto mt-8">
+      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 flex justify-center mt-8">
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
           <p className="text-red-700 font-semibold mb-3">{error}</p>
           <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#CC0000] text-white rounded-xl text-sm font-bold">Coba Lagi</button>
@@ -241,8 +241,21 @@ export default function LihatNilaiPage() {
   // ─── List View ────────────────────────────────────────────────────────────
   if (view === 'list') {
     return (
-      <div className="p-6">
+      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
         {/* Header */}
+        <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-2">
+            <li>
+              <span className="text-gray-500 dark:text-slate-400">Mahasiswa</span>
+            </li>
+            <li>
+              <span className="text-gray-400 dark:text-slate-500 mx-1">/</span>
+            </li>
+            <li>
+              <span className="text-gray-900 dark:text-slate-100 font-semibold">Lihat Nilai</span>
+            </li>
+          </ol>
+        </nav>
         <div className="flex items-center justify-between mb-5">
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Rekap Nilai KPPM</h1>
@@ -369,9 +382,28 @@ export default function LihatNilaiPage() {
   const lecturerGrades = data!.lecturer_grades;
 
   return (
-    <div className="p-5 md:p-8 max-w-4xl mx-auto space-y-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
 
-      {/* Header */}
+            {/* Header */}
+      <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-2">
+          <li>
+            <span className="text-gray-500 dark:text-slate-400">Mahasiswa</span>
+          </li>
+          <li>
+            <span className="text-gray-400 dark:text-slate-500 mx-1">/</span>
+          </li>
+          <li>
+            <span className="text-gray-500 dark:text-slate-400 cursor-pointer hover:text-gray-700" onClick={() => setView('list')}>Lihat Nilai</span>
+          </li>
+          <li>
+            <span className="text-gray-400 dark:text-slate-500 mx-1">/</span>
+          </li>
+          <li>
+            <span className="text-gray-900 dark:text-slate-100 font-semibold">Detail Rekap Nilai</span>
+          </li>
+        </ol>
+      </nav>
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
@@ -491,6 +523,41 @@ export default function LihatNilaiPage() {
             subtitle="Dosen pembimbing akademik belum menginputkan nilai untuk Anda."
           />
         )}
+      </div>
+
+      {/* Akumulasi Total Nilai */}
+      <div className="bg-gray-50/50 dark:bg-slate-900/30 rounded-2xl border border-gray-200 dark:border-slate-700 p-5 md:p-6 mt-4 shadow-sm">
+        <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-4">Akumulasi Total Nilai</h2>
+        
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          {/* Nilai PA */}
+          <div className="flex-1 w-full bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-600 shadow-sm py-5 px-2 text-center">
+            <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1">Nilai PA</p>
+            <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
+              {lecturerGrades ? lecturerGrades.total.toFixed(2) : '-'}
+            </p>
+          </div>
+          
+          <div className="text-2xl font-bold text-gray-300 dark:text-gray-600 hidden md:block">+</div>
+
+          {/* Nilai Mentor */}
+          <div className="flex-1 w-full bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-600 shadow-sm py-5 px-2 text-center">
+            <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1">Nilai Mentor</p>
+            <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
+              {mentorGrades ? mentorGrades.total.toFixed(2) : '-'}
+            </p>
+          </div>
+
+          <div className="text-2xl font-bold text-gray-300 dark:text-gray-600 hidden md:block">=</div>
+
+          {/* Total Gabungan */}
+          <div className="flex-1 w-full bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-300 dark:border-red-700 shadow-sm py-5 px-2 text-center">
+            <p className="text-[11px] font-bold text-[#CC0000] dark:text-red-400 mb-1">Total Gabungan</p>
+            <p className="text-3xl font-extrabold text-[#CC0000] dark:text-red-400">
+              {(lecturerGrades && mentorGrades) ? (lecturerGrades.total + mentorGrades.total).toFixed(2) : '-'}
+            </p>
+          </div>
+        </div>
       </div>
 
     </div>

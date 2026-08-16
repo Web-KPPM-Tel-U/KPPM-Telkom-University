@@ -271,53 +271,8 @@ function DetailModal({
         </div>
       )}
 
-      {/* ── Detail Modal ── */}
-      {/* Overlay: pisahkan blur ke layer sendiri agar scroll tidak re-render blur */}
-      <div
-        className="fixed inset-0 z-50"
-        onClick={onClose}
-      >
-        {/* Blur layer — pointer-events-none, tidak berpengaruh ke scroll */}
-        <div
-          className="absolute inset-0 bg-black/50"
-          style={{ backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }}
-        />
-        {/* Modal card */}
-        <div className="relative flex items-center justify-center w-full h-full p-4">
-          <div
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
-            style={{ willChange: 'transform' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
-              <div>
-                <h2 className="font-bold text-gray-900 dark:text-white text-base">
-                  Detail Pengajuan KPPM
-                </h2>
-                <p className="text-xs text-gray-400 dark:text-slate-400 mt-0.5">
-                  ID Pengajuan: #{entry.registration_id}
-                </p>
-              </div>
-              <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Body — scroll smooth + contain */}
-            <div
-              className="px-6 py-5 space-y-4 max-h-[72vh] overflow-y-auto"
-              style={{
-                scrollBehavior: 'smooth',
-                overscrollBehavior: 'contain',
-                WebkitOverflowScrolling: 'touch',
-              } as React.CSSProperties}
-            >
+      {/* ── Detail Full Page ── */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 max-w-4xl mx-auto space-y-6">
               {/* Status */}
               <div className="flex items-center gap-3">
                 <StatusBadge status={entry.status} />
@@ -391,9 +346,6 @@ function DetailModal({
                   {entry.rejected_at && <Row label="Ditolak" value={fmt(entry.rejected_at)} />}
                 </Section>
               )}
-            </div>
-          </div>
-        </div>
       </div>
     </>
   );
@@ -635,15 +587,63 @@ export default function DosenMahasiswaPage() {
 
   return (
     <>
-      <div className="p-6 max-w-7xl mx-auto">
+      {selected && (
+        <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+          <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
+            <ol className="inline-flex items-center space-x-1 md:space-x-2">
+              <li><span className="text-gray-500 dark:text-slate-400">Dosen PA</span></li>
+              <li><span className="text-gray-400 dark:text-slate-500 mx-1">/</span></li>
+              <li><span className="text-gray-500 dark:text-slate-400 cursor-pointer hover:text-gray-700 transition-colors" onClick={() => setSelected(null)}>Data Mahasiswa</span></li>
+              <li><span className="text-gray-400 dark:text-slate-500 mx-1">/</span></li>
+              <li><span className="text-gray-900 dark:text-slate-100 font-semibold">Detail Pengajuan</span></li>
+            </ol>
+          </nav>
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSelected(null)}
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Kembali
+              </button>
+              <span className="text-gray-300 dark:text-gray-600">|</span>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Pengajuan KPPM</h1>
+                <p className="text-gray-500 text-sm mt-0.5">ID Pengajuan: #{selected.registration_id}</p>
+              </div>
+            </div>
+          </div>
+          <DetailModal entry={selected} onClose={() => setSelected(null)} />
+        </div>
+      )}
+
+      <div className={selected ? 'hidden' : 'p-5 md:p-8 max-w-6xl mx-auto space-y-6'}>
+
+
 
         {/* ── Header ── */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
+              <ol className="inline-flex items-center space-x-1 md:space-x-2">
+                <li>
+                  <span className="text-gray-500 dark:text-slate-400">Dosen PA</span>
+                </li>
+                <li>
+                  <span className="text-gray-400 dark:text-slate-500 mx-1">/</span>
+                </li>
+                <li>
+                  <span className="text-gray-900 dark:text-slate-100 font-semibold">Data Mahasiswa</span>
+                </li>
+              </ol>
+            </nav>
+            <h1 className="text-2xl font-extrabold text-gray-900 dark:text-slate-100">
               Data Mahasiswa Bimbingan
             </h1>
-            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
+            <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">
               Daftar mahasiswa KPPM yang mengajukan ke Anda
             </p>
           </div>
@@ -997,10 +997,7 @@ export default function DosenMahasiswaPage() {
         </div>
       </div>
 
-      {/* ── Modal Detail ── */}
-      {selected && (
-        <DetailModal entry={selected} onClose={() => setSelected(null)} />
-      )}
+      {/* ── Detail View Rendered At Top ── */}
 
       {/* ── Modal Konfirmasi Approve / Reject ── */}
       {confirm && (
