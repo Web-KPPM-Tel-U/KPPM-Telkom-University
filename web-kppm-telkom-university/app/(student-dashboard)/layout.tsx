@@ -131,9 +131,9 @@ const SettingsIcon = () => (
 // ─── KPPM Logo Mark ───────────────────────────────────────────────────────────
 
 const KPPMLogoMark = () => (
-  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M4 5h3v10H4V5zm4 0h3l3 5-3 5h-3l3-5-3-5z" fill="#CC0000" />
+  <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#CC0000" width="20" height="20">
+      <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
     </svg>
   </div>
 );
@@ -194,208 +194,194 @@ export default function StudentDashboardLayout({ children }: { children: React.R
   const navItems = [
     { href: '/dashboard',       label: t.dashboard, icon: <DashboardIcon /> },
     { href: '/isi-data-kppm',   label: t.isiData,   icon: <EditIcon /> },
-    { href: '/upload-hasil-kp', label: t.upload,    icon: <UploadIcon /> },
     { href: '/lihat-nilai',     label: t.nilai,     icon: <GradeIcon /> },
+    { href: '/upload-hasil-kp', label: t.upload,    icon: <UploadIcon /> },
   ];
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
-
-      {/* ══════════════════════════════════
-          TOPBAR — Merah Solid
-          ══════════════════════════════════ */}
-      <header className="bg-[#CC0000] dark:bg-slate-900 h-16 flex items-center px-4 gap-3 z-30 flex-shrink-0 transition-colors duration-300" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.22), 0 1px 0 rgba(0,0,0,0.08)' }}>
-
-        {/* Toggle Sidebar */}
-        <button
-          id="btn-toggle-sidebar"
-          onClick={() => setSidebarOpen((v) => !v)}
-          className="text-white/80 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10 flex-shrink-0"
-        >
-          <MenuIcon />
-        </button>
-
-        {/* Logo + Name */}
-        <div className="flex items-center gap-2.5 flex-shrink-0">
-          <KPPMLogoMark />
-          <div className="hidden sm:block">
-            <p className="text-white font-bold text-sm leading-tight">SISTEM MANAJEMEN KPPM</p>
-            <p className="text-red-200 text-[10px] leading-tight">Telkom University</p>
+    <div className="h-full flex bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
+      <aside className={`relative bg-white dark:bg-slate-900 flex-shrink-0 transition-all duration-300 overflow-hidden z-20 border-r border-[#ebebeb] dark:border-slate-700/60 flex flex-col ${sidebarOpen ? 'w-64' : 'w-[84px]'}`} style={{ boxShadow: '2px 0 12px rgba(0,0,0,0.05)' }}>
+        <div className="p-3 border-b border-gray-100 dark:border-slate-800 transition-colors duration-300">
+          <div className="relative flex items-center p-2 rounded-2xl border border-gray-200/60 dark:border-slate-700/60 bg-gray-50 dark:bg-slate-800/40 transition-all duration-300 overflow-hidden justify-start">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-[#CC0000]/10 dark:bg-red-500/20 text-[#CC0000] dark:text-red-400 flex items-center justify-center font-bold text-sm flex-shrink-0" style={{ boxShadow: 'inset 0 0 0 1px rgba(204,0,0,0.1)' }}>
+                {user ? getInitials(user.name) : '?'}
+              </div>
+              <div className={`transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-[150px] opacity-100' : 'w-0 opacity-0'}`}>
+                <div className="w-[150px] flex flex-col justify-center">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate whitespace-nowrap">{user?.name || '...'}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400 truncate whitespace-nowrap mt-0.5">
+                    {user?.nim}{user?.prodi ? ` • ${user.prodi}` : ''}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* ── Theme Toggle ── */}
-        <div className="flex-shrink-0 hidden sm:block mr-2">
-          <ThemeToggle />
-        </div>
-
-        {/* ── Language Selector ── */}
-        <div className="relative flex-shrink-0" ref={langRef}>
-          <button
-            id="btn-lang-selector"
-            onClick={() => { setLangMenuOpen((v) => !v); setUserMenuOpen(false); }}
-            className="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-white/10 transition-colors"
-            title={lang === 'id' ? 'Bahasa Indonesia' : 'English'}
-          >
-            <span className="text-white/70"><GlobeIcon /></span>
-            <span className="hidden sm:flex items-center">{LANG_LABELS[lang].flag}</span>
-            <span className="text-white text-xs font-bold uppercase hidden sm:block">{lang}</span>
-            <span className="text-white/60"><ChevronDownIcon size={12} /></span>
-          </button>
-
-          {langMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-50 transition-colors duration-300">
-              <p className="px-4 py-2 text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700 mb-1">
-                Bahasa / Language
-              </p>
-              {(['id', 'en'] as Lang[]).map((l) => (
-                <button
-                  key={l}
-                  id={`lang-${l}`}
-                  onClick={() => { setLang(l); setLangMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 ${
-                    lang === l ? 'text-[#CC0000] dark:text-red-400 font-semibold' : 'text-gray-700 dark:text-slate-300'
-                  }`}
-                >
-                  {LANG_LABELS[l].flag}
-                  <span>{LANG_LABELS[l].label}</span>
-                  {lang === l && (
-                    <svg className="ml-auto" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="3">
-                      <polyline points="20,6 9,17 4,12" />
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ── User Menu ── */}
-        <div className="relative flex-shrink-0" ref={userRef}>
-          <button
-            id="btn-user-menu"
-            onClick={() => { setUserMenuOpen((v) => !v); setLangMenuOpen(false); }}
-            className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl hover:bg-white/10 dark:hover:bg-slate-800/50 transition-colors"
-          >
-            <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-[#CC0000] dark:text-red-400 font-bold text-sm" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.15)' }}>
-              {user ? getInitials(user.name) : '?'}
-            </div>
-            <div className="hidden md:block text-left">
-              <p className="text-white font-semibold text-sm leading-tight truncate max-w-[120px]">
-                {user?.name || '...'}
-              </p>
-              <p className="text-red-200 text-[10px] leading-tight uppercase tracking-wide">
-                {lang === 'id' ? 'Mahasiswa' : 'Student'}
-              </p>
-            </div>
-            <span className="text-white/60"><ChevronDownIcon size={13} /></span>
-          </button>
-
-          {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-50 transition-colors duration-300">
-              <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700">
-                <p className="font-semibold text-gray-900 dark:text-slate-100 text-sm truncate">{user?.name}</p>
-                <p className="text-gray-400 dark:text-slate-400 text-xs mt-0.5">
-                  {t.nim}: {user?.nim}
-                </p>
-                {user?.prodi && <p className="text-gray-400 dark:text-slate-400 text-xs mt-0.5">Kelas: {user.prodi}</p>}
-              </div>
+        <nav className="p-3 flex-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden mt-1">
+          <p className={`text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-2 transition-all duration-300 ease-in-out ${sidebarOpen ? 'opacity-100 max-h-8 mb-2' : 'opacity-0 max-h-0 mb-0 overflow-hidden'}`}>
+            {t.menuUtama}
+          </p>
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
               <Link
-                href="/pengaturan"
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
-                onClick={() => setUserMenuOpen(false)}
+                key={item.href}
+                href={item.href}
+                id={`nav-${item.href.replace('/', '')}`}
+                title={!sidebarOpen ? item.label : undefined}
+                className={`relative flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-150 ${
+                  isActive 
+                    ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800/80' 
+                    : 'text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800/40 hover:text-gray-700 dark:hover:text-slate-200'
+                }`}
               >
-                <SettingsIcon />
-                {t.pengaturan}
-              </Link>
-              <button
-                id="btn-logout-dropdown"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60"
-              >
-                <LogoutIcon />
-                {isLoggingOut ? t.loggingOut : t.keluar}
-              </button>
-              {/* Theme toggle for mobile in user menu */}
-              <div className="sm:hidden px-4 py-2.5 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
-                <span className="text-sm text-gray-700 dark:text-slate-300">Tema Gelap</span>
-                <ThemeToggle />
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* ══════════════════════════════════
-          BODY — Sidebar + Content
-          ══════════════════════════════════ */}
-      <div className="flex flex-1 overflow-hidden">
-
-        {/* ── Sidebar ── */}
-        <aside className={`bg-white dark:bg-slate-900 flex-shrink-0 transition-all duration-300 overflow-hidden z-20 border-r border-[#ebebeb] dark:border-slate-700/60 ${sidebarOpen ? 'w-56' : 'w-0'}`} style={{ boxShadow: '2px 0 12px rgba(0,0,0,0.05)' }}>
-          <div className="w-56 overflow-y-auto h-full flex flex-col">
-            {/* Profile Card */}
-            <div className="p-4 border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors duration-300">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#CC0000] dark:bg-slate-800 flex items-center justify-center text-white dark:text-red-400 font-bold text-sm flex-shrink-0" style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
-                  {user ? getInitials(user.name) : '?'}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 dark:text-slate-100 text-sm truncate">{user?.name || '...'}</p>
-                  <p className="text-gray-400 dark:text-slate-500 text-xs truncate">{user?.nim}</p>
-                  {user?.prodi && <p className="text-[#CC0000] dark:text-red-400 text-[10px] font-semibold truncate mt-0.5">Kelas: {user.prodi}</p>}
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation */}
-            <nav className="p-3 flex-1">
-              <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest px-3 mb-2 mt-1">
-                {t.menuUtama}
-              </p>
-              {navItems.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    id={`nav-${item.href.replace('/', '')}`}
-                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150 ${
-                      isActive ? 'bg-[#CC0000] text-white dark:bg-slate-800 dark:text-white' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                    style={isActive ? { boxShadow: '0 2px 8px rgba(0,0,0,0.2)' } : undefined}
-                  >
-                    <span className={isActive ? 'text-white' : 'text-gray-400 dark:text-slate-500'}>{item.icon}</span>
+                {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#CC0000] rounded-r-md" />
+                )}
+                <span className={`flex-shrink-0 flex items-center justify-center w-[28px] ${isActive ? 'text-[#CC0000]' : 'text-gray-400 dark:text-slate-500'} [&>svg]:w-[22px] [&>svg]:h-[22px]`}>
+                  {item.icon}
+                </span>
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-[150px] opacity-100 ml-4' : 'w-0 opacity-0 ml-0'}`}>
+                  <span className="text-[15px] whitespace-nowrap block w-[150px]">
                     {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Logout */}
-            <div className="p-3 border-t border-gray-100 dark:border-slate-800">
-              <button
-                id="btn-logout-sidebar"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60"
-              >
-                <LogoutIcon />
-                {isLoggingOut ? t.loggingOut : t.keluar}
-              </button>
-            </div>
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+          
+          <div className="mt-4 flex flex-col gap-1">
+            <p className={`text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-2 transition-all duration-300 ease-in-out ${sidebarOpen ? 'opacity-100 max-h-8 mb-2' : 'opacity-0 max-h-0 mb-0 overflow-hidden'}`}>
+              Lainnya
+            </p>
+            <Link
+              href="/pengaturan"
+              id="nav-pengaturan"
+              title={!sidebarOpen ? t.pengaturan : undefined}
+              className={`relative flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-150 ${
+                pathname === '/pengaturan' 
+                  ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800/80' 
+                  : 'text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800/40 hover:text-gray-700 dark:hover:text-slate-200'
+              }`}
+            >
+              {pathname === '/pengaturan' && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#CC0000] rounded-r-md" />
+              )}
+              <span className={`flex-shrink-0 flex items-center justify-center w-[28px] ${pathname === '/pengaturan' ? 'text-[#CC0000]' : 'text-gray-400 dark:text-slate-500'} [&>svg]:w-[22px] [&>svg]:h-[22px]`}>
+                <SettingsIcon />
+              </span>
+              <div className={`transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-[150px] opacity-100 ml-4' : 'w-0 opacity-0 ml-0'}`}>
+                <span className="text-[15px] whitespace-nowrap block w-[150px]">
+                  {t.pengaturan}
+                </span>
+              </div>
+            </Link>
           </div>
-        </aside>
+        </nav>
+        
+        <div className="p-3 flex flex-col gap-1 border-t border-gray-100 dark:border-slate-800 transition-colors duration-300">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle Sidebar" className="relative flex items-center px-4 py-3 rounded-xl text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800/40 hover:text-gray-700 dark:hover:text-slate-200 font-medium transition-all duration-150">
+            <span className="flex-shrink-0 flex items-center justify-center w-[28px] [&>svg]:w-[22px] [&>svg]:h-[22px]">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="9" y1="3" x2="9" y2="21"/>
+              </svg>
+            </span>
+            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-[150px] opacity-100 ml-4' : 'w-0 opacity-0 ml-0'}`}>
+              <span className="text-[15px] whitespace-nowrap block w-[150px]">
+                Toggle Sidebar
+              </span>
+            </div>
+          </button>
+          <button
+            id="btn-logout-sidebar"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            title={!sidebarOpen ? t.keluar : undefined}
+            className="relative flex items-center px-4 py-3 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 font-medium transition-all duration-150 disabled:opacity-60"
+          >
+            <span className="flex-shrink-0 flex items-center justify-center w-[28px] [&>svg]:w-[22px] [&>svg]:h-[22px]">
+              <LogoutIcon />
+            </span>
+            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-[150px] opacity-100 ml-4' : 'w-0 opacity-0 ml-0'}`}>
+              <span className="text-[15px] whitespace-nowrap block w-[150px]">
+                {isLoggingOut ? t.loggingOut : t.keluar}
+              </span>
+            </div>
+          </button>
+        </div>
+      </aside>
 
-        {/* ── Main Content ── */}
-        <main className="flex-1 overflow-y-auto">{children}</main>
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        <div className="px-4 pt-4 pb-2 shrink-0 z-40">
+          <header className="bg-gradient-to-r from-[#CC0000] to-[#E60000] dark:from-slate-900 dark:to-slate-800 h-14 rounded-[2rem] flex items-center px-4 gap-3 transition-all duration-300 shadow-lg shadow-red-900/15 dark:shadow-black/40 border border-white/20 dark:border-slate-700 relative">
+
+            {/* Logo + Name */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <KPPMLogoMark />
+              <div className="hidden sm:block">
+                <p className="text-white font-black text-[17px] leading-tight tracking-wide">SISTEM MANAJEMEN KPPM</p>
+                <p className="text-red-200 text-[12px] font-bold leading-tight tracking-wider uppercase mt-0.5">Telkom University</p>
+              </div>
+            </div>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* ── Theme Toggle ── */}
+            <div className="flex-shrink-0 mr-2">
+              <ThemeToggle />
+            </div>
+
+            {/* ── Language Selector ── */}
+            <div className="relative flex-shrink-0" ref={langRef}>
+              <button
+                id="btn-lang-selector"
+                onClick={() => { setLangMenuOpen((v) => !v); setUserMenuOpen(false); }}
+                className="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-white/10 transition-colors"
+                title={lang === 'id' ? 'Bahasa Indonesia' : 'English'}
+              >
+                <span className="text-white/70"><GlobeIcon /></span>
+                <span className="hidden sm:flex items-center">{LANG_LABELS[lang].flag}</span>
+                <span className="text-white text-xs font-bold uppercase hidden sm:block">{lang}</span>
+                <span className="text-white/60"><ChevronDownIcon size={12} /></span>
+              </button>
+
+              {langMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-50 transition-colors duration-300">
+                  <p className="px-4 py-2 text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700 mb-1">
+                    Bahasa / Language
+                  </p>
+                  {(['id', 'en'] as Lang[]).map((l) => (
+                    <button
+                      key={l}
+                      id={`lang-${l}`}
+                      onClick={() => { setLang(l); setLangMenuOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 ${
+                        lang === l ? 'text-[#CC0000] dark:text-red-400 font-semibold' : 'text-gray-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {LANG_LABELS[l].flag}
+                      <span>{LANG_LABELS[l].label}</span>
+                      {lang === l && (
+                        <svg className="ml-auto" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="3">
+                          <polyline points="20,6 9,17 4,12" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+
+          </header>
+        </div>
+
+        <main className="flex-1 overflow-y-auto transition-all duration-300">{children}</main>
       </div>
 
-      {/* ── Onboarding Wizard (tampil otomatis jika belum verifikasi/ganti password) ── */}
       <StudentOnboardingWizard />
     </div>
   );

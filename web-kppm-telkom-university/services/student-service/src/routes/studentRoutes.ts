@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { getProfile, getDashboard, changePassword, getMyGrades } from '../controllers/studentController';
-import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload } from '../controllers/kppmController';
+import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload, uploadKpDocuments, getKpResults, uploadKpResults, getLecturerKpResults } from '../controllers/kppmController';
 import { getMentorDashboard } from '../controllers/mentorController';
 import { submitMentorGrade, getMentorGrade, getAllMentorGrades } from '../controllers/mentorGradesController';
 import { submitLecturerGrade, getLecturerGrade, getLecturerStudentFullGrades } from '../controllers/lecturerGradesController';
@@ -46,6 +46,15 @@ router.get('/kppm/registrations/:id',    verifyToken, getRegistrationDetail);
 router.delete('/kppm/registrations/:id', verifyToken, cancelRegistration);
 router.get('/lecturers',                 verifyToken, getLecturers);
 
+// ─── KP Results Routes ──────────────────────────────────────────────────────────
+router.get('/kppm/results',  verifyToken, getKpResults);
+router.post('/kppm/results', verifyToken, uploadKpDocuments.fields([
+  { name: 'certificate_file',               maxCount: 1 },
+  { name: 'field_supervisor_score_file',    maxCount: 1 },
+  { name: 'academic_supervisor_score_file', maxCount: 1 },
+  { name: 'implementation_agreement_file',  maxCount: 1 },
+]), uploadKpResults);
+
 // ─── Lecturer Routes ──────────────────────────────────────────────────────────
 // GET   /student/lecturer/students              — daftar mahasiswa bimbingan + status pengajuan
 // PATCH /student/lecturer/registrations/:id/status — approve atau reject pengajuan
@@ -56,6 +65,7 @@ router.patch('/lecturer/registrations/:id/status',      verifyToken, updateRegis
 router.get('/lecturer/grades/:registration_id',          verifyToken, getLecturerGrade);
 router.post('/lecturer/grades/:registration_id',         verifyToken, submitLecturerGrade);
 router.get('/lecturer/student-grades/:registration_id',  verifyToken, getLecturerStudentFullGrades);
+router.get('/lecturer/kp-results',                       verifyToken, getLecturerKpResults);
 
 // ─── Mentor Routes ───────────────────────────────────────────────────────────
 // GET  /student/mentor/dashboard           — data mahasiswa yang dibimbing

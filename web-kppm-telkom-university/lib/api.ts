@@ -847,6 +847,81 @@ export const injectStudents = async (
   return res.json();
 };
 
+// ─── KP Results Upload API ────────────────────────────────────────────────────
+
+export interface KpResultsRegistration {
+  registration_id: number;
+  // Data mahasiswa
+  student_nim: string;
+  student_name: string;
+  student_class: string;
+  student_email: string | null;
+  whatsapp_number: string;
+  // Data KP
+  company_name: string;
+  internship_position: string;
+  internship_start: string;
+  internship_end: string;
+  semester_code: string;
+  // Pembimbing lapang / mentor
+  mentor_name: string;
+  mentor_position: string;
+  mentor_email: string;
+  mentor_phone: string;
+  // Dosen PA
+  dosen_name: string;
+}
+
+export interface KpResultsDocuments {
+  document_id: number;
+  certificate_file: string;
+  field_supervisor_score_file: string;
+  academic_supervisor_score_file: string;
+  implementation_agreement_file: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KpResultsData {
+  eligible: boolean;
+  reason: string;
+  registration: KpResultsRegistration | null;
+  documents: KpResultsDocuments | null;
+  grades_status: {
+    mentor: boolean;
+    lecturer: boolean;
+  };
+}
+
+/**
+ * Cek status eligibility upload hasil KP dan ambil dokumen yang sudah diupload
+ */
+export const getKpResults = async (): Promise<ApiResponse<KpResultsData>> => {
+  const res = await fetch(`${API_BASE_URL}/student/kppm/results`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
+
+/**
+ * Upload dokumen hasil KP (multipart/form-data)
+ * - certificate_file              : Wajib
+ * - field_supervisor_score_file   : Wajib
+ * - academic_supervisor_score_file: Wajib
+ * - implementation_agreement_file : Opsional
+ */
+export const uploadKpResults = async (
+  formData: FormData
+): Promise<ApiResponse<null>> => {
+  const token = getToken();
+  const res = await fetch(`${API_BASE_URL}/student/kppm/results`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  return res.json();
+};
+
 /**
  * Import data dosen dari file CSV/XLSX
  */
@@ -859,6 +934,45 @@ export const injectLecturers = async (
     method: 'POST',
     headers: { Authorization: `Bearer ${getAdminToken()}` },
     body: formData,
+  });
+  return res.json();
+};
+
+// ─── Lecturer: KP Results Mahasiswa Bimbingan ────────────────────────────────
+
+export interface LecturerKpResultItem {
+  registration_id: number;
+  nim: string;
+  student_name: string;
+  student_class: string;
+  student_email: string | null;
+  whatsapp_number: string | null;
+  company_name: string;
+  internship_position: string;
+  internship_start: string;
+  internship_end: string;
+  semester_code: string;
+  approved_at: string;
+  mentor_name: string | null;
+  mentor_position: string | null;
+  mentor_email: string | null;
+  mentor_phone: string | null;
+  // null jika mahasiswa belum upload
+  document_id: number | null;
+  certificate_file: string | null;
+  field_supervisor_score_file: string | null;
+  academic_supervisor_score_file: string | null;
+  implementation_agreement_file: string | null;
+  uploaded_at: string | null;
+  updated_at: string | null;
+}
+
+/**
+ * Ambil daftar mahasiswa bimbingan beserta status dokumen hasil KP mereka — hanya untuk dosen
+ */
+export const getLecturerKpResults = async (): Promise<ApiResponse<LecturerKpResultItem[]>> => {
+  const res = await fetch(`${API_BASE_URL}/student/lecturer/kp-results`, {
+    headers: authHeaders(),
   });
   return res.json();
 };
