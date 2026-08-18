@@ -471,7 +471,6 @@ export const toggleStudentStatus = async (
     console.error('[Admin] toggleStudentStatus error:', err.message);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
-  }
 };
 
 // ─── Admin: Create Semester ───────────────────────────────────────────────────
