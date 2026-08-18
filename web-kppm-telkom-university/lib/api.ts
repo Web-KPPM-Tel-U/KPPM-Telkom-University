@@ -824,6 +824,32 @@ export const getAdminSemesters = async (): Promise<ApiResponse<any[]>> => {
 };
 
 /**
+ * Buat kode semester baru
+ */
+export const createAdminSemester = async (
+  code: string,
+  label: string
+): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/semesters`, {
+    method: 'POST',
+    headers: adminAuthHeaders(),
+    body: JSON.stringify({ code, label }),
+  });
+  return res.json();
+};
+
+/**
+ * Toggle status aktif/nonaktif semester
+ */
+export const toggleAdminSemesterStatus = async (id: number): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/semesters/${id}/toggle-status`, {
+    method: 'PATCH',
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
+/**
  * Update data dosen (nama, email) — hanya PIC
  */
 export const updateAdminLecturer = async (

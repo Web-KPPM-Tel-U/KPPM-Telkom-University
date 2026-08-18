@@ -471,5 +471,98 @@ export const toggleStudentStatus = async (
     console.error('[Admin] toggleStudentStatus error:', err.message);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
+  }
 };
 
+// ─── Admin: Create Semester ───────────────────────────────────────────────────
+
+/**
+ * POST /admin/semesters
+ * Membuat kode semester baru.
+ * Body: { code: "2526-1", label: "Semester Ganjil 2025/2026" }
+ */
+export const createSemester = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { code, label } = req.body as { code?: string; label?: string };
+
+  if (!code?.trim() || !label?.trim()) {
+    res.status(400).json({ success: false, message: 'Kode dan label semester wajib diisi.' });
+    return;
+  }
+
+  const codeClean = code.trim();
+  if (!/^\d{4}-[12]$/.test(codeClean)) {
+    res.status(400).json({ success: false, message: 'Format kode semester tidak valid. Gunakan format seperti "2526-1".' });
+    return;
+  }
+
+  try {
+    const [existing] = await pool.execute<any[]>(
+      'SELECT semester_id FROM semester_codes WHERE code = ?',
+      [codeClean]
+    );
+    if (existing && existing.length > 0) {
+      res.status(409).json({ success: false, message: `Kode semester "${codeClean}" sudah ada.` });
+      return;
+    }
+
+    const [insertRes] = await pool.execute<any>(
+      'INSERT INTO semester_codes (code, label, is_active) VALUES (?, ?, 0)',
+      [codeClean, label.trim()]
+    );
+
+    const [newRow] = await pool.execute<any[]>(
+      'SELECT * FROM semester_codes WHERE semester_id = ?',
+      [(insertRes as any).insertId]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: `Semester "${codeClean}" berhasil dibuat.`,
+      data: newRow[0],
+    });
+  } catch (err: any) {
+    console.error('[Admin] createSemester error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Admin: Toggle Semester Status ───────────────────────────────────────────
+
+/**
+ * PATCH /admin/semesters/:id/toggle-status
+ * Aktifkan atau nonaktifkan semester.
+ */
+export const toggleSemesterStatus = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT semester_id, code, is_active FROM semester_codes WHERE semester_id = ?',
+      [id]
+    );
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Semester tidak ditemukan.' });
+      return;
+    }
+    const newStatus = rows[0].is_active === 1 ? 0 : 1;
+    await pool.execute(
+      'UPDATE semester_codes SET is_active = ?, updated_at = NOW() WHERE semester_id = ?',
+      [newStatus, id]
+    );
+    res.status(200).json({
+      success: true,
+      message: newStatus === 1
+        ? `Semester "${rows[0].code}" berhasil diaktifkan.`
+        : `Semester "${rows[0].code}" berhasil dinonaktifkan.`,
+      data: { semester_id: rows[0].semester_id, code: rows[0].code, is_active: newStatus },
+    });
+  } catch (err: any) {
+    console.error('[Admin] toggleSemesterStatus error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
