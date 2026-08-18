@@ -11,6 +11,7 @@ import {
   mentorSendOtp,
   mentorVerifyOtp,
   logout,
+  adminLogin,
 } from '../controllers/authController';
 
 const router = Router();
@@ -33,5 +34,8 @@ router.post('/mentor/verify-otp', mentorVerifyOtp);
 
 // ─── Logout (semua role) ──────────────────────────────────────────────────────
 router.post('/logout', logout);
+
+// ─── Admin / PIC ─────────────────────────────────────────────────────
+router.post('/admin/login', adminLogin);
 
 export default router;

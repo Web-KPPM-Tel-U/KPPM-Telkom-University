@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Requires bcryptjs for admin password hashing — loaded from student-service node_modules
 /**
  * ─── KPPM Safe Database Migrator ─────────────────────────────────────────────
  *
@@ -13,6 +14,7 @@ const path = require('path');
 // Resolve dependencies dari student-service/node_modules
 const SERVICE_DIR = path.join(__dirname, '..', 'services', 'student-service');
 const mysql = require(path.join(SERVICE_DIR, 'node_modules', 'mysql2', 'promise'));
+const bcrypt = require(path.join(SERVICE_DIR, 'node_modules', 'bcryptjs'));
 require(path.join(SERVICE_DIR, 'node_modules', 'dotenv')).config({
   path: path.join(SERVICE_DIR, '.env'),
 });
@@ -213,6 +215,46 @@ const MIGRATIONS = [
     ignoreErrorCode: 1060, // ER_DUP_FIELDNAME — kolom sudah ada
   },
 
+  // ── v5: Tabel admin_users untuk Admin/PIC ────────────────────────────────────
+  {
+    description: 'Create admin_users table',
+    sql: `CREATE TABLE IF NOT EXISTS internship_management.admin_users (
+      admin_id   BIGINT AUTO_INCREMENT PRIMARY KEY,
+      username   VARCHAR(50)  NOT NULL UNIQUE,
+      email      VARCHAR(100) NOT NULL UNIQUE,
+      password   VARCHAR(255) NOT NULL,
+      full_name  VARCHAR(100) NOT NULL,
+      role       ENUM('admin','pic') NOT NULL DEFAULT 'pic',
+      is_active  TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;`,
+  },
+
+  // ── v5b: Add email column to admin_users if missing (for existing installs) ──────
+  {
+    description: 'Add email column to admin_users (if missing)',
+    sql: `ALTER TABLE internship_management.admin_users
+          ADD COLUMN email VARCHAR(100) NOT NULL DEFAULT '' AFTER username,
+          ADD UNIQUE KEY uq_admin_email (email);`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME
+  },
+
+  // ── v6: Tabel semester_codes untuk kelola semester ──────────────────────────
+  {
+    description: 'Create semester_codes table',
+    sql: `CREATE TABLE IF NOT EXISTS internship_management.semester_codes (
+      semester_id  BIGINT AUTO_INCREMENT PRIMARY KEY,
+      code         VARCHAR(20)  NOT NULL UNIQUE,
+      label        VARCHAR(100) NOT NULL,
+      is_active    TINYINT(1)   NOT NULL DEFAULT 0,
+      start_date   DATE NULL,
+      end_date     DATE NULL,
+      created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;`,
+  },
+
 ];
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
@@ -266,6 +308,32 @@ async function run() {
     console.log('✅');
   } catch (err) {
     console.log('⚠️  seed warning:', err.message);
+  }
+
+  // Seed admin akun default
+  process.stdout.write(`  ▸ Seeding default admin account... `);
+  try {
+    const [existing] = await conn.execute(
+      'SELECT admin_id FROM internship_management.admin_users WHERE username = ?',
+      ['admin']
+    );
+    if (!existing || existing.length === 0) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await conn.execute(
+        `INSERT INTO internship_management.admin_users (username, email, password, full_name, role) VALUES (?, ?, ?, ?, ?)`,
+        ['admin', 'admin@telkomuniversity.ac.id', hashedPassword, 'Administrator KPPM', 'admin']
+      );
+      console.log('✅ (admin@telkomuniversity.ac.id / admin123 dibuat)');
+    } else {
+      // Pastikan email sudah terisi jika akun lama belum punya email
+      await conn.execute(
+        `UPDATE internship_management.admin_users SET email = 'admin@telkomuniversity.ac.id' WHERE username = 'admin' AND (email = '' OR email IS NULL)`,
+        []
+      ).catch(() => {});
+      console.log('⏭️  (admin sudah ada)');
+    }
+  } catch (err) {
+    console.log('⚠️  admin seed warning:', err.message);
   }
 
   await conn.end();

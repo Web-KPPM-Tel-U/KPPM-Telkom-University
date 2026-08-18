@@ -693,6 +693,217 @@ export const getLecturerStudentFullGrades = async (
   return res.json();
 };
 
+// ─── Admin / PIC API ──────────────────────────────────────────────────────────
+
+export interface AdminUser {
+  admin_id: number;
+  username: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'pic';
+}
+
+export const getAdminToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('kppm_admin_token');
+};
+
+export const setAdminToken = (token: string): void => {
+  localStorage.setItem('kppm_admin_token', token);
+};
+
+export const removeAdminToken = (): void => {
+  localStorage.removeItem('kppm_admin_token');
+  localStorage.removeItem('kppm_admin_user');
+};
+
+export const setAdminUser = (user: AdminUser): void => {
+  localStorage.setItem('kppm_admin_user', JSON.stringify(user));
+};
+
+export const getAdminUser = (): AdminUser | null => {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem('kppm_admin_user');
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+};
+
+const adminAuthHeaders = (): HeadersInit => ({
+  'Content-Type': 'application/json',
+  ...(getAdminToken() ? { Authorization: `Bearer ${getAdminToken()}` } : {}),
+});
+
+/**
+ * Login Admin/PIC dengan email dan password
+ */
+export const loginAdmin = async (
+  email: string,
+  password: string
+): Promise<ApiResponse<{ token: string; user: AdminUser }>> => {
+  const res = await fetch(`${API_BASE_URL}/auth/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  return res.json();
+};
+
+/**
+ * Logout Admin — hapus token admin dari localStorage
+ */
+export const logoutAdmin = async (): Promise<void> => {
+  try {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+      headers: adminAuthHeaders(),
+    });
+  } catch {
+    // tetap hapus token
+  } finally {
+    removeAdminToken();
+  }
+};
+
+export interface AdminStats {
+  total_students: number;
+  total_lecturers: number;
+  pending_registrations: number;
+  approved_registrations: number;
+  active_semesters: number;
+  total_registrations: number;
+}
+
+/**
+ * Ambil statistik ringkasan untuk dashboard admin
+ */
+export const getAdminStats = async (): Promise<ApiResponse<AdminStats>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/stats`, {
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
+/**
+ * Ambil daftar semua dosen (untuk admin)
+ */
+export const getAdminLecturers = async (
+  limit = 50,
+  offset = 0,
+  search = ''
+): Promise<ApiResponse<any[]> & { meta?: { total: number; limit: number; offset: number } }> => {
+  const res = await fetch(
+    `${API_BASE_URL}/student/admin/lecturers?limit=${limit}&offset=${offset}&search=${encodeURIComponent(search)}`,
+    { headers: adminAuthHeaders() }
+  );
+  return res.json();
+};
+
+/**
+ * Ambil daftar semua mahasiswa (untuk admin)
+ */
+export const getAdminStudents = async (
+  limit = 50,
+  offset = 0,
+  search = ''
+): Promise<ApiResponse<any[]> & { meta?: { total: number; limit: number; offset: number } }> => {
+  const res = await fetch(
+    `${API_BASE_URL}/student/admin/students?limit=${limit}&offset=${offset}&search=${encodeURIComponent(search)}`,
+    { headers: adminAuthHeaders() }
+  );
+  return res.json();
+};
+
+/**
+ * Ambil daftar kode semester (untuk admin)
+ */
+export const getAdminSemesters = async (): Promise<ApiResponse<any[]>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/semesters`, {
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
+/**
+ * Buat kode semester baru
+ */
+export const createAdminSemester = async (
+  code: string,
+  label: string
+): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/semesters`, {
+    method: 'POST',
+    headers: adminAuthHeaders(),
+    body: JSON.stringify({ code, label }),
+  });
+  return res.json();
+};
+
+/**
+ * Toggle status aktif/nonaktif semester
+ */
+export const toggleAdminSemesterStatus = async (id: number): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/semesters/${id}/toggle-status`, {
+    method: 'PATCH',
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
+/**
+ * Update data dosen (nama, email) — hanya PIC
+ */
+export const updateAdminLecturer = async (
+  nip: string,
+  data: { lecturer_name?: string; email?: string }
+): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/lecturers/${nip}`, {
+    method: 'PATCH',
+    headers: adminAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const toggleAdminLecturerStatus = async (nip: string): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/lecturers/${nip}/toggle-status`, {
+    method: 'PATCH',
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
+export const toggleAdminStudentStatus = async (nim: string): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/student/admin/students/${nim}/toggle-status`, {
+    method: 'PATCH',
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
+// ─── Admin: Inject Data ───────────────────────────────────────────────────────
+
+export interface InjectResult {
+  inserted: number;
+  skipped: number;
+  errors: { row: number; message: string }[];
+}
+
+/**
+ * Import data mahasiswa dari file CSV/XLSX
+ */
+export const injectStudents = async (
+  file: File
+): Promise<ApiResponse<InjectResult>> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`${API_BASE_URL}/student/admin/inject/students`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+    body: formData,
+  });
+  return res.json();
+};
+
 // ─── KP Results Upload API ────────────────────────────────────────────────────
 
 export interface KpResultsRegistration {
@@ -763,6 +974,22 @@ export const uploadKpResults = async (
   const res = await fetch(`${API_BASE_URL}/student/kppm/results`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  return res.json();
+};
+
+/**
+ * Import data dosen dari file CSV/XLSX
+ */
+export const injectLecturers = async (
+  file: File
+): Promise<ApiResponse<InjectResult>> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`${API_BASE_URL}/student/admin/inject/lecturers`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
     body: formData,
   });
   return res.json();
