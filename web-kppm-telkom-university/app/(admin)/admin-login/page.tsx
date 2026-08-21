@@ -145,7 +145,9 @@ export default function AdminLoginPage() {
       new Promise<void>((resolve, reject) => {
         if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
         const s = document.createElement('script');
-        s.src = src; s.onload = () => resolve(); s.onerror = reject;
+        s.src = src;
+        s.onload = () => resolve();
+        s.onerror = reject;
         document.head.appendChild(s);
       });
 
@@ -157,16 +159,27 @@ export default function AdminLoginPage() {
         const W = window as any;
         if (vantaRef.current && W.VANTA && !vantaEffect.current) {
           vantaEffect.current = W.VANTA.TOPOLOGY({
-            el: vantaRef.current, p5: W.p5,
-            mouseControls: true, touchControls: true, gyroControls: false,
-            minHeight: 200, minWidth: 200, scale: 1.0, scaleMobile: 1.0,
-            color: 0xcd4b4b, backgroundColor: 0xffffff,
+            el: vantaRef.current,
+            p5: W.p5,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200,
+            minWidth: 200,
+            scale: 1.0,
+            scaleMobile: 1.0,
+            color: 0xcd4b4b,
+            backgroundColor: 0xffffff,
           });
         }
-      } catch (e) { console.warn('Vanta.js failed to load', e); }
+      } catch (e) {
+        console.warn('Vanta.js failed to load', e);
+      }
     })();
 
-    return () => { if (vantaEffect.current) { vantaEffect.current.destroy(); vantaEffect.current = null; } };
+    return () => {
+      if (vantaEffect.current) { vantaEffect.current.destroy(); vantaEffect.current = null; }
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

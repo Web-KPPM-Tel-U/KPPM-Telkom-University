@@ -777,7 +777,7 @@ export interface AdminStats {
  * Ambil statistik ringkasan untuk dashboard admin
  */
 export const getAdminStats = async (): Promise<ApiResponse<AdminStats>> => {
-  const res = await fetch(`${API_BASE_URL}/student/admin/stats`, {
+  const res = await fetch(`${API_BASE_URL}/admin/stats`, {
     headers: adminAuthHeaders(),
   });
   return res.json();
@@ -792,7 +792,7 @@ export const getAdminLecturers = async (
   search = ''
 ): Promise<ApiResponse<any[]> & { meta?: { total: number; limit: number; offset: number } }> => {
   const res = await fetch(
-    `${API_BASE_URL}/student/admin/lecturers?limit=${limit}&offset=${offset}&search=${encodeURIComponent(search)}`,
+    `${API_BASE_URL}/admin/lecturers?limit=${limit}&offset=${offset}&search=${encodeURIComponent(search)}`,
     { headers: adminAuthHeaders() }
   );
   return res.json();
@@ -807,7 +807,7 @@ export const getAdminStudents = async (
   search = ''
 ): Promise<ApiResponse<any[]> & { meta?: { total: number; limit: number; offset: number } }> => {
   const res = await fetch(
-    `${API_BASE_URL}/student/admin/students?limit=${limit}&offset=${offset}&search=${encodeURIComponent(search)}`,
+    `${API_BASE_URL}/admin/students?limit=${limit}&offset=${offset}&search=${encodeURIComponent(search)}`,
     { headers: adminAuthHeaders() }
   );
   return res.json();
@@ -817,7 +817,7 @@ export const getAdminStudents = async (
  * Ambil daftar kode semester (untuk admin)
  */
 export const getAdminSemesters = async (): Promise<ApiResponse<any[]>> => {
-  const res = await fetch(`${API_BASE_URL}/student/admin/semesters`, {
+  const res = await fetch(`${API_BASE_URL}/admin/semesters`, {
     headers: adminAuthHeaders(),
   });
   return res.json();
@@ -830,7 +830,7 @@ export const createAdminSemester = async (
   code: string,
   label: string
 ): Promise<ApiResponse<any>> => {
-  const res = await fetch(`${API_BASE_URL}/student/admin/semesters`, {
+  const res = await fetch(`${API_BASE_URL}/admin/semesters`, {
     method: 'POST',
     headers: adminAuthHeaders(),
     body: JSON.stringify({ code, label }),
@@ -842,7 +842,7 @@ export const createAdminSemester = async (
  * Toggle status aktif/nonaktif semester
  */
 export const toggleAdminSemesterStatus = async (id: number): Promise<ApiResponse<any>> => {
-  const res = await fetch(`${API_BASE_URL}/student/admin/semesters/${id}/toggle-status`, {
+  const res = await fetch(`${API_BASE_URL}/admin/semesters/${id}/toggle-status`, {
     method: 'PATCH',
     headers: adminAuthHeaders(),
   });
@@ -856,7 +856,7 @@ export const updateAdminLecturer = async (
   nip: string,
   data: { lecturer_name?: string; email?: string }
 ): Promise<ApiResponse<any>> => {
-  const res = await fetch(`${API_BASE_URL}/student/admin/lecturers/${nip}`, {
+  const res = await fetch(`${API_BASE_URL}/admin/lecturers/${nip}`, {
     method: 'PATCH',
     headers: adminAuthHeaders(),
     body: JSON.stringify(data),
@@ -865,7 +865,7 @@ export const updateAdminLecturer = async (
 };
 
 export const toggleAdminLecturerStatus = async (nip: string): Promise<ApiResponse<any>> => {
-  const res = await fetch(`${API_BASE_URL}/student/admin/lecturers/${nip}/toggle-status`, {
+  const res = await fetch(`${API_BASE_URL}/admin/lecturers/${nip}/toggle-status`, {
     method: 'PATCH',
     headers: adminAuthHeaders(),
   });
@@ -873,7 +873,7 @@ export const toggleAdminLecturerStatus = async (nip: string): Promise<ApiRespons
 };
 
 export const toggleAdminStudentStatus = async (nim: string): Promise<ApiResponse<any>> => {
-  const res = await fetch(`${API_BASE_URL}/student/admin/students/${nim}/toggle-status`, {
+  const res = await fetch(`${API_BASE_URL}/admin/students/${nim}/toggle-status`, {
     method: 'PATCH',
     headers: adminAuthHeaders(),
   });
@@ -896,7 +896,7 @@ export const injectStudents = async (
 ): Promise<ApiResponse<InjectResult>> => {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`${API_BASE_URL}/student/admin/inject/students`, {
+  const res = await fetch(`${API_BASE_URL}/admin/inject/students`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${getAdminToken()}` },
     body: formData,
@@ -987,7 +987,7 @@ export const injectLecturers = async (
 ): Promise<ApiResponse<InjectResult>> => {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`${API_BASE_URL}/student/admin/inject/lecturers`, {
+  const res = await fetch(`${API_BASE_URL}/admin/inject/lecturers`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${getAdminToken()}` },
     body: formData,

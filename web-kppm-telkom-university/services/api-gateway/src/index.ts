@@ -5,8 +5,9 @@ import morgan from 'morgan';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-const AUTH_SERVICE = 'http://localhost:4001';
+const AUTH_SERVICE    = 'http://localhost:4001';
 const STUDENT_SERVICE = 'http://localhost:4002';
+const ADMIN_SERVICE   = 'http://localhost:4003';
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 const corsOptions = {
@@ -108,6 +109,11 @@ app.all('/student/*', (req: Request, res: Response) => {
   proxyRequest(req, res, STUDENT_SERVICE);
 });
 
+// /admin/* → Admin Service (port 4003)
+app.all('/admin/*', (req: Request, res: Response) => {
+  proxyRequest(req, res, ADMIN_SERVICE);
+});
+
 // /uploads/* → Student Service (port 4002) — binary-safe proxy untuk file statik
 app.all('/uploads/*', async (req: Request, res: Response) => {
   const targetUrl = `${STUDENT_SERVICE}${req.originalUrl}`;
@@ -138,5 +144,6 @@ app.listen(PORT, () => {
   console.log(`\n[API Gateway] Running at http://localhost:${PORT}`);
   console.log(`   → /auth/*    → Auth Service    (${AUTH_SERVICE})`);
   console.log(`   → /student/* → Student Service (${STUDENT_SERVICE})`);
+  console.log(`   → /admin/*   → Admin Service   (${ADMIN_SERVICE})`);
   console.log(`   → /health    → Health check\n`);
 });
