@@ -39,7 +39,7 @@ export const studentLogin = async (req: Request, res: Response): Promise<void> =
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT nim, student_name, class, email, password, is_verified, password_changed FROM students WHERE nim = ?',
+      'SELECT nim, student_name, class, email, password, is_verified, password_changed, is_active FROM students WHERE nim = ?',
       [nim]
     );
 
@@ -48,7 +48,12 @@ export const studentLogin = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    const student = rows[0] as StudentRow;
+    const student = rows[0] as StudentRow & { is_active?: number };
+
+    if (student.is_active === 0) {
+      res.status(403).json({ success: false, message: 'Akun Anda telah dinonaktifkan oleh Admin.' });
+      return;
+    }
 
     let passwordValid = false;
     if (student.password.startsWith('$2')) {
@@ -383,7 +388,7 @@ export const lecturerLogin = async (req: Request, res: Response): Promise<void> 
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT nip, lecturer_name, email, password, is_verified, password_changed FROM lecturers WHERE nip = ?',
+      'SELECT nip, lecturer_name, email, password, is_verified, password_changed, is_active FROM lecturers WHERE nip = ?',
       [nip]
     );
 
@@ -392,7 +397,12 @@ export const lecturerLogin = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const lecturer = rows[0] as LecturerRow;
+    const lecturer = rows[0] as LecturerRow & { is_active?: number };
+
+    if (lecturer.is_active === 0) {
+      res.status(403).json({ success: false, message: 'Akun Anda telah dinonaktifkan oleh Admin.' });
+      return;
+    }
 
     let passwordValid = false;
     if (lecturer.password.startsWith('$2')) {

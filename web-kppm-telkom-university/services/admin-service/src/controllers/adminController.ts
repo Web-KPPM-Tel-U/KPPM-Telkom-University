@@ -47,12 +47,12 @@ export const getAdminStats = async (
     res.status(200).json({
       success: true,
       data: {
-        total_students:      studentRow?.total  ?? 0,
-        total_lecturers:     lecturerRow?.total ?? 0,
-        pending_registrations: pendingRow?.total  ?? 0,
+        total_students:         studentRow?.total  ?? 0,
+        total_lecturers:        lecturerRow?.total ?? 0,
+        pending_registrations:  pendingRow?.total  ?? 0,
         approved_registrations: approvedRow?.total ?? 0,
-        active_semesters:    activeSemRow?.total ?? 0,
-        total_registrations: totalRegRow?.total  ?? 0,
+        active_semesters:       activeSemRow?.total ?? 0,
+        total_registrations:    totalRegRow?.total  ?? 0,
       },
     });
   } catch (err: any) {
@@ -163,6 +163,7 @@ export const getAdminStudents = async (
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
 };
+
 // ─── Helper: Parse file ke array of objects ──────────────────────────────────
 
 function parseFile(buffer: Buffer, mimetype: string, originalname: string): Record<string, string>[] {
@@ -186,7 +187,6 @@ function parseFile(buffer: Buffer, mimetype: string, originalname: string): Reco
 
 // ─── Helper: Normalisasi header fleksibel ─────────────────────────────────────
 
-// Petakan berbagai variasi nama kolom ke key standar
 const STUDENT_FIELD_MAP: Record<string, string> = {
   nim: 'nim', 'nomor induk mahasiswa': 'nim', 'no induk': 'nim',
   student_name: 'student_name', 'nama': 'student_name', 'nama mahasiswa': 'student_name',
@@ -246,7 +246,7 @@ export const injectStudents = async (
   const result: InjectResult = { inserted: 0, skipped: 0, errors: [] };
 
   for (let i = 0; i < rawRows.length; i++) {
-    const rowNum = i + 2; // row 1 = header
+    const rowNum = i + 2;
     const row = normalizeRow(rawRows[i], STUDENT_FIELD_MAP);
 
     if (!row.nim)          { result.errors.push({ row: rowNum, message: 'Kolom NIM kosong atau tidak ditemukan.' }); continue; }
@@ -343,7 +343,7 @@ export const injectLecturers = async (
 
 /**
  * PATCH /admin/lecturers/:nip
- * PIC dapat mengubah nama dan email dosen. NIP tidak dapat diubah (Primary Key).
+ * PIC dapat mengubah nama dan email dosen.
  */
 export const updateLecturer = async (
   req: AuthenticatedRequest,
@@ -358,7 +358,6 @@ export const updateLecturer = async (
   }
 
   try {
-    // Cek apakah dosen ada
     const [rows] = await pool.execute<any[]>(
       'SELECT nip FROM lecturers WHERE nip = ?',
       [nip]
@@ -368,7 +367,6 @@ export const updateLecturer = async (
       return;
     }
 
-    // Build query dinamis — hanya update field yang dikirim
     const fields: string[] = [];
     const values: any[] = [];
 
@@ -407,7 +405,6 @@ export const updateLecturer = async (
 
 /**
  * PATCH /admin/lecturers/:nip/toggle-status
- * Aktifkan atau nonaktifkan akun dosen
  */
 export const toggleLecturerStatus = async (
   req: AuthenticatedRequest,
@@ -441,7 +438,6 @@ export const toggleLecturerStatus = async (
 
 /**
  * PATCH /admin/students/:nim/toggle-status
- * Aktifkan atau nonaktifkan akun mahasiswa
  */
 export const toggleStudentStatus = async (
   req: AuthenticatedRequest,
@@ -477,8 +473,6 @@ export const toggleStudentStatus = async (
 
 /**
  * POST /admin/semesters
- * Membuat kode semester baru.
- * Body: { code: "2526-1", label: "Semester Ganjil 2025/2026" }
  */
 export const createSemester = async (
   req: AuthenticatedRequest,
@@ -532,7 +526,6 @@ export const createSemester = async (
 
 /**
  * PATCH /admin/semesters/:id/toggle-status
- * Aktifkan atau nonaktifkan semester.
  */
 export const toggleSemesterStatus = async (
   req: AuthenticatedRequest,
