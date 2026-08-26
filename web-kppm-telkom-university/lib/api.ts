@@ -374,6 +374,23 @@ export const getLecturersList = async (): Promise<ApiResponse<Lecturer[]>> => {
   return res.json();
 };
 
+/**
+ * Ambil daftar semester yang sedang aktif
+ * (untuk dropdown di form pendaftaran KPPM mahasiswa)
+ */
+export interface ActiveSemester {
+  semester_id: number;
+  code: string;
+  label: string;
+}
+
+export const getActiveSemesters = async (): Promise<ApiResponse<ActiveSemester[]>> => {
+  const res = await fetch(`${API_BASE_URL}/student/semesters/active`, {
+    headers: authHeaders(),
+  });
+  return res.json();
+};
+
 // ─── Lecturer Profile & Auth API ──────────────────────────────────────────────
 
 /**

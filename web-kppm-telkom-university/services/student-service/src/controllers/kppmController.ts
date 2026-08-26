@@ -429,6 +429,28 @@ export const getLecturers = async (
   }
 };
 
+// ─── Get Active Semesters (untuk dropdown di form mahasiswa) ──────────────────
+
+/**
+ * GET /student/semesters/active
+ * Mengembalikan daftar semester yang aktif (is_active = 1).
+ * Digunakan untuk dropdown kode semester pada form pendaftaran KPPM.
+ */
+export const getActiveSemesters = async (
+  _req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT semester_id, code, label FROM semester_codes WHERE is_active = 1 ORDER BY code DESC'
+    );
+    res.status(200).json({ success: true, data: rows });
+  } catch (err: any) {
+    console.error('[KPPM] getActiveSemesters error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
 // ─── Cancel / Batalkan Pendaftaran KPPM ──────────────────────────────────────
 
 /**

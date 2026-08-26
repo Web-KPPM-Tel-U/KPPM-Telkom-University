@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getToken, getUser, StudentUser, submitKppmRegistration, getKppmRegistrations, KppmRegistration, getLecturersList, Lecturer, getKppmRegistrationDetail, KppmRegistrationDetail, cancelKppmRegistration } from '@/lib/api';
+import { getToken, getUser, StudentUser, submitKppmRegistration, getKppmRegistrations, KppmRegistration, getLecturersList, Lecturer, getKppmRegistrationDetail, KppmRegistrationDetail, cancelKppmRegistration, getActiveSemesters, ActiveSemester } from '@/lib/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -202,6 +202,9 @@ export default function IsiDataKppmPage() {
   const [isLoadingLecturers, setIsLoadingLecturers] = useState(false);
   const [selectedLecturerId, setSelectedLecturerId] = useState('');
 
+  const [activeSemesters, setActiveSemesters] = useState<ActiveSemester[]>([]);
+  const [isLoadingSemesters, setIsLoadingSemesters] = useState(false);
+
   const [detailData, setDetailData] = useState<KppmRegistrationDetail | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [showDocModal, setShowDocModal] = useState(false);
@@ -263,6 +266,24 @@ export default function IsiDataKppmPage() {
       }
     };
     fetchLecturers();
+  }, []);
+
+  // Load daftar semester aktif untuk dropdown kode semester
+  useEffect(() => {
+    const fetchSemesters = async () => {
+      const token = getToken();
+      if (!token) return;
+      setIsLoadingSemesters(true);
+      try {
+        const res = await getActiveSemesters();
+        if (res.success && res.data) setActiveSemesters(res.data);
+      } catch {
+        // Biarkan kosong jika gagal
+      } finally {
+        setIsLoadingSemesters(false);
+      }
+    };
+    fetchSemesters();
   }, []);
 
   // Load riwayat pendaftaran dari API
@@ -946,8 +967,41 @@ export default function IsiDataKppmPage() {
               <FormField label="Kelas" readOnly>
                 <Input id="field-kelas" value={student?.class ?? ''} readOnly icon={<LockIcon />} />
               </FormField>
-              <FormField label="Kode Semester" required hasError={!!fieldErrors['kodeSemester']} hint="Contoh: 20242">
-                <Input id="field-kode-semester" placeholder="20242" value={form.kodeSemester} hasError={!!fieldErrors['kodeSemester']} onChange={(e) => handleChange('kodeSemester', e.target.value)} maxLength={5} />
+              <FormField
+                label="Kode Semester"
+                required
+                hasError={!!fieldErrors['kodeSemester']}
+                hint={!fieldErrors['kodeSemester'] ? (activeSemesters.length === 0 && !isLoadingSemesters ? 'Tidak ada semester aktif saat ini' : undefined) : undefined}
+              >
+                <div className="relative">
+                  <select
+                    id="field-kode-semester"
+                    value={form.kodeSemester}
+                    disabled={isLoadingSemesters || activeSemesters.length === 0}
+                    onChange={(e) => handleChange('kodeSemester', e.target.value)}
+                    className={`w-full h-10 rounded-lg border text-sm appearance-none pr-9 pl-3
+                      focus:outline-none focus:ring-2 transition-all
+                      disabled:bg-gray-50 dark:disabled:bg-gray-700/50 disabled:text-gray-400 disabled:cursor-not-allowed
+                      ${fieldErrors['kodeSemester']
+                        ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 text-gray-900 dark:text-gray-100 focus:ring-red-200 focus:border-red-500'
+                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`}
+                  >
+                    <option value="" disabled>
+                      {isLoadingSemesters ? 'Memuat semester...' : activeSemesters.length === 0 ? 'Tidak ada semester aktif' : 'Pilih semester aktif'}
+                    </option>
+                    {activeSemesters.map((sem) => (
+                      <option key={sem.semester_id} value={sem.code}>
+                        {sem.code}
+                      </option>
+                    ))}
+                  </select>
+                  {/* Chevron icon */}
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6,9 12,15 18,9" />
+                    </svg>
+                  </span>
+                </div>
               </FormField>
               <FormField label="Email" readOnly>
                 <Input id="field-email" type="email" value={student?.email ?? ''} readOnly icon={<LockIcon />} />

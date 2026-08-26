@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getProfile, getDashboard, changePassword, getMyGrades } from '../controllers/studentController';
-import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload, uploadKpDocuments, getKpResults, uploadKpResults, getLecturerKpResults } from '../controllers/kppmController';
+import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, getActiveSemesters, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload, uploadKpDocuments, getKpResults, uploadKpResults, getLecturerKpResults } from '../controllers/kppmController';
 import { getMentorDashboard } from '../controllers/mentorController';
 import { submitMentorGrade, getMentorGrade, getAllMentorGrades } from '../controllers/mentorGradesController';
 import { submitLecturerGrade, getLecturerGrade, getLecturerStudentFullGrades } from '../controllers/lecturerGradesController';
@@ -23,6 +23,7 @@ router.get('/kppm/registrations',       verifyToken, getRegistrations);
 router.get('/kppm/registrations/:id',    verifyToken, getRegistrationDetail);
 router.delete('/kppm/registrations/:id', verifyToken, cancelRegistration);
 router.get('/lecturers',                 verifyToken, getLecturers);
+router.get('/semesters/active',          verifyToken, getActiveSemesters);
 
 // ─── KP Results Routes ──────────────────────────────────────────────────────────
 router.get('/kppm/results',  verifyToken, getKpResults);
