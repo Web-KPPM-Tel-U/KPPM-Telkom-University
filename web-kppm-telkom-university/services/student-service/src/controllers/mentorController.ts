@@ -16,7 +16,7 @@ export const getMentorDashboard = async (req: AuthenticatedRequest, res: Respons
 
   try {
     // Ambil semua pendaftaran yang mentor_email-nya cocok dan status approved
-    const [regRows] = await pool.execute<any[]>(
+    const [regRows] = (await (pool as any).execute(
       `SELECT
          ir.registration_id,
          ir.status,
@@ -42,7 +42,7 @@ export const getMentorDashboard = async (req: AuthenticatedRequest, res: Respons
        WHERE ir.mentor_email = ? AND ir.status = 'approved'
        ORDER BY ir.approved_at DESC`,
       [mentorEmail]
-    );
+    )) as [any[], any];
 
     // Ambil data mentor dari baris pertama jika ada
     const firstReg = regRows && regRows.length > 0 ? regRows[0] : null;

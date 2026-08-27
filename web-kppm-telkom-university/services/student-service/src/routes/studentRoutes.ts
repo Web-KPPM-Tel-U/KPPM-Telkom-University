@@ -4,7 +4,7 @@ import { submitRegistration, getRegistrations, getRegistrationDetail, getLecture
 import { getMentorDashboard } from '../controllers/mentorController';
 import { submitMentorGrade, getMentorGrade, getAllMentorGrades } from '../controllers/mentorGradesController';
 import { submitLecturerGrade, getLecturerGrade, getLecturerStudentFullGrades } from '../controllers/lecturerGradesController';
-import { verifyToken } from '../middleware/authMiddleware';
+import { verifyToken, verifyMentorToken } from '../middleware/authMiddleware';
 
 const router = Router();
 
@@ -51,9 +51,9 @@ router.get('/lecturer/kp-results',                       verifyToken, getLecture
 // GET  /student/mentor/grades              — semua nilai yang sudah diinput
 // GET  /student/mentor/grades/:id          — nilai satu mahasiswa
 // POST /student/mentor/grades/:id          — submit / update nilai mahasiswa
-router.get('/mentor/dashboard',              verifyToken, getMentorDashboard);
-router.get('/mentor/grades',                 verifyToken, getAllMentorGrades);
-router.get('/mentor/grades/:registration_id', verifyToken, getMentorGrade);
-router.post('/mentor/grades/:registration_id', verifyToken, submitMentorGrade);
+router.get('/mentor/dashboard',               verifyMentorToken, getMentorDashboard);
+router.get('/mentor/grades',                  verifyMentorToken, getAllMentorGrades);
+router.get('/mentor/grades/:registration_id', verifyMentorToken, getMentorGrade);
+router.post('/mentor/grades/:registration_id', verifyMentorToken, submitMentorGrade);
 
 export default router;

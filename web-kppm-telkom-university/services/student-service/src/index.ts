@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import path from 'path';
+import rateLimit from 'express-rate-limit';
 import studentRoutes from './routes/studentRoutes';
 
 const app = express();
@@ -15,6 +16,16 @@ app.use(cors({
 }));
 app.use(morgan('dev'));
 app.use(express.json());
+
+// ─── Rate Limiter ─────────────────────────────────────────────────────────
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak permintaan. Coba lagi dalam 15 menit.' },
+});
+app.use(apiLimiter);
 
 // ─── Static Files (Uploaded Documents) ───────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

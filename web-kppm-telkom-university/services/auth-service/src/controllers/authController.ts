@@ -464,7 +464,7 @@ export const mentorSendOtp = async (req: Request, res: Response): Promise<void> 
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT registration_id FROM internship_registrations WHERE mentor_email = ? AND status = ?',
+      'SELECT registration_id, mentor_access_revoked FROM internship_registrations WHERE mentor_email = ? AND status = ?',
       [email, 'approved']
     );
 
@@ -473,7 +473,20 @@ export const mentorSendOtp = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const registrationId = rows[0].registration_id;
+    // Pisahkan registrasi yang masih aktif (mentor masih dibutuhkan) vs sudah selesai
+    const activeRegistrations = rows.filter((r: any) => r.mentor_access_revoked === 0);
+
+    // Blokir mentor HANYA jika SEMUA mahasiswa bimbingan sudah upload hasil KP
+    if (activeRegistrations.length === 0) {
+      res.status(403).json({
+        success: false,
+        message: 'Akses Anda telah dinonaktifkan karena semua mahasiswa bimbingan Anda telah menyelesaikan proses upload dokumen KP.',
+      });
+      return;
+    }
+
+    // Gunakan registrasi aktif pertama (mentor login per mahasiswa bimbingan)
+    const registrationId = activeRegistrations[0].registration_id;
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
 

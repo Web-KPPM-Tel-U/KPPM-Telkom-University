@@ -510,11 +510,12 @@ export interface MentorDashboardData {
 /**
  * Ambil dashboard mentor (data mahasiswa yang dibimbing)
  */
-export const getMentorDashboard = async (): Promise<ApiResponse<MentorDashboardData>> => {
+export const getMentorDashboard = async (): Promise<ApiResponse<MentorDashboardData> & { httpStatus?: number }> => {
   const res = await fetch(`${API_BASE_URL}/student/mentor/dashboard`, {
     headers: authHeaders(),
   });
-  return res.json();
+  const data = await res.json();
+  return { ...data, httpStatus: res.status };
 };
 
 /**

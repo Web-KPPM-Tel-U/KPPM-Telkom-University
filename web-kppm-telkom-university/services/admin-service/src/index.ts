@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import adminRoutes from './routes/adminRoutes';
 
 const app = express();
@@ -14,6 +15,16 @@ app.use(cors({
 }));
 app.use(morgan('dev'));
 app.use(express.json());
+
+// ─── Rate Limiter (Admin panel — lebih ketat) ────────────────────────────────
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak permintaan admin. Coba lagi dalam 15 menit.' },
+});
+app.use(adminLimiter);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
