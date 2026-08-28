@@ -675,15 +675,14 @@ function StudentRow({ student, idx, gradeMap, onOpenForm, onOpenDetail }: {
         <div className="flex items-center gap-2">
           <button
             onClick={() => onOpenForm(student)}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
-              hasGrade 
-                ? 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:border-gray-300' 
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${hasGrade
+                ? 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:border-gray-300'
                 : 'bg-[#CC0000] border-[#CC0000] text-white hover:bg-[#A30000] shadow-sm'
-            }`}
+              }`}
           >
             {hasGrade ? 'Edit' : 'Input Nilai'}
           </button>
-          
+
           {hasGrade && (
             <button
               onClick={() => onOpenDetail(student)}
