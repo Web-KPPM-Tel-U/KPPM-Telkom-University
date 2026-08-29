@@ -68,6 +68,7 @@ const PlusIcon = () => (
 interface Lecturer {
   nip: string;
   lecturer_name: string;
+  lecturer_code: string | null;
   email: string | null;
   is_verified: number;
   password_changed: number;
@@ -78,6 +79,7 @@ interface Lecturer {
 
 interface EditForm {
   lecturer_name: string;
+  lecturer_code: string;
   email: string;
 }
 
@@ -95,11 +97,14 @@ function EditModal({ lecturer, onClose, onSaved }: {
   onClose: () => void;
   onSaved: (updated: Lecturer) => void;
 }) {
-  const [form, setForm] = useState<EditForm>({ lecturer_name: lecturer.lecturer_name, email: lecturer.email || '' });
+  const [form, setForm] = useState<EditForm>({
+    lecturer_name: lecturer.lecturer_name,
+    lecturer_code: lecturer.lecturer_code || '',
+    email: lecturer.email || ''
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.lecturer_name.trim()) { setError('Nama dosen tidak boleh kosong.'); return; }
@@ -107,6 +112,7 @@ function EditModal({ lecturer, onClose, onSaved }: {
     try {
       const res = await updateAdminLecturer(lecturer.nip, {
         lecturer_name: form.lecturer_name.trim(),
+        lecturer_code: form.lecturer_code.trim(),
         email: form.email.trim() || undefined,
       });
       if (res.success) {
@@ -140,6 +146,20 @@ function EditModal({ lecturer, onClose, onSaved }: {
           <div>
             <label htmlFor="edit-lecturer-name" className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama Dosen <span className="text-[#CC0000]">*</span></label>
             <input id="edit-lecturer-name" type="text" value={form.lecturer_name} onChange={e => setForm(f => ({ ...f, lecturer_name: e.target.value }))} placeholder="Nama lengkap dosen" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-gray-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all" />
+          </div>
+          <div>
+            <label htmlFor="edit-lecturer-code" className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Kode Dosen <span className="text-[#CC0000]">*</span> <span className="font-normal text-gray-400 normal-case tracking-normal">(maks. 10 huruf kapital)</span>
+            </label>
+            <input
+              id="edit-lecturer-code"
+              required
+              type="text"
+              value={form.lecturer_code}
+              onChange={e => setForm(f => ({ ...f, lecturer_code: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 10) }))}
+              placeholder="Contoh: ABC"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-mono font-bold tracking-widest text-gray-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all uppercase"
+            />
           </div>
           <div>
             <label htmlFor="edit-lecturer-email" className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Email <span className="normal-case font-medium text-gray-400">(opsional)</span></label>
@@ -176,7 +196,7 @@ export default function KelolaDosen() {
 
   // Add Modal State
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addForm, setAddForm] = useState({ nip: '', lecturer_name: '', email: '' });
+  const [addForm, setAddForm] = useState({ nip: '', lecturer_name: '', lecturer_code: '', email: '' });
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState('');
   const [addSuccess, setAddSuccess] = useState('');
@@ -235,7 +255,7 @@ export default function KelolaDosen() {
       const res = await addAdminLecturer(addForm);
       if (res.success) {
         setAddSuccess('Dosen berhasil ditambahkan.');
-        setAddForm({ nip: '', lecturer_name: '', email: '' });
+        setAddForm({ nip: '', lecturer_name: '', lecturer_code: '', email: '' });
         fetchLecturers(search, page);
         setTimeout(() => setShowAddModal(false), 1500);
       } else {
@@ -248,8 +268,8 @@ export default function KelolaDosen() {
     }
   };
 
-  const verified  = lecturers.filter(l => l.is_verified === 1).length;
-  const active    = lecturers.filter(l => l.is_active === 1).length;
+  const verified = lecturers.filter(l => l.is_verified === 1).length;
+  const active = lecturers.filter(l => l.is_active === 1).length;
 
   return (
     <>
@@ -291,7 +311,7 @@ export default function KelolaDosen() {
             )}
           </div>
 
-          <button onClick={() => { setShowAddModal(true); setAddError(''); setAddSuccess(''); setAddForm({ nip: '', lecturer_name: '', email: '' }); }} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#CC0000] rounded-xl hover:bg-[#B00000] shadow-md shadow-red-500/20 transition-all flex-shrink-0">
+          <button onClick={() => { setShowAddModal(true); setAddError(''); setAddSuccess(''); setAddForm({ nip: '', lecturer_name: '', lecturer_code: '', email: '' }); }} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#CC0000] rounded-xl hover:bg-[#B00000] shadow-md shadow-red-500/20 transition-all flex-shrink-0">
             <PlusIcon /> Tambah Dosen
           </button>
         </div>
@@ -349,11 +369,10 @@ export default function KelolaDosen() {
                           <p className="font-semibold text-gray-900 dark:text-slate-100 text-sm break-words leading-snug">{l.lecturer_name}</p>
                           <p className="text-[11px] text-gray-400 dark:text-slate-500 font-mono mt-0.5">{l.nip}</p>
                           <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
-                              isActive
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${isActive
                                 ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
                                 : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
-                            }`}>
+                              }`}>
                               {isActive ? '● Aktif' : '○ Nonaktif'}
                             </span>
                             {l.is_verified === 1 && (
@@ -374,11 +393,10 @@ export default function KelolaDosen() {
                               id={`btn-toggle-dosen-mobile-${l.nip}`}
                               onClick={() => handleToggle(l)}
                               disabled={toggling}
-                              className={`flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${
-                                isActive
+                              className={`flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${isActive
                                   ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                                   : 'border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                              }`}
+                                }`}
                             >
                               {toggling
                                 ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
@@ -400,6 +418,7 @@ export default function KelolaDosen() {
                     <tr className="bg-gray-50/80 dark:bg-slate-800/50">
                       <th className="px-6 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Dosen</th>
                       <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">NIP</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Kode</th>
                       <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Email</th>
                       <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status Akun</th>
                       <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden xl:table-cell">Terdaftar</th>
@@ -411,8 +430,8 @@ export default function KelolaDosen() {
                       const initials = l.lecturer_name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
                       const colors = ['bg-indigo-100 text-indigo-700', 'bg-teal-100 text-teal-700', 'bg-violet-100 text-violet-700', 'bg-sky-100 text-sky-700', 'bg-rose-100 text-rose-700'];
                       const color = colors[idx % colors.length];
-                      const isActive  = l.is_active === 1;
-                      const toggling  = togglingNip === l.nip;
+                      const isActive = l.is_active === 1;
+                      const toggling = togglingNip === l.nip;
                       return (
                         <tr key={l.nip} className={`hover:bg-gray-50/70 dark:hover:bg-slate-800/30 transition-colors ${!isActive ? 'opacity-60' : ''}`}>
                           <td className="px-6 py-4">
@@ -424,16 +443,20 @@ export default function KelolaDosen() {
                             </div>
                           </td>
                           <td className="px-4 py-4 text-gray-600 dark:text-slate-300 font-mono text-xs">{l.nip}</td>
+                          <td className="px-4 py-4 text-center hidden md:table-cell">
+                            <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 text-xs font-extrabold tracking-widest font-mono">
+                              {l.lecturer_code || '—'}
+                            </span>
+                          </td>
                           <td className="px-4 py-4 text-xs text-gray-500 dark:text-slate-400 hidden lg:table-cell truncate max-w-[200px]">
                             {l.email || <span className="text-gray-300 dark:text-slate-600 italic">Belum diisi</span>}
                           </td>
                           <td className="px-4 py-4 text-center">
                             <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
-                                isActive
+                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${isActive
                                   ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
                                   : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
-                              }`}>
+                                }`}>
                                 {isActive ? '● Aktif' : '○ Nonaktif'}
                               </span>
                               {l.is_verified === 1 && (
@@ -457,11 +480,10 @@ export default function KelolaDosen() {
                                 id={`btn-toggle-dosen-${l.nip}`}
                                 onClick={() => handleToggle(l)}
                                 disabled={toggling}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${
-                                  isActive
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${isActive
                                     ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                                     : 'border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                }`}
+                                  }`}
                               >
                                 {toggling
                                   ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
@@ -522,7 +544,7 @@ export default function KelolaDosen() {
       </div>
 
       {editTarget && <EditModal lecturer={editTarget} onClose={() => setEditTarget(null)} onSaved={handleSaved} />}
-      
+
       {/* Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -545,10 +567,24 @@ export default function KelolaDosen() {
                 <input required type="text" value={addForm.lecturer_name} onChange={e => setAddForm(f => ({ ...f, lecturer_name: e.target.value }))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]" placeholder="Nama Lengkap Dosen" />
               </div>
               <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">
+                  Kode Dosen <span className="text-red-500">*</span> <span className="font-normal text-gray-400 lowercase tracking-normal">(maks. 10 huruf kapital)</span>
+                </label>
+                <input
+                  required
+                  type="text"
+                  value={addForm.lecturer_code}
+                  onChange={e => setAddForm(f => ({ ...f, lecturer_code: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 10) }))}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-mono font-bold tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]"
+                  placeholder="Contoh: ABC"
+                  maxLength={10}
+                />
+              </div>
+              <div>
                 <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Email <span className="font-normal text-gray-400 lowercase tracking-normal">(Opsional)</span></label>
                 <input type="email" value={addForm.email} onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]" placeholder="email@telkomuniversity.ac.id" />
               </div>
-              
+
               <div className="pt-2 flex justify-end gap-3">
                 <button type="button" onClick={() => setShowAddModal(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Batal</button>
                 <button type="submit" disabled={addLoading || !!addSuccess} className="inline-flex items-center justify-center min-w-[120px] px-5 py-2.5 text-sm font-bold text-white bg-[#CC0000] hover:bg-[#B00000] rounded-xl shadow-lg shadow-red-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed">

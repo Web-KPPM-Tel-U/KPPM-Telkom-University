@@ -78,7 +78,7 @@ export const getAdminLecturers = async (
   try {
     const searchParam = `%${search}%`;
     const [rows] = await pool.execute<any[]>(
-      `SELECT nip, lecturer_name, email, is_verified, password_changed, is_active, created_at, updated_at
+      `SELECT nip, lecturer_name, lecturer_code, email, is_verified, password_changed, is_active, created_at, updated_at
        FROM lecturers
        WHERE lecturer_name LIKE ? OR nip LIKE ?
        ORDER BY lecturer_name ASC
@@ -267,23 +267,23 @@ export const createLecturer = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
-  const { nip, lecturer_name, email } = req.body as { nip: string; lecturer_name: string; email?: string };
+  const { nip, lecturer_name, lecturer_code, email } = req.body as { nip: string; lecturer_name: string; lecturer_code: string; email?: string };
 
-  if (!nip?.trim() || !lecturer_name?.trim()) {
-    res.status(400).json({ success: false, message: 'NIP dan Nama Dosen wajib diisi.' });
+  if (!nip?.trim() || !lecturer_name?.trim() || !lecturer_code?.trim()) {
+    res.status(400).json({ success: false, message: 'NIP, Nama Dosen, dan Kode Dosen wajib diisi.' });
     return;
   }
 
   try {
     const hashedPassword = await bcrypt.hash(nip.trim(), 10);
     const [insertRes] = await pool.execute<any>(
-      `INSERT INTO lecturers (nip, lecturer_name, email, password, is_active)
-       VALUES (?, ?, ?, ?, 1)`,
-      [nip.trim(), lecturer_name.trim(), email?.trim() || null, hashedPassword]
+      `INSERT INTO lecturers (nip, lecturer_name, lecturer_code, email, password, is_active)
+       VALUES (?, ?, ?, ?, ?, 1)`,
+      [nip.trim(), lecturer_name.trim(), lecturer_code.trim().toUpperCase(), email?.trim() || null, hashedPassword]
     );
 
     const [newRow] = await pool.execute<any[]>(
-      'SELECT nip, lecturer_name, email, is_verified, password_changed, is_active, created_at, updated_at FROM lecturers WHERE nip = ?',
+      'SELECT nip, lecturer_name, lecturer_code, email, is_verified, password_changed, is_active, created_at, updated_at FROM lecturers WHERE nip = ?',
       [nip.trim()]
     );
 
@@ -402,13 +402,14 @@ export const injectLecturers = async (
 
     if (!row.nip)           { result.errors.push({ row: rowNum, message: 'Kolom NIP kosong atau tidak ditemukan.' }); continue; }
     if (!row.lecturer_name) { result.errors.push({ row: rowNum, message: `NIP ${row.nip}: Kolom nama dosen kosong.` }); continue; }
+    if (!row.lecturer_code) { result.errors.push({ row: rowNum, message: `NIP ${row.nip}: Kolom kode dosen kosong (wajib diisi).` }); continue; }
 
     try {
       const hashedPassword = await bcrypt.hash(row.nip, 10);
       const [insertRes] = await pool.execute<any>(
-        `INSERT IGNORE INTO lecturers (nip, lecturer_name, email, password)
-         VALUES (?, ?, ?, ?)`,
-        [row.nip, row.lecturer_name, row.email || null, hashedPassword]
+        `INSERT IGNORE INTO lecturers (nip, lecturer_name, lecturer_code, email, password)
+         VALUES (?, ?, ?, ?, ?)`,
+        [row.nip, row.lecturer_name, row.lecturer_code.trim().toUpperCase(), row.email || null, hashedPassword]
       );
       if (insertRes.affectedRows === 0) {
         result.skipped++;
@@ -438,9 +439,9 @@ export const updateLecturer = async (
   res: Response
 ): Promise<void> => {
   const { nip } = req.params;
-  const { lecturer_name, email } = req.body as { lecturer_name?: string; email?: string };
+  const { lecturer_name, lecturer_code, email } = req.body as { lecturer_name?: string; lecturer_code?: string; email?: string };
 
-  if (!lecturer_name?.trim() && email === undefined) {
+  if (!lecturer_name?.trim() && lecturer_code === undefined && email === undefined) {
     res.status(400).json({ success: false, message: 'Tidak ada data yang akan diubah.' });
     return;
   }
@@ -462,6 +463,11 @@ export const updateLecturer = async (
       fields.push('lecturer_name = ?');
       values.push(lecturer_name.trim());
     }
+    if (lecturer_code !== undefined) {
+      const code = lecturer_code?.trim().toUpperCase().slice(0, 10) || null;
+      fields.push('lecturer_code = ?');
+      values.push(code);
+    }
     if (email !== undefined) {
       fields.push('email = ?');
       values.push(email?.trim() || null);
@@ -474,7 +480,7 @@ export const updateLecturer = async (
     );
 
     const [updated] = await pool.execute<any[]>(
-      'SELECT nip, lecturer_name, email, is_verified, password_changed, updated_at FROM lecturers WHERE nip = ?',
+      'SELECT nip, lecturer_name, lecturer_code, email, is_verified, password_changed, updated_at FROM lecturers WHERE nip = ?',
       [nip]
     );
 

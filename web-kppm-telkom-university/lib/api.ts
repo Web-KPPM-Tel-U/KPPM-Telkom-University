@@ -395,7 +395,7 @@ export const addAdminStudent = async (data: { nim: string; student_name: string;
   return res.json();
 };
 
-export const addAdminLecturer = async (data: { nip: string; lecturer_name: string; email?: string }): Promise<ApiResponse<any>> => {
+export const addAdminLecturer = async (data: { nip: string; lecturer_name: string; lecturer_code?: string; email?: string }): Promise<ApiResponse<any>> => {
   const res = await fetch(`${API_BASE_URL}/admin/lecturers/add`, {
     method: 'POST',
     headers: { ...adminAuthHeaders(), 'Content-Type': 'application/json' },
@@ -892,7 +892,7 @@ export const toggleAdminSemesterStatus = async (id: number): Promise<ApiResponse
  */
 export const updateAdminLecturer = async (
   nip: string,
-  data: { lecturer_name?: string; email?: string }
+  data: { lecturer_name?: string; lecturer_code?: string; email?: string }
 ): Promise<ApiResponse<any>> => {
   const res = await fetch(`${API_BASE_URL}/admin/lecturers/${nip}`, {
     method: 'PATCH',
