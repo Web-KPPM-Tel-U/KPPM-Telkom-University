@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -271,10 +271,10 @@ export default function AdminSemesterPage() {
   const hasActiveSemester = activeSemesters.length > 0;
 
   return (
-    <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-5">
 
       {/* ── Hero Banner ── */}
-      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-3xl p-6 md:p-8 text-white overflow-hidden shadow-xl">
+      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-2xl md:rounded-3xl p-5 md:p-8 text-white overflow-hidden shadow-xl">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full" />
         <div className="absolute top-8 -right-4  w-32 h-32 bg-white/5 rounded-full" />
         <div className="absolute -bottom-8 right-16 w-24 h-24 bg-white/5 rounded-full" />
@@ -284,7 +284,7 @@ export default function AdminSemesterPage() {
             <CalendarIcon />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Kelola Semester</h1>
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight break-words leading-tight">Kelola Semester</h1>
             <p className="text-red-100/80 text-sm mt-1">
               Atur semester aktif yang eligible untuk program magang mahasiswa KPPM.
             </p>
@@ -454,12 +454,12 @@ export default function AdminSemesterPage() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center">
+          <div className="p-6 sm:p-12 text-center">
             <div className="w-8 h-8 border-2 border-[#CC0000]/30 border-t-[#CC0000] rounded-full animate-spin mx-auto mb-3" />
             <p className="text-sm text-gray-400 dark:text-slate-500">Memuat data semester...</p>
           </div>
         ) : semesters.length === 0 ? (
-          <div className="p-12 text-center">
+          <div className="p-6 sm:p-12 text-center">
             <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3 text-gray-300 dark:text-slate-600">
               <CalendarIcon />
             </div>

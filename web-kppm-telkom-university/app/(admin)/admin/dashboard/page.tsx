@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -191,19 +191,19 @@ export default function AdminDashboardPage() {
   const roleLabel = admin?.role === 'admin' ? 'Administrator' : 'Person In Charge';
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
 
       {/* ── Hero Banner ── */}
-      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-3xl p-6 md:p-8 text-white overflow-hidden shadow-xl">
+      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-2xl md:rounded-3xl p-5 md:p-8 text-white overflow-hidden shadow-xl">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full" />
         <div className="absolute top-8 -right-4 w-32 h-32 bg-white/5 rounded-full" />
         <div className="absolute -bottom-8 right-16 w-24 h-24 bg-white/5 rounded-full" />
         <div className="absolute bottom-0 left-0 w-full h-px bg-white/10" />
 
-        <div className="relative flex flex-col md:flex-row items-start md:items-center gap-5">
+        <div className="relative flex items-start gap-4">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-2xl md:text-3xl font-bold shadow-lg">
+            <div className="w-14 h-14 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-xl md:text-3xl font-bold shadow-lg">
               {initials}
             </div>
             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white shadow" title="Online" />
@@ -213,14 +213,14 @@ export default function AdminDashboardPage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <GreetingIcon period={greeting.period} />
-              <span className="text-red-200 text-sm font-medium">{greeting.text}</span>
+              <span className="text-red-200 text-xs sm:text-sm font-medium">{greeting.text}</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight truncate">
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight break-words leading-tight">
               {admin?.name || 'Administrator KPPM'}
             </h1>
             <p className="text-red-100/80 text-sm mt-1.5 flex items-center gap-2.5 flex-wrap">
               <span className="font-semibold">{admin?.email || `@${admin?.username}`}</span>
-              <span className="w-px h-3.5 bg-red-200/30" />
+              <span className="hidden sm:block w-px h-3.5 bg-red-200/30" />
               <span>{roleLabel} — KPPM Telkom University</span>
             </p>
           </div>

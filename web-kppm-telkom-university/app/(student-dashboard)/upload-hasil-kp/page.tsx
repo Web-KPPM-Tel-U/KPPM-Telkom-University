@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -415,7 +415,7 @@ export default function UploadHasilKpPage() {
 
   // ─── Not Eligible (no registration) ──────────────────────────────────────
   if (!data?.registration) return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
       <PageHeader subtitle="Daftar KP aktif & upload dokumen" />
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
         <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-5 flex items-center gap-4">
@@ -427,7 +427,7 @@ export default function UploadHasilKpPage() {
             <p className="text-amber-100 text-sm mt-0.5">Belum ada pendaftaran KPPM yang disetujui.</p>
           </div>
         </div>
-        <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+        <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
           <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl">
             <div className="text-amber-500 mt-0.5 flex-shrink-0"><AlertCircleIcon /></div>
             <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
@@ -445,7 +445,7 @@ export default function UploadHasilKpPage() {
 
   // ─── OVERVIEW — KP Aktif ──────────────────────────────────────────────────
   if (view === 'overview') return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
       <PageHeader subtitle="Daftar KP aktif & upload dokumen" />
 
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
@@ -458,7 +458,7 @@ export default function UploadHasilKpPage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest">KP Aktif</p>
-              <p className="text-white font-bold text-lg leading-tight truncate">{reg!.company_name}</p>
+              <p className="text-white font-bold text-base sm:text-lg leading-tight break-words">{reg!.company_name}</p>
               <p className="text-red-200 text-xs mt-0.5">{reg!.internship_position}</p>
             </div>
             <span className="bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0">{reg!.semester_code}</span>
@@ -544,7 +544,7 @@ export default function UploadHasilKpPage() {
 
   // ─── DONE — Dokumen sudah diupload ───────────────────────────────────────
   if (view === 'done' && docs) return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
       {activeDoc && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center p-4"
@@ -677,7 +677,7 @@ export default function UploadHasilKpPage() {
 
   // ─── FORM Upload ──────────────────────────────────────────────────────────
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
       <PageHeader subtitle="Daftar KP aktif & upload dokumen" />
 
       {/* Back button */}

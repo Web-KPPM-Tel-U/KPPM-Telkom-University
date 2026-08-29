@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { getUser, getToken, getLecturerStudents } from '@/lib/api';
@@ -141,21 +141,19 @@ function StatCard({
   badge?: string;
 }) {
   return (
-    <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-5 overflow-hidden group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-default">
-      {/* Decorative gradient blob */}
+    <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-4 overflow-hidden group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-default">
       <div className={`absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-10 group-hover:opacity-15 transition-opacity ${gradient}`} />
-
-      <div className="relative flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">{label}</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-slate-100 mt-2">{value}</p>
+      <div className="relative flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] sm:text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider leading-tight">{label}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100 mt-1.5">{value}</p>
           {badge && (
-            <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-full">
               <TrendUpIcon /> {badge}
             </span>
           )}
         </div>
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${gradient} bg-opacity-15`}>
+        <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${gradient} bg-opacity-15`}>
           {icon}
         </div>
       </div>
@@ -215,42 +213,46 @@ export default function DosenDashboardPage() {
   const initials = lecturer?.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'DS';
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
 
       {/* ── Hero Banner ── */}
-      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-3xl p-6 md:p-8 text-white overflow-hidden shadow-xl">
-        {/* Decorative circles */}
+      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-2xl md:rounded-3xl p-5 md:p-8 text-white overflow-hidden shadow-xl">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full" />
         <div className="absolute top-8 -right-4 w-32 h-32 bg-white/5 rounded-full" />
         <div className="absolute -bottom-8 right-16 w-24 h-24 bg-white/5 rounded-full" />
         <div className="absolute bottom-0 left-0 w-full h-px bg-white/10" />
 
-        <div className="relative flex flex-col md:flex-row items-start md:items-center gap-5">
+        <div className="relative flex items-start gap-4">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-2xl md:text-3xl font-bold shadow-lg">
+            <div className="w-14 h-14 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-xl md:text-3xl font-bold shadow-lg">
               {initials}
             </div>
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white shadow" title="Online" />
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-green-400 rounded-full border-2 border-white shadow" title="Online" />
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-1.5 mb-1">
               <GreetingIcon period={greeting.period} />
-              <span className="text-red-200 text-sm font-medium">{greeting.text}</span>
+              <span className="text-red-200 text-xs sm:text-sm font-medium">{greeting.text}</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight truncate">
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight break-words leading-tight">
               {lecturer?.name || 'Dosen'}
             </h1>
-            <p className="text-red-100/70 text-sm mt-1.5 flex items-center gap-2 flex-wrap">
+            <div className="text-red-100/70 text-xs mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="flex items-center gap-1"><AcademicIcon /><span>NIP {lecturer?.nip}</span></span>
-              <span className="w-px h-3.5 bg-red-200/30" />
+              <span className="hidden sm:inline w-px h-3 bg-red-200/30" />
               <span>Pembimbing Akademik KPPM</span>
-            </p>
+            </div>
+
+            {/* Date — tampil di bawah info pada mobile */}
+            {currentDate && (
+              <p className="text-red-100/50 text-[11px] mt-2 md:hidden">{currentDate}</p>
+            )}
           </div>
 
-          {/* Date badge */}
+          {/* Date badge — hanya desktop */}
           <div className="flex-shrink-0 hidden md:block">
             <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl px-4 py-3 text-center">
               <p className="text-red-200 text-[10px] font-semibold uppercase tracking-widest mb-0.5">Hari ini</p>
@@ -260,8 +262,8 @@ export default function DosenDashboardPage() {
         </div>
 
         {/* Bottom bar */}
-        <div className="relative mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
-          <p className="text-red-100/60 text-xs">Portal Dosen PA — Sistem Manajemen KPPM Telkom University</p>
+        <div className="relative mt-4 pt-3 border-t border-white/10">
+          <p className="text-red-100/60 text-[11px] leading-relaxed">Portal Dosen PA — Sistem Manajemen KPPM Telkom University</p>
         </div>
       </div>
 

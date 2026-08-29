@@ -106,12 +106,12 @@ function CustomSelect({
   const selectedOption = options.find(o => o.value === value) || options[0];
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative w-full" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full sm:w-auto min-w-[180px] flex items-center justify-between gap-3 px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-[#CC0000]/50 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20 focus:border-[#CC0000]"
+        className="w-full flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-[#CC0000]/50 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20 focus:border-[#CC0000]"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           {icon}
           <span className="truncate">{selectedOption.label}</span>
         </div>
@@ -415,7 +415,7 @@ export default function HasilKPPage() {
   return (
     <>
       {selected && (
-        <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+        <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
           <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-2">
               <li><span className="text-gray-500 dark:text-slate-400">Dosen PA</span></li>
@@ -438,7 +438,7 @@ export default function HasilKPPage() {
               </button>
               <span className="text-gray-300 dark:text-gray-600">|</span>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Dokumen & Hasil</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Dokumen & Hasil</h1>
                 <p className="text-gray-500 text-sm mt-0.5">{selected.student_name} — {selected.nim}</p>
               </div>
             </div>
@@ -534,7 +534,7 @@ export default function HasilKPPage() {
               value={search} onChange={e => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 transition-all" />
           </div>
-          <div className="flex gap-3">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3">
             <CustomSelect
               value={filter}
               onChange={(v) => setFilter(v as any)}
@@ -596,13 +596,13 @@ export default function HasilKPPage() {
                   <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{item.internship_position}</p>
                 </div>
                 {/* Status + Action */}
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${hasDoc ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>
+                <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold ${hasDoc ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${hasDoc ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                     {hasDoc ? 'Sudah Upload' : 'Belum Upload'}
                   </span>
                   <button onClick={() => setSelected(item)}
-                    className="px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 text-sm font-medium transition-colors border border-gray-200 dark:border-slate-700">
+                    className="px-3 py-1 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 text-[11px] sm:text-xs font-semibold shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-slate-700">
                     Detail
                   </button>
                 </div>

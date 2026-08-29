@@ -329,7 +329,7 @@ async function run() {
       await conn.execute(
         `UPDATE internship_management.admin_users SET email = 'admin@telkomuniversity.ac.id' WHERE username = 'admin' AND (email = '' OR email IS NULL)`,
         []
-      ).catch(() => {});
+      ).catch(() => { });
       console.log('⏭️  (admin sudah ada)');
     }
   } catch (err) {

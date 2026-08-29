@@ -329,34 +329,34 @@ function MenteeRow({
   const hasGrade = total !== null && total !== undefined;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all p-5 flex items-center gap-4">
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#CC0000] text-white shadow-sm">
-        {initials}
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <p className="font-bold text-gray-900 dark:text-slate-100 text-sm truncate">{mentee.student.name}</p>
-        <p className="text-gray-400 dark:text-slate-500 text-xs mt-0.5">NIM: {mentee.student.nim} · {mentee.student.class}</p>
-        <p className="text-gray-400 dark:text-slate-500 text-xs truncate">{mentee.company_name} — {mentee.internship_position}</p>
-      </div>
-
-      <div className="flex-shrink-0 flex items-center gap-3">
-        {hasGrade ? (
-          <div className="text-center">
-            <p className="text-[10px] text-gray-400 dark:text-slate-500 font-semibold mb-0.5">Nilai</p>
-            <div className="flex items-center gap-1.5">
-              <span className="text-lg font-extrabold text-gray-800 dark:text-slate-100">{total!.toFixed(2)}</span>
-            </div>
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all p-4 sm:p-5">
+      {/* Top: avatar + info + nilai */}
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#CC0000] text-white shadow-sm">
+          {initials}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-gray-900 dark:text-slate-100 text-sm break-words leading-snug">{mentee.student.name}</p>
+          <p className="text-gray-400 dark:text-slate-500 text-[11px] mt-0.5">NIM: {mentee.student.nim} · {mentee.student.class}</p>
+          <p className="text-gray-400 dark:text-slate-500 text-[11px] break-words">{mentee.company_name}</p>
+        </div>
+        {hasGrade && (
+          <div className="flex-shrink-0 text-right">
+            <p className="text-[10px] text-gray-400 dark:text-slate-500 font-semibold">Nilai</p>
+            <span className="text-lg font-extrabold text-gray-800 dark:text-slate-100">{total!.toFixed(2)}</span>
           </div>
-        ) : (
-          <span className="text-xs text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-800 border border-dashed border-gray-200 dark:border-slate-700 px-3 py-1.5 rounded-xl">
-            Belum dinilai
-          </span>
         )}
-
+      </div>
+      {/* Bottom: status + button */}
+      <div className="flex items-center gap-2">
+        {hasGrade ? (
+          <span className="text-[11px] font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">Sudah Dinilai</span>
+        ) : (
+          <span className="text-[11px] text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-800 border border-dashed border-gray-200 dark:border-slate-700 px-2 py-0.5 rounded-full">Belum Dinilai</span>
+        )}
         <button
           onClick={() => onOpenForm(mentee)}
-          className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+          className={`ml-auto px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
             hasGrade
               ? 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
               : 'bg-[#CC0000] text-white hover:bg-[#A30000] shadow-sm'
@@ -368,6 +368,7 @@ function MenteeRow({
     </div>
   );
 }
+
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function MentorGradesPage() {
@@ -495,7 +496,7 @@ export default function MentorGradesPage() {
   }
 
   return (
-    <div className="p-5 md:p-8 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-5">
 
       {/* Header */}
       <div>
@@ -614,12 +615,12 @@ export default function MentorGradesPage() {
 
       {/* Daftar mahasiswa */}
       {data && data.mentees.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-10 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-10 text-center">
           <p className="text-gray-500 dark:text-slate-400 font-semibold text-sm">Tidak ada mahasiswa yang perlu dinilai</p>
           <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">Mahasiswa akan muncul setelah pendaftaran disetujui.</p>
         </div>
       ) : processedMentees.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-10 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-10 text-center">
           <p className="text-gray-500 dark:text-slate-400 font-semibold text-sm">Pencarian tidak ditemukan</p>
           <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">Coba ubah kata kunci atau filter status.</p>
         </div>
