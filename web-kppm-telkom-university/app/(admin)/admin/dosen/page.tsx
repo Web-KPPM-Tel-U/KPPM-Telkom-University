@@ -221,20 +221,20 @@ export default function KelolaDosen() {
 
   return (
     <>
-      <div className="p-5 md:p-8 max-w-7xl mx-auto space-y-7">
+      <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-5">
 
         {/* Hero */}
-        <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-3xl p-6 md:p-8 text-white overflow-hidden shadow-xl">
+        <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-2xl md:rounded-3xl p-5 md:p-8 text-white overflow-hidden shadow-xl">
           <div className="absolute -top-10 -right-10 w-44 h-44 bg-white/5 rounded-full" />
           <div className="absolute top-6 -right-4 w-28 h-28 bg-white/5 rounded-full" />
-          <div className="relative flex flex-col md:flex-row items-start md:items-center gap-5">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white flex-shrink-0 shadow-lg"><AcademicIcon /></div>
+          <div className="relative flex items-start gap-4">
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white flex-shrink-0 shadow-lg"><AcademicIcon /></div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Kelola Dosen</h1>
-              <p className="text-red-100/90 text-sm mt-1.5 max-w-2xl leading-relaxed">Kelola data dosen — edit nama & email, serta aktifkan atau nonaktifkan akun dosen.</p>
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight break-words leading-tight">Kelola Dosen</h1>
+              <p className="text-red-100/90 text-[11px] sm:text-sm mt-1 line-clamp-2 sm:line-clamp-none">Kelola data dosen — edit nama & email, serta aktifkan atau nonaktifkan akun dosen.</p>
             </div>
-            <div className="flex-shrink-0 bg-white/10 border border-white/20 rounded-2xl px-5 py-3 text-center">
-              <p className="text-3xl font-extrabold">{loading ? '…' : total.toLocaleString('id-ID')}</p>
+            <div className="hidden sm:block flex-shrink-0 bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-center">
+              <p className="text-2xl sm:text-3xl font-extrabold">{loading ? '…' : total.toLocaleString('id-ID')}</p>
               <p className="text-red-200 text-xs font-semibold mt-0.5 uppercase tracking-widest">Total Dosen</p>
             </div>
           </div>
@@ -297,47 +297,26 @@ export default function KelolaDosen() {
             </div>
           )}
 
-          {/* Table */}
+          {/* Table (desktop) / Card list (mobile) */}
           {!loading && !error && lecturers.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50/80 dark:bg-slate-800/50">
-                    <th className="px-6 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Dosen</th>
-                    <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">NIP</th>
-                    <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Email</th>
-                    <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status Akun</th>
-                    <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden xl:table-cell">Terdaftar</th>
-                    <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
-                  {lecturers.map((l, idx) => {
-                    const initials = l.lecturer_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-                    const colors = ['bg-indigo-100 text-indigo-700', 'bg-teal-100 text-teal-700', 'bg-violet-100 text-violet-700', 'bg-sky-100 text-sky-700', 'bg-rose-100 text-rose-700'];
-                    const color = colors[idx % colors.length];
-                    const isActive  = l.is_active === 1;
-                    const toggling  = togglingNip === l.nip;
-
-                    return (
-                      <tr key={l.nip} className={`hover:bg-gray-50/70 dark:hover:bg-slate-800/30 transition-colors ${!isActive ? 'opacity-60' : ''}`}>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold flex-shrink-0 ${color}`}>{initials}</div>
-                            <div className="min-w-0">
-                              <p className="font-semibold text-gray-900 dark:text-slate-100 truncate max-w-[180px]">{l.lecturer_name}</p>
-                              <p className="text-xs text-gray-400 dark:text-slate-500 sm:hidden font-mono">{l.nip}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-gray-600 dark:text-slate-300 font-mono text-xs hidden sm:table-cell">{l.nip}</td>
-                        <td className="px-4 py-4 text-xs text-gray-500 dark:text-slate-400 hidden lg:table-cell truncate max-w-[200px]">
-                          {l.email || <span className="text-gray-300 dark:text-slate-600 italic">Belum diisi</span>}
-                        </td>
-                        {/* Status Akun */}
-                        <td className="px-4 py-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
+            <>
+              {/* ── Mobile Card List (hidden on md+) ── */}
+              <div className="md:hidden divide-y divide-gray-100 dark:divide-slate-800">
+                {lecturers.map((l, idx) => {
+                  const initials = l.lecturer_name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
+                  const colors = ['bg-indigo-100 text-indigo-700', 'bg-teal-100 text-teal-700', 'bg-violet-100 text-violet-700', 'bg-sky-100 text-sky-700', 'bg-rose-100 text-rose-700'];
+                  const color = colors[idx % colors.length];
+                  const isActive = l.is_active === 1;
+                  const toggling = togglingNip === l.nip;
+                  return (
+                    <div key={l.nip} className={`px-4 py-3.5 ${!isActive ? 'opacity-60' : ''}`}>
+                      <div className="flex items-start gap-3">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold flex-shrink-0 mt-0.5 ${color}`}>{initials}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 dark:text-slate-100 text-sm break-words leading-snug">{l.lecturer_name}</p>
+                          <p className="text-[11px] text-gray-400 dark:text-slate-500 font-mono mt-0.5">{l.nip}</p>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
                               isActive
                                 ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
                                 : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
@@ -350,23 +329,19 @@ export default function KelolaDosen() {
                               </span>
                             )}
                           </div>
-                        </td>
-                        <td className="px-4 py-4 text-xs text-gray-400 dark:text-slate-500 whitespace-nowrap hidden xl:table-cell">{formatDate(l.created_at)}</td>
-                        {/* Aksi */}
-                        <td className="px-4 py-4">
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex gap-2 mt-2.5">
                             <button
-                              id={`btn-edit-dosen-${l.nip}`}
+                              id={`btn-edit-dosen-mobile-${l.nip}`}
                               onClick={() => setEditTarget(l)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#CC0000]/50 hover:text-[#CC0000] hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
+                              className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#CC0000]/50 hover:text-[#CC0000] hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
                             >
                               <EditIcon /> Edit
                             </button>
                             <button
-                              id={`btn-toggle-dosen-${l.nip}`}
+                              id={`btn-toggle-dosen-mobile-${l.nip}`}
                               onClick={() => handleToggle(l)}
                               disabled={toggling}
-                              className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${
+                              className={`flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${
                                 isActive
                                   ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                                   : 'border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
@@ -378,13 +353,97 @@ export default function KelolaDosen() {
                               {isActive ? 'Nonaktifkan' : 'Aktifkan'}
                             </button>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* ── Desktop Table (hidden on mobile) ── */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50/80 dark:bg-slate-800/50">
+                      <th className="px-6 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Dosen</th>
+                      <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">NIP</th>
+                      <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Email</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status Akun</th>
+                      <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden xl:table-cell">Terdaftar</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
+                    {lecturers.map((l, idx) => {
+                      const initials = l.lecturer_name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
+                      const colors = ['bg-indigo-100 text-indigo-700', 'bg-teal-100 text-teal-700', 'bg-violet-100 text-violet-700', 'bg-sky-100 text-sky-700', 'bg-rose-100 text-rose-700'];
+                      const color = colors[idx % colors.length];
+                      const isActive  = l.is_active === 1;
+                      const toggling  = togglingNip === l.nip;
+                      return (
+                        <tr key={l.nip} className={`hover:bg-gray-50/70 dark:hover:bg-slate-800/30 transition-colors ${!isActive ? 'opacity-60' : ''}`}>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold flex-shrink-0 ${color}`}>{initials}</div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 dark:text-slate-100 truncate max-w-[180px]">{l.lecturer_name}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-gray-600 dark:text-slate-300 font-mono text-xs">{l.nip}</td>
+                          <td className="px-4 py-4 text-xs text-gray-500 dark:text-slate-400 hidden lg:table-cell truncate max-w-[200px]">
+                            {l.email || <span className="text-gray-300 dark:text-slate-600 italic">Belum diisi</span>}
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
+                                isActive
+                                  ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
+                                  : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
+                              }`}>
+                                {isActive ? '● Aktif' : '○ Nonaktif'}
+                              </span>
+                              {l.is_verified === 1 && (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                                  Verified
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-xs text-gray-400 dark:text-slate-500 whitespace-nowrap hidden xl:table-cell">{formatDate(l.created_at)}</td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                id={`btn-edit-dosen-${l.nip}`}
+                                onClick={() => setEditTarget(l)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#CC0000]/50 hover:text-[#CC0000] hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
+                              >
+                                <EditIcon /> Edit
+                              </button>
+                              <button
+                                id={`btn-toggle-dosen-${l.nip}`}
+                                onClick={() => handleToggle(l)}
+                                disabled={toggling}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${
+                                  isActive
+                                    ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                    : 'border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                                }`}
+                              >
+                                {toggling
+                                  ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
+                                  : <PowerOnIcon />}
+                                {isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           {/* Empty */}
