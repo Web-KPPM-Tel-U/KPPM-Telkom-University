@@ -155,12 +155,12 @@ function CustomSelect({
   const selectedOption = options.find(o => o.value === value) || options[0];
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative w-full" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full sm:w-auto min-w-[180px] flex items-center justify-between gap-3 px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-[#CC0000]/50 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20 focus:border-[#CC0000]"
+        className="w-full flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-[#CC0000]/50 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20 focus:border-[#CC0000]"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           {icon}
           <span className="truncate">{selectedOption.label}</span>
         </div>
@@ -203,7 +203,7 @@ function RubricCard({ option, selected, onSelect }: {
     <button
       type="button"
       onClick={onSelect}
-      className={`w-full text-left rounded-xl border-2 px-4 py-3 transition-all duration-150 flex items-start gap-3 ${selected
+      className={`w-full text-left rounded-xl border-2 px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-150 flex items-start gap-2 sm:gap-3 ${selected
         ? 'border-[#CC0000] bg-red-50/70 dark:bg-red-900/20 shadow-sm'
         : 'border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800/60 hover:border-gray-300 dark:hover:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-800'
         }`}
@@ -212,7 +212,7 @@ function RubricCard({ option, selected, onSelect }: {
         }`}>
         {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
       </span>
-      <span className="flex-1 text-sm text-gray-700 dark:text-slate-300 leading-snug">{option.label}</span>
+      <span className="flex-1 text-[13px] sm:text-sm text-gray-700 dark:text-slate-300 leading-snug">{option.label}</span>
       <span className={`flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-lg border ${scoreColor}`}>{option.value}</span>
     </button>
   );
@@ -337,7 +337,7 @@ function GradeForm({ student, onClose, onSaved }: {
                           <span className="flex-shrink-0 text-xs font-bold text-[#CC0000] bg-red-50 dark:bg-red-900/30 border border-[#CC0000]/20 px-2 py-0.5 rounded-lg">Nilai: {selected}</span>
                         )}
                       </div>
-                      <div className="space-y-2 pl-7">
+                      <div className="space-y-2 pl-0 sm:pl-7 mt-2 sm:mt-0">
                         {ind.options.map(opt => (
                           <RubricCard
                             key={opt.value}
@@ -601,24 +601,24 @@ function GradeDetailModal({
             {(data?.lecturer_grades || data?.mentor_grades) && (
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-700 rounded-2xl border border-gray-200 dark:border-slate-600 px-5 py-4">
                 <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-3">Akumulasi Total Nilai</p>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 text-center bg-white dark:bg-slate-900 rounded-xl py-3 border border-gray-100 dark:border-slate-700">
-                    <p className="text-[10px] text-gray-400 dark:text-slate-500 font-semibold mb-1">Nilai PA</p>
-                    <p className="text-2xl font-extrabold text-gray-900 dark:text-slate-100">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+                  <div className="flex-1 text-center bg-white dark:bg-slate-900 rounded-xl py-2 sm:py-3 border border-gray-100 dark:border-slate-700 flex flex-row sm:flex-col items-center justify-between sm:justify-center px-4 sm:px-0">
+                    <p className="text-xs sm:text-[10px] text-gray-400 dark:text-slate-500 font-semibold sm:mb-1">Nilai PA</p>
+                    <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-slate-100">
                       {data.lecturer_grades ? data.lecturer_grades.total.toFixed(2) : <span className="text-gray-300 dark:text-slate-600 text-base">—</span>}
                     </p>
                   </div>
-                  <span className="text-2xl font-bold text-gray-300 dark:text-slate-600">+</span>
-                  <div className="flex-1 text-center bg-white dark:bg-slate-900 rounded-xl py-3 border border-gray-100 dark:border-slate-700">
-                    <p className="text-[10px] text-gray-400 dark:text-slate-500 font-semibold mb-1">Nilai Mentor</p>
-                    <p className="text-2xl font-extrabold text-gray-900 dark:text-slate-100">
+                  <span className="text-lg sm:text-2xl font-bold text-gray-300 dark:text-slate-600 text-center">+</span>
+                  <div className="flex-1 text-center bg-white dark:bg-slate-900 rounded-xl py-2 sm:py-3 border border-gray-100 dark:border-slate-700 flex flex-row sm:flex-col items-center justify-between sm:justify-center px-4 sm:px-0">
+                    <p className="text-xs sm:text-[10px] text-gray-400 dark:text-slate-500 font-semibold sm:mb-1">Nilai Mentor</p>
+                    <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-slate-100">
                       {data.mentor_grades ? data.mentor_grades.total.toFixed(2) : <span className="text-gray-300 dark:text-slate-600 text-base">—</span>}
                     </p>
                   </div>
-                  <span className="text-2xl font-bold text-gray-300 dark:text-slate-600">=</span>
-                  <div className="flex-1 text-center bg-[#CC0000]/5 dark:bg-red-900/20 rounded-xl py-3 border border-[#CC0000]/20 dark:border-red-800/40">
-                    <p className="text-[10px] text-[#CC0000] dark:text-red-400 font-semibold mb-1">Total Gabungan</p>
-                    <p className="text-2xl font-extrabold text-[#CC0000]">
+                  <span className="text-lg sm:text-2xl font-bold text-gray-300 dark:text-slate-600 text-center">=</span>
+                  <div className="flex-1 text-center bg-[#CC0000]/5 dark:bg-red-900/20 rounded-xl py-2 sm:py-3 border border-[#CC0000]/20 dark:border-red-800/40 flex flex-row sm:flex-col items-center justify-between sm:justify-center px-4 sm:px-0">
+                    <p className="text-xs sm:text-[10px] text-[#CC0000] dark:text-red-400 font-semibold sm:mb-1">Total Gabungan</p>
+                    <p className="text-lg sm:text-2xl font-extrabold text-[#CC0000]">
                       {((data.lecturer_grades?.total ?? 0) + (data.mentor_grades?.total ?? 0)).toFixed(2)}
                     </p>
                   </div>
@@ -630,11 +630,10 @@ function GradeDetailModal({
         )}
       </div>
     </div>
-
   );
 }
 
-// ─── Student Row ──────────────────────────────────────────────────────────────
+// ─── Student Row ─────────────────────────────────────────────────────────────
 function StudentRow({ student, idx, gradeMap, onOpenForm, onOpenDetail }: {
   student: LecturerStudentEntry; idx: number;
   gradeMap: Record<number, { total: number; avg: number } | null>;
@@ -646,57 +645,45 @@ function StudentRow({ student, idx, gradeMap, onOpenForm, onOpenDetail }: {
   const hasGrade = entry !== null && entry !== undefined;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all p-5 flex items-center gap-4">
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#CC0000] text-white shadow-sm">{initials}</div>
-      <div className="flex-1 min-w-0">
-        <p className="font-bold text-gray-900 dark:text-slate-100 text-sm truncate">{student.student_name}</p>
-        <p className="text-gray-400 dark:text-slate-500 text-xs mt-0.5">NIM: {student.nim} · {student.student_class}</p>
-        <p className="text-gray-400 dark:text-slate-500 text-xs truncate">{student.company_name} — {student.internship_position}</p>
-      </div>
-      <div className="flex-shrink-0 flex items-center gap-4">
-        {hasGrade ? (
-          <div className="flex items-center gap-6 pr-5 border-r border-gray-200 dark:border-slate-700 mr-1">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all p-4 sm:p-5">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#CC0000] text-white shadow-sm">{initials}</div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-gray-900 dark:text-slate-100 text-sm break-words leading-snug">{student.student_name}</p>
+          <p className="text-gray-400 dark:text-slate-500 text-[11px] mt-0.5">NIM: {student.nim} &middot; {student.student_class}</p>
+          <p className="text-gray-400 dark:text-slate-500 text-[11px] break-words">{student.company_name}</p>
+        </div>
+        {hasGrade && (
+          <div className="flex items-center gap-4 border-l border-gray-100 dark:border-slate-800 pl-4">
             <div className="flex flex-col items-center min-w-[50px]">
               <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Nilai PA</span>
               <span className="text-xl font-black text-gray-800 dark:text-slate-100 leading-none">{entry!.total.toFixed(2)}</span>
             </div>
+            <div className="w-px h-8 bg-gray-100 dark:bg-slate-700" />
             <div className="flex flex-col items-center min-w-[50px]">
               <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Rata-rata</span>
               <span className="text-xl font-black text-[#CC0000] dark:text-red-400 leading-none">{entry!.avg.toFixed(2)}</span>
             </div>
           </div>
-        ) : (
-          <div className="pr-5 border-r border-gray-200 dark:border-slate-700 mr-1">
-            <span className="inline-block px-3 py-1.5 bg-gray-50 dark:bg-slate-800 border border-dashed border-gray-200 dark:border-slate-700 text-gray-400 dark:text-slate-500 text-xs font-semibold rounded-xl">
-              Belum dinilai
-            </span>
-          </div>
         )}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onOpenForm(student)}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
-              hasGrade 
-                ? 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:border-gray-300' 
-                : 'bg-[#CC0000] border-[#CC0000] text-white hover:bg-[#A30000] shadow-sm'
-            }`}
-          >
-            {hasGrade ? 'Edit' : 'Input Nilai'}
-          </button>
-          
-          {hasGrade && (
-            <button
-              onClick={() => onOpenDetail(student)}
-              className="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/30 hover:bg-blue-100 dark:hover:bg-blue-900/40"
-            >
-              Detail Nilai
-            </button>
-          )}
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        {hasGrade ? (
+          <span className="text-[11px] font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">Sudah Dinilai</span>
+        ) : (
+          <span className="text-[11px] font-semibold text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-800 border border-dashed border-gray-200 dark:border-slate-700 px-2 py-0.5 rounded-full">Belum Dinilai</span>
+        )}
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={() => onOpenForm(student)} className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all border ${hasGrade ? 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50' : 'bg-[#CC0000] border-[#CC0000] text-white hover:bg-[#A30000] shadow-sm'}`}>{hasGrade ? 'Edit' : 'Input Nilai'}</button>
+          {hasGrade && (<button onClick={() => onOpenDetail(student)} className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-600 border border-blue-100 hover:bg-blue-100">Detail</button>)}
         </div>
       </div>
     </div>
   );
 }
+
+
+
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function DosenInputNilaiPage() {
@@ -818,7 +805,7 @@ export default function DosenInputNilaiPage() {
   return (
     <>
       {detailStudent && (
-        <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+        <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
           <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-2">
               <li><span className="text-gray-500 dark:text-slate-400">Dosen PA</span></li>
@@ -841,7 +828,7 @@ export default function DosenInputNilaiPage() {
               </button>
               <span className="text-gray-300 dark:text-gray-600">|</span>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Nilai Mahasiswa</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Nilai Mahasiswa</h1>
                 <p className="text-gray-500 text-sm mt-0.5">Rekap Nilai Lengkap — KPPM</p>
               </div>
             </div>
@@ -938,7 +925,7 @@ export default function DosenInputNilaiPage() {
                 className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20 focus:border-[#CC0000] transition-all"
               />
             </div>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3">
               <CustomSelect
                 value={filterStatus}
                 onChange={(v) => setFilterStatus(v as any)}
@@ -966,7 +953,7 @@ export default function DosenInputNilaiPage() {
         )}
 
         {approvedStudents.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-10 text-center">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-10 text-center">
             <div className="w-14 h-14 bg-purple-50 dark:bg-purple-950 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9333EA" strokeWidth="1.5">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -977,7 +964,7 @@ export default function DosenInputNilaiPage() {
             <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">Mahasiswa akan muncul di sini setelah pengajuan KPPM-nya disetujui.</p>
           </div>
         ) : processedStudents.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-10 text-center">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-10 text-center">
             <p className="text-gray-500 dark:text-slate-400 font-semibold text-sm">Pencarian tidak ditemukan</p>
             <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">Coba ubah kata kunci atau filter status.</p>
           </div>

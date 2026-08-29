@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -53,9 +53,9 @@ function getPasswordStrength(pw: string): { level: number; label: string; color:
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const ProfileRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-start py-2.5 border-b border-gray-50 dark:border-slate-800 last:border-0 transition-colors">
-    <span className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider w-36 flex-shrink-0 pt-0.5">{label}</span>
-    <span className="text-sm text-gray-800 dark:text-slate-200 font-medium">{value || '-'}</span>
+  <div className="flex items-start py-2.5 border-b border-gray-50 dark:border-slate-800 last:border-0 transition-colors gap-2">
+    <span className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider w-28 sm:w-36 flex-shrink-0 pt-0.5 leading-tight">{label}</span>
+    <span className="text-sm text-gray-800 dark:text-slate-200 font-medium min-w-0 flex-1 break-all">{value || '-'}</span>
   </div>
 );
 
@@ -139,11 +139,11 @@ export default function DosenPengaturanPage() {
   const initials = profile?.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
 
   return (
-    <div className="p-5 max-w-5xl mx-auto">
+    <div className="p-4 md:p-5 max-w-5xl mx-auto">
 
       {/* ── Page title ── */}
       <div className="mb-5">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Pengaturan</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100">Pengaturan</h1>
         <p className="text-gray-400 dark:text-slate-500 text-sm mt-0.5">Kelola profil dan keamanan akun Anda</p>
       </div>
 
@@ -197,7 +197,7 @@ export default function DosenPengaturanPage() {
         </div>
 
         {/* ── RIGHT: Content panel ── */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors overflow-hidden min-w-0">
 
           {/* ── Tab: Profil ── */}
           {activeTab === 'profil' && (

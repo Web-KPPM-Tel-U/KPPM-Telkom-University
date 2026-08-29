@@ -206,22 +206,22 @@ export default function MentorDashboardPage() {
   const initials = mentor?.email?.substring(0, 2).toUpperCase() || 'MT';
 
   return (
-    <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-5">
 
       {/* ── Hero Banner ── */}
-      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-3xl p-6 md:p-8 text-white overflow-hidden shadow-xl">
+      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-2xl md:rounded-3xl p-5 md:p-8 text-white overflow-hidden shadow-xl">
         <div className="absolute -top-10 -right-10 w-44 h-44 bg-white/5 rounded-full" />
         <div className="absolute top-6 -right-4 w-28 h-28 bg-white/5 rounded-full" />
         <div className="absolute -bottom-8 right-16 w-20 h-20 bg-white/5 rounded-full" />
 
-        <div className="relative flex flex-col md:flex-row items-start md:items-center gap-5">
-          <div className="w-16 h-16 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+        <div className="relative flex items-start gap-4">
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-xl md:text-2xl font-bold flex-shrink-0">
             {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-red-200 text-sm font-medium mb-0.5">{getGreeting()},</p>
-            <h1 className="text-2xl md:text-3xl font-extrabold">{mentor?.name || mentor?.email}</h1>
-            <div className="flex flex-wrap gap-4 mt-2 text-red-100/80 text-xs">
+            <p className="text-red-200 text-xs sm:text-sm font-medium mb-0.5">{getGreeting()},</p>
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold break-words leading-tight">{mentor?.name || mentor?.email}</h1>
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5 text-red-100/80 text-xs">
               <span className="flex items-center gap-1"><BriefcaseIcon /> {mentor?.position || 'Mentor'} · {mentor?.company_name}</span>
               {mentor?.phone && (
                 <span className="flex items-center gap-1"><PhoneIcon /> {mentor?.phone}</span>
@@ -236,16 +236,18 @@ export default function MentorDashboardPage() {
           </div>
         </div>
 
-        <div className="relative mt-5 pt-4 border-t border-white/10">
-          <p className="text-red-100/60 text-xs">Portal Mentor — Sistem Manajemen KPPM Telkom University</p>
+        <div className="relative mt-5 md:hidden">
+          <div className="bg-white/10 border border-white/15 rounded-xl px-4 py-3 flex items-center justify-between">
+            <p className="text-red-200 text-[10px] font-semibold uppercase tracking-wider">Mahasiswa Dibimbing</p>
+            <div className="flex items-baseline gap-1">
+              <p className="text-white text-2xl font-extrabold leading-none">{data?.total_mentees ?? 0}</p>
+              <p className="text-red-200 text-xs font-medium">Orang</p>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* ── Mentee Count (mobile) ── */}
-      <div className="md:hidden">
-        <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm text-center">
-          <p className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-1">Total Mahasiswa Dibimbing</p>
-          <p className="text-4xl font-extrabold text-[#CC0000]">{data?.total_mentees ?? 0}</p>
+        <div className="relative mt-4 pt-3 border-t border-white/10">
+          <p className="text-red-100/60 text-[11px] leading-relaxed">Portal Mentor — Sistem Manajemen KPPM Telkom University</p>
         </div>
       </div>
 
@@ -283,7 +285,7 @@ export default function MentorDashboardPage() {
         </div>
 
         {mentees.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-10 text-center">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-10 text-center">
             <div className="w-14 h-14 bg-gray-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-3 text-gray-400 dark:text-slate-500">
               <UserIcon />
             </div>

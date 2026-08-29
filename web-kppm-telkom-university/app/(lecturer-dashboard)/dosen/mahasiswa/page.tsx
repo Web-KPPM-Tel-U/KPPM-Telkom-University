@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getLecturerStudents, LecturerStudentEntry, updateLecturerRegistrationStatus } from '@/lib/api';
 
-// ─── Entries Dropdown ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Entries Dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function EntriesDropdown({
   value,
@@ -99,7 +99,7 @@ function EntriesDropdown({
   );
 }
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Status Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StatusBadge({ status }: { status: LecturerStudentEntry['status'] }) {
   const map: Record<
@@ -142,10 +142,10 @@ function StatusBadge({ status }: { status: LecturerStudentEntry['status'] }) {
   );
 }
 
-// ─── Format tanggal ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Format tanggal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function fmt(dateStr: string | null) {
-  if (!dateStr) return '—';
+  if (!dateStr) return 'â€”';
   return new Date(dateStr).toLocaleDateString('id-ID', {
     day: '2-digit',
     month: 'short',
@@ -153,7 +153,7 @@ function fmt(dateStr: string | null) {
   });
 }
 
-// ─── Skeleton row ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Skeleton row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SkeletonRow() {
   return (
@@ -167,7 +167,7 @@ function SkeletonRow() {
   );
 }
 
-// ─── Detail Modal ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Detail Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function DetailModal({
   entry,
@@ -187,7 +187,7 @@ function DetailModal({
 
   return (
     <>
-      {/* ── TOSS Document Overlay ── */}
+      {/* â”€â”€ TOSS Document Overlay â”€â”€ */}
       {showDoc && fileUrl && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center p-4"
@@ -271,7 +271,7 @@ function DetailModal({
         </div>
       )}
 
-      {/* ── Detail Full Page ── */}
+      {/* â”€â”€ Detail Full Page â”€â”€ */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 max-w-4xl mx-auto space-y-6">
               {/* Status */}
               <div className="flex items-center gap-3">
@@ -367,15 +367,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between px-4 py-2.5 gap-4">
-      <span className="text-xs text-gray-400 dark:text-slate-400 flex-shrink-0 w-32">{label}</span>
-      <span className="text-xs font-medium text-gray-800 dark:text-slate-200 text-right break-words">
+      <span className="text-xs text-gray-400 dark:text-slate-400 flex-shrink-0 w-24 sm:w-32">{label}</span>
+      <span className="flex-1 min-w-0 text-xs font-medium text-gray-800 dark:text-slate-200 text-right break-all sm:break-words">
         {value || '—'}
       </span>
     </div>
   );
 }
 
-// ─── Confirm Modal ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Confirm Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type ConfirmAction = { registrationId: number; action: 'approved' | 'rejected'; studentName: string };
 
@@ -463,7 +463,7 @@ function ConfirmModal({
   );
 }
 
-// ─── Filter Chip ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Filter Chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type FilterStatus = 'all' | LecturerStudentEntry['status'];
 
@@ -499,7 +499,7 @@ function FilterChip({
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function DosenMahasiswaPage() {
   const [students, setStudents] = useState<LecturerStudentEntry[]>([]);
@@ -588,7 +588,7 @@ export default function DosenMahasiswaPage() {
   return (
     <>
       {selected && (
-        <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+        <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
           <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-2">
               <li><span className="text-gray-500 dark:text-slate-400">Dosen PA</span></li>
@@ -611,7 +611,7 @@ export default function DosenMahasiswaPage() {
               </button>
               <span className="text-gray-300 dark:text-gray-600">|</span>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Pengajuan KPPM</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Pengajuan KPPM</h1>
                 <p className="text-gray-500 text-sm mt-0.5">ID Pengajuan: #{selected.registration_id}</p>
               </div>
             </div>
@@ -624,7 +624,7 @@ export default function DosenMahasiswaPage() {
 
 
 
-        {/* ── Header ── */}
+        {/* â”€â”€ Header â”€â”€ */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
           <div>
             <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
@@ -666,7 +666,7 @@ export default function DosenMahasiswaPage() {
         </div>
 
 
-        {/* ── Filters & Search ── */}
+        {/* â”€â”€ Filters & Search â”€â”€ */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           {/* Filter chips */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -718,7 +718,7 @@ export default function DosenMahasiswaPage() {
           </div>
         </div>
 
-        {/* ── Table ── */}
+        {/* â”€â”€ Table â”€â”€ */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700/60 shadow-sm overflow-hidden">
 
           {/* Error state */}
@@ -741,7 +741,7 @@ export default function DosenMahasiswaPage() {
             </div>
           )}
 
-          {/* Empty — no data at all */}
+          {/* Empty â€” no data at all */}
           {!error && !loading && students.length === 0 && (
             <div className="flex flex-col items-center py-16 gap-3">
               <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center">
@@ -759,7 +759,7 @@ export default function DosenMahasiswaPage() {
             </div>
           )}
 
-          {/* Empty — filtered but no match */}
+          {/* Empty â€” filtered but no match */}
           {!error && !loading && students.length > 0 && filtered.length === 0 && (
             <div className="flex flex-col items-center py-12 gap-2">
               <p className="text-sm font-medium text-gray-600 dark:text-slate-300">Tidak ada data yang cocok</p>
@@ -767,177 +767,129 @@ export default function DosenMahasiswaPage() {
             </div>
           )}
 
-          {/* Table */}
+          {/* Table (desktop) / Card list (mobile) */}
           {(loading || filtered.length > 0) && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-[#f4f4f6] dark:bg-slate-700/50 border-b-2 border-[#e5e7eb] dark:border-slate-600">
-                    {['NIM', 'Nama Mahasiswa', 'Kelas', 'Perusahaan', 'Periode', 'Status', 'Aksi'].map(
-                      (h) => (
-                        <th
-                          key={h}
-                          className="px-4 py-3.5 text-left text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap border-r border-[#e5e7eb] dark:border-slate-600 last:border-r-0"
-                        >
-                          {h}
-                        </th>
-                      )
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading
-                    ? [...Array(5)].map((_, i) => <SkeletonRow key={i} />)
-                    : paginated.map((s, idx) => (
-                        <tr
-                          key={s.registration_id}
-                          className={`transition-colors hover:bg-red-50/30 dark:hover:bg-red-900/10 border-b border-[#f0f0f0] dark:border-slate-700 group ${
-                            idx % 2 === 0
-                              ? 'bg-white dark:bg-slate-900'
-                              : 'bg-[#fafafa] dark:bg-slate-800/60'
-                          }`}
-                        >
-                          {/* NIM */}
-                          <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700">
-                            <span className="font-mono text-xs font-semibold text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                              {s.nim}
-                            </span>
-                          </td>
-
-                          {/* Nama */}
-                          <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700">
-                            <p className="font-semibold text-gray-800 dark:text-slate-100 whitespace-nowrap">
-                              {s.student_name}
-                            </p>
-                            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">
-                              {s.student_email}
-                            </p>
-                          </td>
-
-                          {/* Kelas */}
-                          <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700 text-gray-600 dark:text-slate-300 whitespace-nowrap">
-                            {s.student_class}
-                          </td>
-
-                          {/* Perusahaan */}
-                          <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700">
-                            <p className="text-gray-800 dark:text-slate-200 font-medium whitespace-nowrap max-w-[160px] truncate">
-                              {s.company_name}
-                            </p>
-                            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5 truncate max-w-[160px]">
-                              {s.internship_position}
-                            </p>
-                          </td>
-
-                          {/* Periode */}
-                          <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700 text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">
-                            <span>{fmt(s.internship_start)}</span>
-                            <span className="mx-1 text-gray-300 dark:text-slate-600">→</span>
-                            <span>{fmt(s.internship_end)}</span>
-                          </td>
-
-                          {/* Status */}
-                          <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700">
-                            <StatusBadge status={s.status} />
-                          </td>
-
-                          {/* Aksi */}
-                          <td className="px-4 py-3.5">
-                            <div className="flex items-center gap-1.5">
-
-                              {/* Tombol Approve — hanya untuk pending */}
+            <>
+              {/* â”€â”€ Mobile Card List â”€â”€ */}
+              <div className="md:hidden divide-y divide-gray-100 dark:divide-slate-800">
+                {loading
+                  ? [...Array(4)].map((_, i) => (
+                      <div key={i} className="px-4 py-3.5 animate-pulse flex gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-800 flex-shrink-0" />
+                        <div className="flex-1 space-y-2"><div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-3/4" /><div className="h-2.5 bg-gray-50 dark:bg-slate-800/50 rounded w-1/2" /></div>
+                      </div>
+                    ))
+                  : paginated.map((s) => (
+                      <div key={s.registration_id} className="px-4 py-3.5">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <p className="font-semibold text-gray-900 dark:text-slate-100 text-sm break-words leading-snug">{s.student_name}</p>
+                              <StatusBadge status={s.status} />
+                            </div>
+                            <p className="text-[11px] font-mono text-gray-400 dark:text-slate-500">{s.nim} &middot; {s.student_class}</p>
+                            <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5 break-words">{s.company_name}</p>
+                            <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{fmt(s.internship_start)} &rarr; {fmt(s.internship_end)}</p>
+                            <div className="flex gap-2 mt-2.5">
                               {s.status === 'pending_approval' && (
-                                <button
-                                  title="Setujui Pengajuan"
-                                  onClick={() => setConfirm({ registrationId: s.registration_id, action: 'approved', studentName: s.student_name })}
-                                  className="
-                                    inline-flex items-center justify-center
-                                    w-9 h-9 rounded-lg
-                                    border-2 border-emerald-500 dark:border-emerald-400
-                                    bg-emerald-500/90 dark:bg-emerald-500/80
-                                    text-white
-                                    hover:bg-emerald-600 dark:hover:bg-emerald-500
-                                    hover:border-emerald-600 dark:hover:border-emerald-300
-                                    hover:scale-110
-                                    opacity-0 group-hover:opacity-100
-                                    transition-all duration-150
-                                    shadow-sm hover:shadow-emerald-300/60 dark:hover:shadow-emerald-800/50
-                                  "
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="20,6 9,17 4,12" />
-                                  </svg>
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => setConfirm({ registrationId: s.registration_id, action: 'approved', studentName: s.student_name })}
+                                    className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border-2 border-emerald-500 bg-emerald-500/90 text-white hover:bg-emerald-600 transition-all"
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
+                                    Setuju
+                                  </button>
+                                  <button
+                                    onClick={() => setConfirm({ registrationId: s.registration_id, action: 'rejected', studentName: s.student_name })}
+                                    className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border-2 border-red-400/70 bg-red-50/80 text-red-500 hover:bg-red-100 transition-all"
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                    Tolak
+                                  </button>
+                                </>
                               )}
-
-                              {/* Tombol Reject — hanya untuk pending */}
-                              {s.status === 'pending_approval' && (
-                                <button
-                                  title="Tolak Pengajuan"
-                                  onClick={() => setConfirm({ registrationId: s.registration_id, action: 'rejected', studentName: s.student_name })}
-                                  className="
-                                    inline-flex items-center justify-center
-                                    w-9 h-9 rounded-lg
-                                    border-2 border-red-400/70 dark:border-red-500/60
-                                    bg-red-50/80 dark:bg-red-950/40
-                                    text-red-500 dark:text-red-400
-                                    hover:bg-red-100/90 dark:hover:bg-red-900/50
-                                    hover:border-red-500 dark:hover:border-red-400
-                                    hover:scale-110
-                                    opacity-0 group-hover:opacity-100
-                                    transition-all duration-150
-                                    shadow-sm hover:shadow-red-200/60 dark:hover:shadow-red-900/40
-                                  "
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                  </svg>
-                                </button>
-                              )}
-
-                              {/* Tombol Detail (kaca pembesar) — selalu ada */}
                               <button
                                 onClick={() => setSelected(s)}
-                                title="Lihat Detail"
-                                className="
-                                  inline-flex items-center justify-center
-                                  w-9 h-9 rounded-lg
-                                  border-2 border-emerald-400/60 dark:border-emerald-500/50
-                                  bg-emerald-50/60 dark:bg-emerald-950/30
-                                  text-emerald-600 dark:text-emerald-400
-                                  hover:bg-emerald-100/80 dark:hover:bg-emerald-900/50
-                                  hover:border-emerald-500 dark:hover:border-emerald-400
-                                  hover:scale-110
-                                  opacity-0 group-hover:opacity-100
-                                  transition-all duration-150
-                                  shadow-sm hover:shadow-emerald-200/60 dark:hover:shadow-emerald-900/40
-                                "
+                                className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border-2 border-emerald-400/60 bg-emerald-50/60 text-emerald-600 hover:bg-emerald-100/80 transition-all"
                               >
-                                {/* Magnifier glass icon */}
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="11" cy="11" r="7" />
-                                  <line x1="16.5" y1="16.5" x2="22" y2="22" />
-                                </svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="22" y2="22" /></svg>
+                                Detail
                               </button>
-
                             </div>
-                          </td>
-                        </tr>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+              </div>
+
+              {/* â”€â”€ Desktop Table â”€â”€ */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-[#f4f4f6] dark:bg-slate-700/50 border-b-2 border-[#e5e7eb] dark:border-slate-600">
+                      {['NIM', 'Nama Mahasiswa', 'Kelas', 'Perusahaan', 'Periode', 'Status', 'Aksi'].map((h) => (
+                        <th key={h} className="px-4 py-3.5 text-left text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap border-r border-[#e5e7eb] dark:border-slate-600 last:border-r-0">{h}</th>
                       ))}
-                </tbody>
-              </table>
-            </div>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading
+                      ? [...Array(5)].map((_, i) => <SkeletonRow key={i} />)
+                      : paginated.map((s, idx) => (
+                          <tr key={s.registration_id} className={`transition-colors hover:bg-red-50/30 dark:hover:bg-red-900/10 border-b border-[#f0f0f0] dark:border-slate-700 group ${idx % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-[#fafafa] dark:bg-slate-800/60'}`}>
+                            <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700">
+                              <span className="font-mono text-xs font-semibold text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded">{s.nim}</span>
+                            </td>
+                            <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700">
+                              <p className="font-semibold text-gray-800 dark:text-slate-100 whitespace-nowrap">{s.student_name}</p>
+                              <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">{s.student_email}</p>
+                            </td>
+                            <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700 text-gray-600 dark:text-slate-300 whitespace-nowrap">{s.student_class}</td>
+                            <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700">
+                              <p className="text-gray-800 dark:text-slate-200 font-medium whitespace-nowrap max-w-[160px] truncate">{s.company_name}</p>
+                              <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5 truncate max-w-[160px]">{s.internship_position}</p>
+                            </td>
+                            <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700 text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">
+                              <span>{fmt(s.internship_start)}</span>
+                              <span className="mx-1 text-gray-300 dark:text-slate-600">&rarr;</span>
+                              <span>{fmt(s.internship_end)}</span>
+                            </td>
+                            <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700"><StatusBadge status={s.status} /></td>
+                            <td className="px-4 py-3.5">
+                              <div className="flex items-center gap-1.5">
+                                {s.status === 'pending_approval' && (
+                                  <>
+                                    <button title="Setujui Pengajuan" onClick={() => setConfirm({ registrationId: s.registration_id, action: 'approved', studentName: s.student_name })} className="inline-flex items-center justify-center w-9 h-9 rounded-lg border-2 border-emerald-500 dark:border-emerald-400 bg-emerald-500/90 dark:bg-emerald-500/80 text-white hover:bg-emerald-600 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-150 shadow-sm">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
+                                    </button>
+                                    <button title="Tolak Pengajuan" onClick={() => setConfirm({ registrationId: s.registration_id, action: 'rejected', studentName: s.student_name })} className="inline-flex items-center justify-center w-9 h-9 rounded-lg border-2 border-red-400/70 dark:border-red-500/60 bg-red-50/80 dark:bg-red-950/40 text-red-500 dark:text-red-400 hover:bg-red-100/90 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-150 shadow-sm">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                    </button>
+                                  </>
+                                )}
+                                <button onClick={() => setSelected(s)} title="Lihat Detail" className="inline-flex items-center justify-center w-9 h-9 rounded-lg border-2 border-emerald-400/60 dark:border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/80 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-150 shadow-sm">
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="22" y2="22" /></svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
-          {/* Footer — info + pagination */}
+
+          {/* Footer â€” info + pagination */}
           {!loading && totalFiltered > 0 && (
             <div className="px-4 py-3 border-t-2 border-[#e5e7eb] dark:border-slate-700 bg-[#f4f4f6] dark:bg-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
               {/* Info teks */}
               <p className="text-xs text-gray-400 dark:text-slate-500">
                 {totalFiltered === 0
                   ? 'Tidak ada data'
-                  : `Menampilkan ${startIdx + 1}–${Math.min(startIdx + entriesPerPage, totalFiltered)} dari ${totalFiltered} pengajuan`}
+                  : `Menampilkan ${startIdx + 1}-${Math.min(startIdx + entriesPerPage, totalFiltered)} dari ${totalFiltered} pengajuan`}
               </p>
 
               {/* Navigasi halaman */}
@@ -964,7 +916,7 @@ export default function DosenMahasiswaPage() {
                   }, [])
                   .map((item, i) =>
                     item === '...' ? (
-                      <span key={`ellipsis-${i}`} className="px-2 text-xs text-gray-400">…</span>
+                      <span key={`ellipsis-${i}`} className="px-2 text-xs text-gray-400">â€¦</span>
                     ) : (
                       <button
                         key={item}
@@ -997,9 +949,9 @@ export default function DosenMahasiswaPage() {
         </div>
       </div>
 
-      {/* ── Detail View Rendered At Top ── */}
+      {/* â”€â”€ Detail View Rendered At Top â”€â”€ */}
 
-      {/* ── Modal Konfirmasi Approve / Reject ── */}
+      {/* â”€â”€ Modal Konfirmasi Approve / Reject â”€â”€ */}
       {confirm && (
         <ConfirmModal
           confirm={confirm}

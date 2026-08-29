@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -99,12 +99,26 @@ export default function LecturerDashboardLayout({ children }: { children: React.
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUserState] = useState<{ name: string; nip?: string; email?: string; role: string } | null>(null);
+  // Sidebar: mulai collapsed di mobile, terbuka di desktop
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const [lang, setLang] = useState<Lang>('id');
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Auto-detect screen size untuk initial sidebar state
+  useEffect(() => {
+    const update = () => setSidebarOpen(window.innerWidth >= 768);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   useEffect(() => {
     const token = getToken();
@@ -145,7 +159,9 @@ export default function LecturerDashboardLayout({ children }: { children: React.
 
   return (
     <div className="h-full flex bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
-        <aside className={`bg-white dark:bg-slate-900 flex-shrink-0 transition-all duration-300 z-20 border-r border-[#ebebeb] dark:border-slate-700/60 flex flex-col overflow-hidden ${sidebarOpen ? 'w-64' : 'w-[84px]'}`} style={{ boxShadow: '2px 0 12px rgba(0,0,0,0.05)' }}>
+
+      {/* ── Sidebar Desktop (hidden di mobile) ── */}
+      <aside className={`hidden md:flex bg-white dark:bg-slate-900 flex-shrink-0 transition-all duration-300 z-20 border-r border-[#ebebeb] dark:border-slate-700/60 flex-col overflow-hidden ${sidebarOpen ? 'w-64' : 'w-[84px]'}`} style={{ boxShadow: '2px 0 12px rgba(0,0,0,0.05)' }}>
           <div className="p-3 border-b border-gray-100 dark:border-slate-800 transition-colors duration-300">
             <div className="relative flex items-center p-2 rounded-2xl border border-gray-200/60 dark:border-slate-700/60 bg-gray-50 dark:bg-slate-800/40 transition-all duration-300 overflow-hidden justify-start">
               <div className="flex items-center gap-3 min-w-0">
@@ -229,9 +245,7 @@ export default function LecturerDashboardLayout({ children }: { children: React.
                 </svg>
               </span>
               <div className={`transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-[150px] opacity-100 ml-4' : 'w-0 opacity-0 ml-0'}`}>
-                <span className="text-[15px] whitespace-nowrap block w-[150px]">
-                  Toggle Sidebar
-                </span>
+                <span className="text-[15px] whitespace-nowrap block w-[150px]">Toggle Sidebar</span>
               </div>
             </button>
             <button id="btn-logout-sidebar" onClick={handleLogout} disabled={isLoggingOut} title={!sidebarOpen ? 'Keluar' : undefined} className="relative flex items-center px-4 py-3 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 font-medium transition-all duration-150 disabled:opacity-60">
@@ -245,11 +259,72 @@ export default function LecturerDashboardLayout({ children }: { children: React.
               </div>
             </button>
           </div>
-        </aside>
-        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      </aside>
+
+      {/* ── Mobile Sidebar Drawer ── */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setMobileOpen(false)} />
+      )}
+      <aside
+        className={`fixed top-0 left-0 h-full w-72 bg-white dark:bg-slate-900 z-50 flex flex-col md:hidden transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ boxShadow: '4px 0 24px rgba(0,0,0,0.15)' }}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-[#CC0000] rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="17" height="17">
+                <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
+              </svg>
+            </div>
+            <div>
+              <p className="font-black text-[13px] text-gray-900 dark:text-white leading-tight tracking-wide">SISTEM MANAJEMEN KPPM</p>
+              <p className="text-[10px] text-gray-500 dark:text-slate-400 font-semibold uppercase leading-tight mt-0.5">Telkom University</p>
+            </div>
+          </div>
+          <button onClick={() => setMobileOpen(false)} className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" aria-label="Tutup menu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          </button>
+        </div>
+        <div className="p-3 border-b border-gray-100 dark:border-slate-800">
+          <div className="flex items-center p-2 rounded-2xl border border-gray-200/60 dark:border-slate-700/60 bg-gray-50 dark:bg-slate-800/40">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-[#CC0000]/10 text-[#CC0000] flex items-center justify-center font-bold text-sm flex-shrink-0">{user ? getInitials(user.name) : '?'}</div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user?.name || '...'}</p>
+                <p className="text-xs text-gray-500 truncate mt-0.5">{user?.nip ? `NIP: ${user.nip}` : 'Dosen PA'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <nav className="p-3 flex-1 flex flex-col gap-1 overflow-y-auto mt-1">
+
+          {[...navItems, { href: '/dosen/pengaturan', label: 'Pengaturan', icon: <SettingsIcon /> }].map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link key={item.href} href={item.href} className={`relative flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-150 ${isActive ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800/80' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800/40'}`}>
+                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#CC0000] rounded-r-md" />}
+                <span className={`flex-shrink-0 flex items-center justify-center w-[28px] ${isActive ? 'text-[#CC0000]' : 'text-gray-400'} [&>svg]:w-[22px] [&>svg]:h-[22px]`}>{item.icon}</span>
+                <span className="ml-4 text-[15px]">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="p-3 border-t border-gray-100 dark:border-slate-800">
+          <button onClick={handleLogout} disabled={isLoggingOut} className="w-full flex items-center px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 font-medium transition-all duration-150 disabled:opacity-60">
+            <span className="flex-shrink-0 flex items-center justify-center w-[28px] [&>svg]:w-[22px] [&>svg]:h-[22px]"><LogoutIcon /></span>
+            <span className="ml-4 text-[15px]">{isLoggingOut ? 'Keluar...' : 'Sign out'}</span>
+          </button>
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
           <div className="px-4 pt-4 pb-2 shrink-0 z-40">
             <header className="bg-gradient-to-r from-[#CC0000] to-[#E60000] dark:from-slate-900 dark:to-slate-800 h-14 rounded-[2rem] flex items-center px-4 gap-3 transition-all duration-300 shadow-lg shadow-red-900/15 dark:shadow-black/40 border border-white/20 dark:border-slate-700 relative">
-              <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Hamburger — hanya mobile */}
+              <button className="md:hidden flex-shrink-0 p-1.5 rounded-xl text-white/80 hover:bg-white/10 active:bg-white/20 transition-colors" onClick={() => setMobileOpen(true)} aria-label="Buka menu">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+              </button>
+              <div className="hidden md:flex items-center gap-3 flex-shrink-0">
                 <KPPMLogoMark />
                 <div className="hidden sm:block">
                   <p className="text-white font-black text-[17px] leading-tight tracking-wide">SISTEM MANAJEMEN KPPM</p>
@@ -304,7 +379,7 @@ export default function LecturerDashboardLayout({ children }: { children: React.
               </div>
             </header>
           </div>
-          <main className="flex-1 overflow-y-auto transition-all duration-300">{children}</main>
+          <main className="flex-1 overflow-y-auto overflow-x-hidden transition-all duration-300">{children}</main>
         </div>
 
       {/* ── Onboarding Wizard (tampil otomatis jika belum verifikasi/ganti password) ── */}

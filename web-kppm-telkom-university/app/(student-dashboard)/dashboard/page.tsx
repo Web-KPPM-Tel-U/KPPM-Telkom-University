@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -281,43 +281,45 @@ export default function DashboardPage() {
   const initials = profile?.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'MH';
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
       {/* ── Hero Banner ── */}
-      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-3xl p-6 md:p-8 text-white overflow-hidden shadow-xl">
-        {/* Decorative circles */}
+      <div className="relative bg-gradient-to-br from-[#CC0000] via-[#B00000] to-[#7A0000] rounded-2xl md:rounded-3xl p-5 md:p-8 text-white overflow-hidden shadow-xl">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full" />
         <div className="absolute top-8 -right-4 w-32 h-32 bg-white/5 rounded-full" />
         <div className="absolute -bottom-8 right-16 w-24 h-24 bg-white/5 rounded-full" />
         <div className="absolute bottom-0 left-0 w-full h-px bg-white/10" />
 
-        <div className="relative flex flex-col md:flex-row items-start md:items-center gap-5">
+        <div className="relative flex items-start gap-4">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-2xl md:text-3xl font-bold shadow-lg">
+            <div className="w-14 h-14 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-xl md:text-3xl font-bold shadow-lg">
               {initials}
             </div>
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white shadow" title="Online" />
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-green-400 rounded-full border-2 border-white shadow" title="Online" />
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-1.5 mb-1">
               <GreetingIcon period={greeting.period} />
-              <span className="text-red-200 text-sm font-medium">{greeting.text}</span>
+              <span className="text-red-200 text-xs sm:text-sm font-medium">{greeting.text}</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight truncate">
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight break-words leading-tight">
               {profile?.name || 'Mahasiswa'}
             </h1>
-            <p className="text-red-100/80 text-sm mt-1.5 flex items-center gap-2.5 flex-wrap">
-              <span className="flex items-center gap-1.5 font-semibold"><AcademicIcon /><span>NIM {profile?.nim || '-'}</span></span>
-              <span className="w-px h-3.5 bg-red-200/30" />
+            <div className="text-red-100/80 text-xs mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span className="flex items-center gap-1 font-semibold"><AcademicIcon /><span>NIM {profile?.nim || '-'}</span></span>
+              <span className="hidden sm:inline w-px h-3 bg-red-200/30" />
               <span>Kelas: <strong className="text-white font-semibold">{profile?.class || '-'}</strong></span>
-              <span className="w-px h-3.5 bg-red-200/30" />
+              <span className="hidden sm:inline w-px h-3 bg-red-200/30" />
               <span className="text-white font-medium">{profile?.prodi || 'Program Studi'}</span>
-            </p>
+            </div>
+            {currentDate && (
+              <p className="text-red-100/50 text-[11px] mt-2 md:hidden">{currentDate}</p>
+            )}
           </div>
 
-          {/* Date badge */}
+          {/* Date badge — hanya desktop */}
           <div className="flex-shrink-0 hidden md:block">
             <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl px-4 py-3 text-center">
               <p className="text-red-200 text-[10px] font-semibold uppercase tracking-widest mb-0.5">Hari ini</p>
@@ -327,8 +329,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Bottom bar */}
-        <div className="relative mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
-          <p className="text-red-100/60 text-xs">Portal Mahasiswa — Sistem Manajemen KPPM Telkom University</p>
+        <div className="relative mt-4 pt-3 border-t border-white/10">
+          <p className="text-red-100/60 text-[11px] leading-relaxed">Portal Mahasiswa — Sistem Manajemen KPPM Telkom University</p>
         </div>
       </div>
 
