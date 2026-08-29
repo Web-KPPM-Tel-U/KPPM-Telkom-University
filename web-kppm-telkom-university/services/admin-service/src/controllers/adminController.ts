@@ -78,7 +78,7 @@ export const getAdminLecturers = async (
   try {
     const searchParam = `%${search}%`;
     const [rows] = await pool.execute<any[]>(
-      `SELECT nip, lecturer_name, email, is_verified, password_changed, created_at, updated_at
+      `SELECT nip, lecturer_name, email, is_verified, password_changed, is_active, created_at, updated_at
        FROM lecturers
        WHERE lecturer_name LIKE ? OR nip LIKE ?
        ORDER BY lecturer_name ASC
@@ -140,7 +140,7 @@ export const getAdminStudents = async (
   try {
     const searchParam = `%${search}%`;
     const [rows] = await pool.execute<any[]>(
-      `SELECT nim, student_name, class, email, is_verified, password_changed, created_at
+      `SELECT nim, student_name, class, email, is_verified, password_changed, is_active, created_at
        FROM students
        WHERE student_name LIKE ? OR nim LIKE ?
        ORDER BY student_name ASC
@@ -213,6 +213,94 @@ function normalizeRow(
   }
   return normalized;
 }
+
+// ─── Admin: Create Student Manually ──────────────────────────────────────────
+
+/**
+ * POST /admin/students/add
+ */
+export const createStudent = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { nim, student_name, class: kelas, email } = req.body as { nim: string; student_name: string; class: string; email?: string };
+
+  if (!nim?.trim() || !student_name?.trim() || !kelas?.trim()) {
+    res.status(400).json({ success: false, message: 'NIM, Nama, dan Kelas wajib diisi.' });
+    return;
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(nim.trim(), 10);
+    const [insertRes] = await pool.execute<any>(
+      `INSERT INTO students (nim, student_name, class, email, password, is_active)
+       VALUES (?, ?, ?, ?, ?, 1)`,
+      [nim.trim(), student_name.trim(), kelas.trim(), email?.trim() || null, hashedPassword]
+    );
+
+    const [newRow] = await pool.execute<any[]>(
+      'SELECT nim, student_name, class, email, is_verified, password_changed, is_active, created_at FROM students WHERE nim = ?',
+      [nim.trim()]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: `Mahasiswa ${nim.trim()} berhasil ditambahkan.`,
+      data: newRow[0],
+    });
+  } catch (err: any) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      res.status(409).json({ success: false, message: `Mahasiswa dengan NIM ${nim.trim()} sudah terdaftar.` });
+      return;
+    }
+    console.error('[Admin] createStudent error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Admin: Create Lecturer Manually ─────────────────────────────────────────
+
+/**
+ * POST /admin/lecturers/add
+ */
+export const createLecturer = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { nip, lecturer_name, email } = req.body as { nip: string; lecturer_name: string; email?: string };
+
+  if (!nip?.trim() || !lecturer_name?.trim()) {
+    res.status(400).json({ success: false, message: 'NIP dan Nama Dosen wajib diisi.' });
+    return;
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(nip.trim(), 10);
+    const [insertRes] = await pool.execute<any>(
+      `INSERT INTO lecturers (nip, lecturer_name, email, password, is_active)
+       VALUES (?, ?, ?, ?, 1)`,
+      [nip.trim(), lecturer_name.trim(), email?.trim() || null, hashedPassword]
+    );
+
+    const [newRow] = await pool.execute<any[]>(
+      'SELECT nip, lecturer_name, email, is_verified, password_changed, is_active, created_at, updated_at FROM lecturers WHERE nip = ?',
+      [nip.trim()]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: `Dosen ${nip.trim()} berhasil ditambahkan.`,
+      data: newRow[0],
+    });
+  } catch (err: any) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      res.status(409).json({ success: false, message: `Dosen dengan NIP ${nip.trim()} sudah terdaftar.` });
+      return;
+    }
+    console.error('[Admin] createLecturer error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
 
 // ─── Admin: Inject Students ───────────────────────────────────────────────────
 
@@ -401,6 +489,72 @@ export const updateLecturer = async (
   }
 };
 
+// ─── Admin/PIC: Update Mahasiswa ───────────────────────────────────────────────
+
+/**
+ * PATCH /admin/students/:nim
+ * PIC dapat mengubah nama, kelas, dan email mahasiswa.
+ */
+export const updateStudent = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { nim } = req.params;
+  const { student_name, class: kelas, email } = req.body as { student_name?: string; class?: string; email?: string };
+
+  if (!student_name?.trim() && !kelas?.trim() && email === undefined) {
+    res.status(400).json({ success: false, message: 'Tidak ada data yang akan diubah.' });
+    return;
+  }
+
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT nim FROM students WHERE nim = ?',
+      [nim]
+    );
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Mahasiswa tidak ditemukan.' });
+      return;
+    }
+
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (student_name?.trim()) {
+      fields.push('student_name = ?');
+      values.push(student_name.trim());
+    }
+    if (kelas?.trim()) {
+      fields.push('class = ?');
+      values.push(kelas.trim());
+    }
+    if (email !== undefined) {
+      fields.push('email = ?');
+      values.push(email?.trim() || null);
+    }
+
+    values.push(nim);
+    await pool.execute(
+      `UPDATE students SET ${fields.join(', ')}, updated_at = NOW() WHERE nim = ?`,
+      values
+    );
+
+    const [updated] = await pool.execute<any[]>(
+      'SELECT nim, student_name, class, email, is_verified, password_changed, updated_at FROM students WHERE nim = ?',
+      [nim]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Data mahasiswa ${nim} berhasil diperbarui.`,
+      data: updated[0],
+    });
+  } catch (err: any) {
+    console.error('[Admin] updateStudent error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
 // ─── Admin: Toggle Account Status ─────────────────────────────────────────────
 
 /**
@@ -541,7 +695,25 @@ export const toggleSemesterStatus = async (
       res.status(404).json({ success: false, message: 'Semester tidak ditemukan.' });
       return;
     }
-    const newStatus = rows[0].is_active === 1 ? 0 : 1;
+
+    const current = rows[0];
+    const newStatus = current.is_active === 1 ? 0 : 1;
+
+    // Jika mengaktifkan, pastikan tidak ada semester lain yang sudah aktif
+    if (newStatus === 1) {
+      const [activeRows] = await pool.execute<any[]>(
+        'SELECT semester_id, code FROM semester_codes WHERE is_active = 1 AND semester_id != ?',
+        [id]
+      );
+      if (activeRows.length > 0) {
+        res.status(409).json({
+          success: false,
+          message: `Nonaktifkan semester "${activeRows[0].code}" terlebih dahulu sebelum mengaktifkan semester lain.`,
+        });
+        return;
+      }
+    }
+
     await pool.execute(
       'UPDATE semester_codes SET is_active = ?, updated_at = NOW() WHERE semester_id = ?',
       [newStatus, id]
@@ -549,9 +721,9 @@ export const toggleSemesterStatus = async (
     res.status(200).json({
       success: true,
       message: newStatus === 1
-        ? `Semester "${rows[0].code}" berhasil diaktifkan.`
-        : `Semester "${rows[0].code}" berhasil dinonaktifkan.`,
-      data: { semester_id: rows[0].semester_id, code: rows[0].code, is_active: newStatus },
+        ? `Semester "${current.code}" berhasil diaktifkan.`
+        : `Semester "${current.code}" berhasil dinonaktifkan.`,
+      data: { semester_id: current.semester_id, code: current.code, is_active: newStatus },
     });
   } catch (err: any) {
     console.error('[Admin] toggleSemesterStatus error:', err.message);

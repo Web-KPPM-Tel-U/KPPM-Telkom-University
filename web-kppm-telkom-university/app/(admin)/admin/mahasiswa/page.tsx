@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getAdminStudents, toggleAdminStudentStatus } from '@/lib/api';
+import { getAdminStudents, toggleAdminStudentStatus, addAdminStudent, updateAdminStudent } from '@/lib/api';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -40,6 +40,17 @@ const RefreshIcon = () => (
 const PowerOnIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18.36 6.64a9 9 0 11-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" />
+  </svg>
+);
+const PlusIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+const EditIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
   </svg>
 );
 
@@ -86,6 +97,20 @@ export default function KelolaMahasiswaPage() {
   const [togglingNim, setTogglingNim] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Add Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm]         = useState({ nim: '', student_name: '', class: '', email: '' });
+  const [addLoading, setAddLoading]   = useState(false);
+  const [addError, setAddError]       = useState('');
+  const [addSuccess, setAddSuccess]   = useState('');
+
+  // ── Edit Mahasiswa
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm]           = useState({ nim: '', student_name: '', class: '', email: '' });
+  const [editLoading, setEditLoading]     = useState(false);
+  const [editError, setEditError]         = useState('');
+  const [editSuccess, setEditSuccess]     = useState('');
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const fetchStudents = useCallback(async (q: string, pg: number) => {
@@ -128,10 +153,54 @@ export default function KelolaMahasiswaPage() {
     finally { setTogglingNim(null); }
   };
 
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddLoading(true); setAddError(''); setAddSuccess('');
+    try {
+      const res = await addAdminStudent(addForm);
+      if (res.success) {
+        setAddSuccess('Mahasiswa berhasil ditambahkan.');
+        setAddForm({ nim: '', student_name: '', class: '', email: '' });
+        fetchStudents(search, page);
+        setTimeout(() => setShowAddModal(false), 1500);
+      } else {
+        setAddError(res.message || 'Gagal menambahkan mahasiswa.');
+      }
+    } catch (err: any) {
+      setAddError(err.message || 'Terjadi kesalahan jaringan.');
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditLoading(true); setEditError(''); setEditSuccess('');
+    try {
+      const res = await updateAdminStudent(editForm.nim, {
+        student_name: editForm.student_name,
+        class: editForm.class,
+        email: editForm.email
+      });
+      if (res.success) {
+        setEditSuccess(`Data mahasiswa ${editForm.nim} berhasil diperbarui.`);
+        fetchStudents(search, page);
+        setTimeout(() => setShowEditModal(false), 1500);
+      } else {
+        setEditError(res.message || 'Gagal memperbarui mahasiswa.');
+      }
+    } catch (err: any) {
+      setEditError(err.message || 'Terjadi kesalahan jaringan.');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const activeCount   = students.filter(s => s.is_active === 1).length;
   const verifiedCount = students.filter(s => s.is_verified === 1).length;
 
   return (
+    <>
     <div className="p-5 md:p-8 max-w-7xl mx-auto space-y-7">
 
       {/* Hero */}
@@ -169,8 +238,9 @@ export default function KelolaMahasiswaPage() {
             </button>
           )}
         </div>
-        <button onClick={handleReset} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl hover:border-[#CC0000]/40 hover:text-[#CC0000] transition-all flex-shrink-0">
-          <RefreshIcon /> Reset
+
+        <button onClick={() => { setShowAddModal(true); setAddError(''); setAddSuccess(''); setAddForm({ nim: '', student_name: '', class: '', email: '' }); }} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#CC0000] rounded-xl hover:bg-[#B00000] shadow-md shadow-red-500/20 transition-all flex-shrink-0">
+          <PlusIcon /> Tambah Mahasiswa
         </button>
       </div>
 
@@ -267,21 +337,33 @@ export default function KelolaMahasiswaPage() {
                       <td className="px-4 py-4 text-xs text-gray-400 dark:text-slate-500 whitespace-nowrap hidden xl:table-cell">{formatDate(s.created_at)}</td>
                       {/* Aksi */}
                       <td className="px-4 py-4 text-center">
-                        <button
-                          id={`btn-toggle-mahasiswa-${s.nim}`}
-                          onClick={() => handleToggle(s)}
-                          disabled={toggling}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${
-                            isActive
-                              ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
-                              : 'border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                          }`}
-                        >
-                          {toggling
-                            ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
-                            : <PowerOnIcon />}
-                          {isActive ? 'Nonaktifkan' : 'Aktifkan'}
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => {
+                              setEditForm({ nim: s.nim, student_name: s.student_name, class: s.class || '', email: s.email || '' });
+                              setEditError(''); setEditSuccess(''); setShowEditModal(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                            title="Edit Data"
+                          >
+                            <EditIcon /> Edit
+                          </button>
+                          <button
+                            id={`btn-toggle-mahasiswa-${s.nim}`}
+                            onClick={() => handleToggle(s)}
+                            disabled={toggling}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${
+                              isActive
+                                ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                : 'border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                            }`}
+                          >
+                            {toggling
+                              ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
+                              : <PowerOnIcon />}
+                            {isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -330,5 +412,88 @@ export default function KelolaMahasiswaPage() {
         )}
       </div>
     </div>
+      
+      {/* Add Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-gray-100 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between bg-gray-50/50 dark:bg-slate-800/30">
+              <h3 className="font-extrabold text-gray-900 dark:text-slate-100 text-lg">Tambah Mahasiswa Baru</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+                <XIcon />
+              </button>
+            </div>
+            <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
+              {addError && <div className="p-3 text-sm text-red-600 bg-red-50 rounded-xl border border-red-100 font-medium">{addError}</div>}
+              {addSuccess && <div className="p-3 text-sm text-green-600 bg-green-50 rounded-xl border border-green-100 font-medium">{addSuccess}</div>}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">NIM <span className="text-red-500">*</span></label>
+                <input required type="text" value={addForm.nim} onChange={e => setAddForm(f => ({ ...f, nim: e.target.value }))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]" placeholder="Contoh: 1301220001" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Nama Lengkap <span className="text-red-500">*</span></label>
+                <input required type="text" value={addForm.student_name} onChange={e => setAddForm(f => ({ ...f, student_name: e.target.value }))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]" placeholder="Nama Mahasiswa" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Kelas <span className="text-red-500">*</span></label>
+                <input required type="text" value={addForm.class} onChange={e => setAddForm(f => ({ ...f, class: e.target.value }))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]" placeholder="Contoh: IF-46-01" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Email <span className="font-normal text-gray-400 lowercase tracking-normal">(Opsional)</span></label>
+                <input type="email" value={addForm.email} onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]" placeholder="email@student.telkomuniversity.ac.id" />
+              </div>
+              
+              <div className="pt-2 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowAddModal(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Batal</button>
+                <button type="submit" disabled={addLoading || !!addSuccess} className="inline-flex items-center justify-center min-w-[120px] px-5 py-2.5 text-sm font-bold text-white bg-[#CC0000] hover:bg-[#B00000] rounded-xl shadow-lg shadow-red-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                  {addLoading ? 'Menyimpan...' : 'Simpan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-gray-100 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between bg-gray-50/50 dark:bg-slate-800/30">
+              <h3 className="font-extrabold text-gray-900 dark:text-slate-100 text-lg">Edit Mahasiswa</h3>
+              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+                <XIcon />
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+              {editError && <div className="p-3 text-sm text-red-600 bg-red-50 rounded-xl border border-red-100 font-medium">{editError}</div>}
+              {editSuccess && <div className="p-3 text-sm text-green-600 bg-green-50 rounded-xl border border-green-100 font-medium">{editSuccess}</div>}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">NIM <span className="font-normal text-gray-400 lowercase tracking-normal">(Tidak dapat diubah)</span></label>
+                <input type="text" value={editForm.nim} disabled className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-100 dark:bg-slate-800/50 text-gray-500 dark:text-slate-400 text-sm cursor-not-allowed" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Nama Lengkap <span className="text-red-500">*</span></label>
+                <input required type="text" value={editForm.student_name} onChange={e => setEditForm(f => ({ ...f, student_name: e.target.value }))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]" placeholder="Nama Mahasiswa" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Kelas <span className="text-red-500">*</span></label>
+                <input required type="text" value={editForm.class} onChange={e => setEditForm(f => ({ ...f, class: e.target.value }))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]" placeholder="Contoh: IF-46-01" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Email <span className="font-normal text-gray-400 lowercase tracking-normal">(Opsional)</span></label>
+                <input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]" placeholder="email@student.telkomuniversity.ac.id" />
+              </div>
+              
+              <div className="pt-2 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowEditModal(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Batal</button>
+                <button type="submit" disabled={editLoading || !!editSuccess} className="inline-flex items-center justify-center min-w-[120px] px-5 py-2.5 text-sm font-bold text-white bg-[#CC0000] hover:bg-[#B00000] rounded-xl shadow-lg shadow-red-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                  {editLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

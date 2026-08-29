@@ -384,6 +384,26 @@ export interface ActiveSemester {
   label: string;
 }
 
+
+
+export const addAdminStudent = async (data: { nim: string; student_name: string; class: string; email?: string }): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/admin/students/add`, {
+    method: 'POST',
+    headers: { ...adminAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const addAdminLecturer = async (data: { nip: string; lecturer_name: string; email?: string }): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/admin/lecturers/add`, {
+    method: 'POST',
+    headers: { ...adminAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
 export const getActiveSemesters = async (): Promise<ApiResponse<ActiveSemester[]>> => {
   const res = await fetch(`${API_BASE_URL}/student/semesters/active`, {
     headers: authHeaders(),
@@ -877,6 +897,21 @@ export const updateAdminLecturer = async (
   const res = await fetch(`${API_BASE_URL}/admin/lecturers/${nip}`, {
     method: 'PATCH',
     headers: adminAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+/**
+ * Update data mahasiswa (nama, kelas, email) — hanya PIC
+ */
+export const updateAdminStudent = async (
+  nim: string,
+  data: { student_name?: string; class?: string; email?: string }
+): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/admin/students/${nim}`, {
+    method: 'PATCH',
+    headers: { ...adminAuthHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   return res.json();

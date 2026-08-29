@@ -12,6 +12,9 @@ import {
   toggleStudentStatus,
   createSemester,
   toggleSemesterStatus,
+  createStudent,
+  createLecturer,
+  updateStudent,
 } from '../controllers/adminController';
 import { verifyAdminToken } from '../middleware/authMiddleware';
 
@@ -48,9 +51,12 @@ router.get('/stats',                              verifyAdminToken, getAdminStat
 router.get('/lecturers',                          verifyAdminToken, getAdminLecturers);
 router.get('/students',                           verifyAdminToken, getAdminStudents);
 router.get('/semesters',                          verifyAdminToken, getAdminSemesters);
+router.post('/students/add',                      verifyAdminToken, createStudent);
+router.post('/lecturers/add',                     verifyAdminToken, createLecturer);
 router.post('/inject/students',  verifyAdminToken, uploadInMemory.single('file'), injectStudents);
 router.post('/inject/lecturers', verifyAdminToken, uploadInMemory.single('file'), injectLecturers);
 router.patch('/lecturers/:nip',               verifyAdminToken, updateLecturer);
+router.patch('/students/:nim',                verifyAdminToken, updateStudent);
 router.patch('/lecturers/:nip/toggle-status', verifyAdminToken, toggleLecturerStatus);
 router.patch('/students/:nim/toggle-status',  verifyAdminToken, toggleStudentStatus);
 router.post('/semesters',                     verifyAdminToken, createSemester);
