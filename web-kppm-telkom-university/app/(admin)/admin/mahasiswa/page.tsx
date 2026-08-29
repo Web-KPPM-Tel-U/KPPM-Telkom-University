@@ -314,7 +314,7 @@ export default function KelolaMahasiswaPage() {
                             setEditForm({ nim: s.nim, student_name: s.student_name, class: s.class || '', email: s.email || '' });
                             setEditError(''); setEditSuccess(''); setShowEditModal(true);
                           }}
-                          className="mt-2.5 w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                          className="mt-2.5 w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#CC0000]/50 hover:text-[#CC0000] hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
                         >
                           <EditIcon /> Edit
                         </button>
@@ -388,7 +388,7 @@ export default function KelolaMahasiswaPage() {
                                 setEditForm({ nim: s.nim, student_name: s.student_name, class: s.class || '', email: s.email || '' });
                                 setEditError(''); setEditSuccess(''); setShowEditModal(true);
                               }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#CC0000]/50 hover:text-[#CC0000] hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
                               title="Edit Data"
                             >
                               <EditIcon /> Edit
