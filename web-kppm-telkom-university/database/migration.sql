@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS students (
 CREATE TABLE IF NOT EXISTS lecturers (
     nip VARCHAR(30) NOT NULL PRIMARY KEY,
     lecturer_name VARCHAR(100) NOT NULL,
+    lecturer_code VARCHAR(3) NULL DEFAULT NULL,
     email VARCHAR(100) NULL DEFAULT NULL,
     password VARCHAR(255) NOT NULL,
     is_verified TINYINT(1) NOT NULL DEFAULT 0,
@@ -224,7 +225,7 @@ INSERT IGNORE INTO students (nim, student_name, class, email, is_verified, passw
     ('1301213003', 'Siti Rahayu',      'SI-46-01', NULL, 0, 0, '1301213003');
 
 -- Dosen (password default = NIP)
-INSERT IGNORE INTO lecturers (nip, lecturer_name, email, password, is_verified, password_changed) VALUES
-    ('198001012005011001', 'Dr. Bambang Supriyanto, M.T.', NULL, '198001012005011001', 0, 0),
-    ('198205152009121002', 'Dra. Siti Aminah, M.Kom.',     NULL, '198205152009121002', 0, 0),
-    ('197803232003121003', 'Ir. Hendra Kusuma, M.T., Ph.D.', NULL, '197803232003121003', 0, 0);
+INSERT IGNORE INTO lecturers (nip, lecturer_name, lecturer_code, email, password, is_verified, password_changed) VALUES
+    ('198001012005011001', 'Dr. Bambang Supriyanto, M.T.', 'BBS', NULL, '198001012005011001', 0, 0),
+    ('198205152009121002', 'Dra. Siti Aminah, M.Kom.',     'STA', NULL, '198205152009121002', 0, 0),
+    ('197803232003121003', 'Ir. Hendra Kusuma, M.T., Ph.D.', 'HNK', NULL, '197803232003121003', 0, 0);

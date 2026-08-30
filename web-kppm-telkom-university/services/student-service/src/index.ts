@@ -7,6 +7,8 @@ import rateLimit from 'express-rate-limit';
 import studentRoutes from './routes/studentRoutes';
 
 const app = express();
+// Percayai header X-Forwarded-For dari API Gateway supaya rate limiter membaca IP klien asli
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4002;
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
@@ -17,10 +19,11 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(express.json());
 
-// ─── Rate Limiter ─────────────────────────────────────────────────────────
+// ─── Rate Limiter ────────────────────────────────────────────────────────────────
+// 1500 request per IP per 15 menit = ~100 req/menit per user, sangat longgar untuk pemakaian normal
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 1500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Terlalu banyak permintaan. Coba lagi dalam 15 menit.' },

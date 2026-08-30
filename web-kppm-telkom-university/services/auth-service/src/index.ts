@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import authRoutes from './routes/authRoutes';
 
 const app = express();
+// Percayai header X-Forwarded-For dari API Gateway supaya rate limiter membaca IP klien asli
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4001;
 
 // ─── Middleware ───────────────────────────────────────────────────────────────

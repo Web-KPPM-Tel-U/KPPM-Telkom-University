@@ -19,28 +19,29 @@ const router = Router();
 
 // ─── Rate Limiters ────────────────────────────────────────────────────────────
 
-// Login: maks 10 percobaan per 15 menit per IP (anti brute-force)
+// Login: maks 30 percobaan per 15 menit per IP
+// (tester bisa coba login berkali-kali, tetap ketat untuk brute-force yang butuh ribuan percobaan)
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Terlalu banyak percobaan login. Coba lagi dalam 15 menit.' },
 });
 
-// OTP: maks 10 permintaan OTP per 15 menit per IP (anti OTP spam)
+// OTP: maks 20 permintaan OTP per 15 menit per IP
 const otpLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Terlalu banyak permintaan OTP. Coba lagi dalam 15 menit.' },
 });
 
-// Password change: maks 5 permintaan per 15 menit
+// Password change: maks 10 permintaan per 15 menit
 const passwordLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Terlalu banyak permintaan. Coba lagi dalam 15 menit.' },
