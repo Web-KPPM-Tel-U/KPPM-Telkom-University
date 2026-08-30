@@ -252,6 +252,14 @@ const MIGRATIONS = [
     ignoreErrorCode: 1060, // ER_DUP_FIELDNAME
   },
 
+  // ── v4f: Add is_active column to lecturers (if missing) ────────────────────
+  {
+    description: 'Add is_active column to lecturers (if missing)',
+    sql: `ALTER TABLE internship_management.lecturers
+          ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1 AFTER password_changed;`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME
+  },
+
   // ── v5: Tabel admin_users untuk Admin/PIC ────────────────────────────────────
   {
     description: 'Create admin_users table',

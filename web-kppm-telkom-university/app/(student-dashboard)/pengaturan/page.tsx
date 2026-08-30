@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getStudentProfile,
@@ -8,6 +8,8 @@ import {
   updateStudentProfile,
   getToken,
   getUser,
+  sendStudentVerifyOtp,
+  verifyStudentEmail,
   type StudentUser,
 } from '@/lib/api';
 
@@ -116,6 +118,7 @@ export default function PengaturanPage() {
   const [pwLoading, setPwLoading]         = useState(false);
   const [pwError, setPwError]             = useState('');
   const [pwSuccess, setPwSuccess]         = useState('');
+  const [emailToast, setEmailToast]       = useState('');  // floating toast untuk sukses ganti email
 
   const [activeTab, setActiveTab]         = useState<'profil' | 'keamanan'>('profil');
   const strength = getPasswordStrength(newPw);
@@ -124,35 +127,108 @@ export default function PengaturanPage() {
   const [editEmailForm, setEditEmailForm] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
 
+  // ── OTP email flow ──
+  const [otpSent, setOtpSent]           = useState(false);   // apakah OTP sudah dikirim
+  const [showOtpModal, setShowOtpModal] = useState(false);   // tampilkan popup OTP
+  const [otpValues, setOtpValues]       = useState(['','','','','','']); // 6 kotak OTP
+  const [otpError, setOtpError]         = useState('');
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const otpRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+
   const handleEditEmail = () => {
     setEditEmailForm(profile?.email || '');
     setIsEditingEmail(true);
+    setOtpSent(false);
+    setOtpValues(['','','','','','']);
+    setOtpError('');
   };
 
-  const handleSaveEmail = async () => {
+  const handleCancelEmail = () => {
+    setIsEditingEmail(false);
+    setOtpSent(false);
+    setShowOtpModal(false);
+    setOtpValues(['','','','','','']);
+    setOtpError('');
+  };
+
+  // Kirim OTP ke email baru
+  const handleSendOtp = async () => {
+    if (!editEmailForm) return;
     setEmailSaving(true);
+    setOtpError('');
     try {
-      const res = await updateStudentProfile({ email: editEmailForm });
+      const res = await sendStudentVerifyOtp(editEmailForm);
       if (res.success) {
-         setProfile(prev => prev ? { ...prev, email: editEmailForm } : null);
-         
-         const user = getUser();
-         if (user) {
-           (user as any).email = editEmailForm;
-           localStorage.setItem('kppm_user', JSON.stringify(user));
-         }
-         setIsEditingEmail(false);
-         setPwSuccess('Email berhasil diperbarui!');
-         setTimeout(() => setPwSuccess(''), 3000);
+        setOtpSent(true);
+        setShowOtpModal(true);
+        setOtpValues(['','','','','','']);
+        // cooldown 60 detik
+        setResendCooldown(60);
+        const t = setInterval(() => setResendCooldown(c => { if (c <= 1) { clearInterval(t); return 0; } return c - 1; }), 1000);
+        setTimeout(() => otpRefs[0].current?.focus(), 100);
       } else {
-         setProfileError(res.message || 'Gagal mengubah email.');
-         setTimeout(() => setProfileError(''), 3000);
+        setProfileError(res.message || 'Gagal mengirim OTP.');
+        setTimeout(() => setProfileError(''), 4000);
       }
     } catch {
       setProfileError('Terjadi kesalahan server.');
-      setTimeout(() => setProfileError(''), 3000);
+      setTimeout(() => setProfileError(''), 4000);
     }
     setEmailSaving(false);
+  };
+
+  // Verifikasi OTP & simpan email
+  const handleVerifyOtp = async () => {
+    const otp = otpValues.join('');
+    if (otp.length < 6) { setOtpError('Masukkan 6 digit OTP.'); return; }
+    setOtpVerifying(true);
+    setOtpError('');
+    try {
+      const res = await verifyStudentEmail(editEmailForm, otp);
+      if (res.success) {
+        // Update token & user di localStorage
+        if (res.data?.token) {
+          localStorage.setItem('kppm_token', res.data.token);
+        }
+        if (res.data?.user) {
+          localStorage.setItem('kppm_user', JSON.stringify(res.data.user));
+        }
+        setProfile(prev => prev ? { ...prev, email: editEmailForm } : null);
+        setShowOtpModal(false);
+        setIsEditingEmail(false);
+        setOtpValues(['','','','','','']);
+        setEmailToast('Email berhasil diperbarui dan diverifikasi! ✓');
+        setTimeout(() => setEmailToast(''), 4000);
+      } else {
+        setOtpError(res.message || 'OTP salah. Coba lagi.');
+      }
+    } catch {
+      setOtpError('Terjadi kesalahan server.');
+    }
+    setOtpVerifying(false);
+  };
+
+  // Handle input per kotak OTP
+  const handleOtpInput = (idx: number, val: string) => {
+    if (!/^\d?$/.test(val)) return;
+    const next = [...otpValues];
+    next[idx] = val;
+    setOtpValues(next);
+    setOtpError('');
+    if (val && idx < 5) otpRefs[idx + 1].current?.focus();
+  };
+  const handleOtpKeyDown = (idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpValues[idx] && idx > 0) otpRefs[idx - 1].current?.focus();
+  };
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+    e.preventDefault();
+    const next = ['','','','','',''];
+    pasted.split('').forEach((c, i) => { next[i] = c; });
+    setOtpValues(next);
+    otpRefs[Math.min(pasted.length, 5)].current?.focus();
   };
 
   useEffect(() => {
@@ -202,6 +278,29 @@ export default function PengaturanPage() {
 
   return (
     <div className="p-4 md:p-5 max-w-5xl mx-auto">
+
+      {/* ── Floating Email Toast ── */}
+      <div
+        className={`fixed bottom-6 right-6 z-[60] flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border border-green-200 dark:border-green-500/30 bg-white dark:bg-slate-900 text-green-700 dark:text-green-400 text-sm font-semibold transition-all duration-500 ${
+          emailToast
+            ? 'opacity-100 translate-y-0 pointer-events-auto'
+            : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+      >
+        <div className="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-500/15 flex items-center justify-center flex-shrink-0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+        </div>
+        <span>{emailToast}</span>
+        <button
+          onClick={() => setEmailToast('')}
+          className="ml-1 text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+          aria-label="Tutup"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
 
       {/* ── Page title ── */}
       <div className="mb-5">
@@ -291,9 +390,27 @@ export default function PengaturanPage() {
                     <span className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider w-28 sm:w-36 flex-shrink-0 pt-0.5 leading-tight">Email</span>
                     {isEditingEmail ? (
                       <div className="flex-1 flex gap-2 items-center">
-                         <input type="email" value={editEmailForm} onChange={e => setEditEmailForm(e.target.value)} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded focus:outline-none focus:border-[#CC0000]" placeholder="Email aktif" />
-                         <button onClick={handleSaveEmail} disabled={emailSaving} className="text-xs font-semibold bg-[#CC0000] text-white px-3 py-1.5 rounded hover:bg-[#a00000] disabled:bg-gray-400 transition-colors whitespace-nowrap flex-shrink-0">Simpan</button>
-                         <button onClick={() => setIsEditingEmail(false)} disabled={emailSaving} className="text-xs font-semibold bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-300 px-3 py-1.5 rounded hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors whitespace-nowrap flex-shrink-0">Batal</button>
+                        <input
+                          type="email"
+                          value={editEmailForm}
+                          onChange={e => { setEditEmailForm(e.target.value); setOtpSent(false); }}
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded focus:outline-none focus:border-[#CC0000]"
+                          placeholder="Email aktif"
+                        />
+                        <button
+                          onClick={handleSendOtp}
+                          disabled={emailSaving || !editEmailForm || editEmailForm === profile?.email}
+                          className="text-xs font-semibold bg-[#CC0000] text-white px-3 py-1.5 rounded hover:bg-[#a00000] disabled:bg-gray-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed transition-colors whitespace-nowrap flex-shrink-0 flex items-center gap-1.5"
+                        >
+                          {emailSaving ? (
+                            <><svg className="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" /></svg>Mengirim...</>
+                          ) : otpSent ? 'Kirim Ulang OTP' : 'Verifikasi'}
+                        </button>
+                        <button
+                          onClick={handleCancelEmail}
+                          disabled={emailSaving}
+                          className="text-xs font-semibold bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-300 px-3 py-1.5 rounded hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors whitespace-nowrap flex-shrink-0"
+                        >Batal</button>
                       </div>
                     ) : (
                       <div className="flex-1 flex justify-between items-start group gap-3">
@@ -405,6 +522,95 @@ export default function PengaturanPage() {
           )}
         </div>
       </div>
+
+      {/* ── OTP Modal ── */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !otpVerifying && setShowOtpModal(false)} />
+
+          {/* Card */}
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-800 w-full max-w-sm p-6 flex flex-col items-center gap-4 animate-[fadeInUp_0.25s_ease]">
+            {/* Header */}
+            <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center mb-1">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/><path d="M12 14v.01"/>
+              </svg>
+            </div>
+            <div className="text-center">
+              <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">Verifikasi Email</h3>
+              <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                Kode OTP telah dikirim ke<br />
+                <span className="font-semibold text-gray-700 dark:text-slate-300">{editEmailForm}</span>
+              </p>
+              <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">Berlaku selama 5 menit</p>
+            </div>
+
+            {/* OTP inputs */}
+            <div className="flex gap-2.5 justify-center" onPaste={handleOtpPaste}>
+              {otpValues.map((v, i) => (
+                <input
+                  key={i}
+                  ref={otpRefs[i]}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={v}
+                  onChange={e => handleOtpInput(i, e.target.value)}
+                  onKeyDown={e => handleOtpKeyDown(i, e)}
+                  className={`w-10 h-12 text-center text-lg font-bold rounded-xl border-2 transition-all outline-none
+                    ${v ? 'border-[#CC0000] bg-red-50 dark:bg-red-500/10 text-[#CC0000]' : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100'}
+                    ${otpError ? 'border-red-400 animate-[shake_0.3s_ease]' : ''}
+                    focus:border-[#CC0000] focus:ring-2 focus:ring-[#CC0000]/20`}
+                />
+              ))}
+            </div>
+
+            {/* Error */}
+            {otpError && (
+              <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400 text-xs font-medium">
+                <AlertIcon /> {otpError}
+              </div>
+            )}
+
+            {/* Submit */}
+            <button
+              onClick={handleVerifyOtp}
+              disabled={otpVerifying || otpValues.join('').length < 6}
+              className="w-full bg-[#CC0000] hover:bg-[#a00000] disabled:bg-gray-200 dark:disabled:bg-slate-800 disabled:text-gray-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2"
+            >
+              {otpVerifying ? (
+                <><svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" /></svg>Memverifikasi...</>
+              ) : 'Konfirmasi & Simpan Email'}
+            </button>
+
+            {/* Resend */}
+            <p className="text-[11px] text-gray-400 dark:text-slate-500">
+              Tidak menerima OTP?{' '}
+              {resendCooldown > 0 ? (
+                <span className="text-gray-400">Kirim ulang dalam {resendCooldown}d</span>
+              ) : (
+                <button
+                  onClick={handleSendOtp}
+                  disabled={emailSaving}
+                  className="text-[#CC0000] font-semibold hover:underline disabled:opacity-50"
+                >
+                  Kirim Ulang
+                </button>
+              )}
+            </p>
+
+            {/* Close */}
+            <button
+              onClick={() => !otpVerifying && setShowOtpModal(false)}
+              className="absolute top-3.5 right-3.5 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+              aria-label="Tutup"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
