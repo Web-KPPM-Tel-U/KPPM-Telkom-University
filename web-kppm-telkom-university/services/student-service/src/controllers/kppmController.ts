@@ -116,7 +116,6 @@ export const submitRegistration = async (
     mentor_position,
     mentor_email,
     mentor_phone,
-    lecturer_nip,
   } = req.body;
 
   // Validasi field wajib
@@ -132,7 +131,6 @@ export const submitRegistration = async (
     mentor_position,
     mentor_email,
     mentor_phone,
-    lecturer_nip,
   };
 
   const missingFields = Object.entries(requiredFields)
@@ -225,28 +223,37 @@ export const submitRegistration = async (
       res.status(409).json({
         success: false,
         message:
-          'Anda sudah memiliki pengajuan KPPM yang aktif. Batalkan pengajuan tersebut sebelum mengajukan yang baru.',
+          'Anda sudah memiliki pengajuan KPPM yang aktif. Jika Anda ingin mengajukan ulang atau terdapat kekeliruan data, silakan hubungi Admin KPPM.',
       });
       return;
     }
 
-    // Validasi lecturer_nip — pastikan dosen ada di DB
-    const [lecturerRows] = await pool.execute<any[]>(
-      'SELECT nip, lecturer_name FROM lecturers WHERE nip = ?',
-      [lecturer_nip]
+    // Lookup dosen yang di-assign ke mahasiswa ini (via assigned_lecturer_code)
+    const [studentRows] = await pool.execute<any[]>(
+      `SELECT s.assigned_lecturer_code, l.nip AS lecturer_nip, l.lecturer_name
+       FROM students s
+       LEFT JOIN lecturers l ON l.lecturer_code = s.assigned_lecturer_code
+       WHERE s.nim = ?`,
+      [nim]
     );
 
-    if (!lecturerRows || lecturerRows.length === 0) {
-      res.status(400).json({
+    if (!studentRows || studentRows.length === 0) {
+      res.status(404).json({ success: false, message: 'Data mahasiswa tidak ditemukan.' });
+      return;
+    }
+
+    if (!studentRows[0].assigned_lecturer_code || !studentRows[0].lecturer_nip) {
+      res.status(403).json({
         success: false,
-        message: 'Dosen pembimbing tidak valid. Pilih dosen dari daftar yang tersedia.',
+        message: 'Dosen pembimbing belum ditentukan. Hubungi admin KPPM untuk mendapatkan dosen pembimbing sebelum melakukan pengajuan.',
       });
       return;
     }
 
-    const assignedLecturerNip = lecturerRows[0].nip;
+    const assignedLecturerNip = studentRows[0].lecturer_nip;
 
     // Insert pendaftaran ke tabel internship_registrations
+    // Status langsung 'approved' — tidak ada proses approval dosen PA
     const [result] = await pool.execute<any>(
       `INSERT INTO internship_registrations
          (nim, lecturer_nip, semester_code, whatsapp_number,
@@ -254,8 +261,8 @@ export const submitRegistration = async (
           internship_start, internship_end,
           toss_cover_letter_file,
           mentor_name, mentor_nip, mentor_position, mentor_email, mentor_phone,
-          status, submitted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_approval', NOW())`,
+          status, submitted_at, approved_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', NOW(), NOW())`,
       [
         nim,
         assignedLecturerNip,
@@ -276,13 +283,13 @@ export const submitRegistration = async (
 
     res.status(201).json({
       success: true,
-      message:
-        'Pendaftaran KPPM berhasil dikirim. Menunggu verifikasi pembimbing akademik.',
+      message: 'Pendaftaran KPPM berhasil dikirim dan langsung disetujui. Selamat menjalankan KP/Magang!',
       data: {
         registration_id:    result.insertId,
-        status:             'pending_approval',
+        status:             'approved',
         assigned_lecturer:  assignedLecturerNip,
         submitted_at:       new Date().toISOString(),
+        approved_at:        new Date().toISOString(),
       },
     });
   } catch (err: any) {
@@ -455,89 +462,16 @@ export const getActiveSemesters = async (
 
 /**
  * DELETE /student/kppm/registrations/:id
- * Membatalkan pendaftaran KPPM (soft delete — status diubah ke 'cancelled').
- * Aturan:
- *  - Hanya pemilik pendaftaran yang dapat membatalkan (student_id harus cocok).
- *  - Hanya bisa dibatalkan jika status masih 'pending_approval'.
- *  - Jika sudah 'approved', pembatalan ditolak.
- *  - Data & file TOSS tetap disimpan untuk keperluan logging / riwayat.
+ * DIBEKUKAN: Dengan sistem auto-approve, mahasiswa tidak bisa lagi membatalkan pengajuan.
  */
 export const cancelRegistration = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
-  const nim            = req.user?.nim || String(req.user?.sub || '');
-  const registrationId = Number(req.params.id);
-
-  if (!nim) {
-    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
-    return;
-  }
-
-  if (isNaN(registrationId)) {
-    res.status(400).json({ success: false, message: 'ID pendaftaran tidak valid.' });
-    return;
-  }
-
-  try {
-    // Cek keberadaan dan kepemilikan pendaftaran
-    const [rows] = await pool.execute<any[]>(
-      `SELECT registration_id, status
-       FROM internship_registrations
-       WHERE registration_id = ? AND nim = ?`,
-      [registrationId, nim]
-    );
-
-    if (!rows || rows.length === 0) {
-      res.status(404).json({ success: false, message: 'Data pendaftaran tidak ditemukan.' });
-      return;
-    }
-
-    const reg = rows[0];
-
-    // Tolak jika sudah disetujui
-    if (reg.status === 'approved') {
-      res.status(403).json({
-        success: false,
-        message: 'Pendaftaran yang sudah disetujui tidak dapat dibatalkan.',
-      });
-      return;
-    }
-
-    // Tolak jika sudah dibatalkan sebelumnya
-    if (reg.status === 'cancelled') {
-      res.status(400).json({
-        success: false,
-        message: 'Pendaftaran ini sudah dibatalkan sebelumnya.',
-      });
-      return;
-    }
-
-    // Hanya boleh jika masih pending_approval
-    if (reg.status !== 'pending_approval') {
-      res.status(400).json({
-        success: false,
-        message: `Pendaftaran dengan status '${reg.status}' tidak dapat dibatalkan.`,
-      });
-      return;
-    }
-
-    // Soft delete: update status ke 'cancelled' + catat waktu pembatalan
-    await pool.execute(
-      `UPDATE internship_registrations
-       SET status = 'cancelled', cancelled_at = NOW()
-       WHERE registration_id = ? AND nim = ?`,
-      [registrationId, nim]
-    );
-
-    res.status(200).json({
-      success: true,
-      message: 'Pendaftaran KPPM berhasil dibatalkan.',
-    });
-  } catch (err: any) {
-    console.error('[KPPM] cancelRegistration error:', err.message);
-    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
-  }
+  res.status(403).json({
+    success: false,
+    message: 'Pengajuan yang sudah disubmit tidak dapat dibatalkan.',
+  });
 };
 
 // ─── Get Daftar Mahasiswa Bimbingan (untuk Dosen) ────────────────────────────

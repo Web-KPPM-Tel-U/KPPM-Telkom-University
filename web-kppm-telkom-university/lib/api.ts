@@ -21,6 +21,9 @@ export interface StudentUser {
   role: 'student';
   is_verified: boolean;
   password_changed: boolean;
+  assigned_lecturer_code: string | null;
+  assigned_lecturer_nip:  string | null;
+  assigned_lecturer_name: string | null;
 }
 
 export interface LecturerUser {
@@ -409,6 +412,21 @@ export const addAdminLecturer = async (data: { nip: string; lecturer_name: strin
     method: 'POST',
     headers: { ...adminAuthHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+/**
+ * Assign atau lepas dosen pembimbing ke mahasiswa (admin only)
+ */
+export const assignLecturerToStudent = async (
+  nim: string,
+  lecturer_code: string | null
+): Promise<ApiResponse<{ nim: string; assigned_lecturer_code: string | null; assigned_lecturer_name: string | null }>> => {
+  const res = await fetch(`${API_BASE_URL}/admin/students/${nim}/assign-lecturer`, {
+    method: 'PATCH',
+    headers: { ...adminAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lecturer_code }),
   });
   return res.json();
 };

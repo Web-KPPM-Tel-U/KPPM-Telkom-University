@@ -287,8 +287,8 @@ export default function PengaturanPage() {
                 <>
                   <ProfileRow label="Nama Lengkap"  value={profile?.name || '-'} />
                   <ProfileRow label="NIM"            value={profile?.nim || '-'} />
-                  <div className="flex flex-col sm:flex-row sm:items-center py-2.5 border-b border-gray-50 dark:border-slate-800 last:border-0 transition-colors gap-2">
-                    <span className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider w-28 sm:w-36 flex-shrink-0 leading-tight">Email</span>
+                  <div className="flex items-start py-2.5 border-b border-gray-50 dark:border-slate-800 last:border-0 transition-colors gap-2">
+                    <span className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider w-28 sm:w-36 flex-shrink-0 pt-0.5 leading-tight">Email</span>
                     {isEditingEmail ? (
                       <div className="flex-1 flex gap-2 items-center">
                          <input type="email" value={editEmailForm} onChange={e => setEditEmailForm(e.target.value)} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded focus:outline-none focus:border-[#CC0000]" placeholder="Email aktif" />
@@ -296,8 +296,8 @@ export default function PengaturanPage() {
                          <button onClick={() => setIsEditingEmail(false)} disabled={emailSaving} className="text-xs font-semibold bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-300 px-3 py-1.5 rounded hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors whitespace-nowrap flex-shrink-0">Batal</button>
                       </div>
                     ) : (
-                      <div className="flex-1 flex justify-between items-center group">
-                        <span className="text-sm text-gray-800 dark:text-slate-200 font-medium break-all">{profile?.email || '-'}</span>
+                      <div className="flex-1 flex justify-between items-start group gap-3">
+                        <span className="text-sm text-gray-800 dark:text-slate-200 font-medium break-all mt-0.5">{profile?.email || '-'}</span>
                         <button onClick={handleEditEmail} className="text-[#CC0000] transition-colors hover:bg-red-100 text-xs font-semibold px-3 py-1 bg-red-50 dark:bg-red-500/10 rounded whitespace-nowrap flex-shrink-0">
                           Edit
                         </button>
