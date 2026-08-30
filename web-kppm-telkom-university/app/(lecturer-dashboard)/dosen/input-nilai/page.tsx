@@ -434,10 +434,10 @@ function GradeTable({
     <div>
       <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 mb-3">{title}</h3>
       <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-slate-700">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 text-[11px] uppercase tracking-wider border-b border-gray-100 dark:border-slate-700">
-              <th className="px-4 py-2.5 text-center w-8">No</th>
+              <th className="px-4 py-2.5 text-center w-12 whitespace-nowrap">No</th>
               <th className="px-4 py-2.5 text-left">Indikator Penilaian</th>
               <th className="px-4 py-2.5 text-center w-20">Bobot (%)</th>
               <th className="px-4 py-2.5 text-center w-24">Nilai</th>

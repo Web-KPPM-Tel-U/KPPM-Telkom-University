@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getToken, getUser, StudentUser, submitKppmRegistration, getKppmRegistrations, KppmRegistration, getLecturersList, Lecturer, getKppmRegistrationDetail, KppmRegistrationDetail, cancelKppmRegistration, getActiveSemesters, ActiveSemester } from '@/lib/api';
+import { getToken, getUser, getStudentProfile, StudentUser, submitKppmRegistration, getKppmRegistrations, KppmRegistration, getLecturersList, Lecturer, getKppmRegistrationDetail, KppmRegistrationDetail, cancelKppmRegistration, getActiveSemesters, ActiveSemester } from '@/lib/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -193,10 +193,8 @@ export default function IsiDataKppmPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  // ── State untuk konfirmasi pembatalan ─────────────────────────────────────
-  const [cancelConfirm, setCancelConfirm] = useState<{ id: number } | null>(null);
-  const [isCancelling, setIsCancelling] = useState(false);
-  const [cancelError, setCancelError] = useState('');
+  // ── State untuk konfirmasi submit ──────────────────────────────────────────
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   const [lecturers, setLecturers] = useState<Lecturer[]>([]);
   const [isLoadingLecturers, setIsLoadingLecturers] = useState(false);
@@ -236,37 +234,40 @@ export default function IsiDataKppmPage() {
   useEffect(() => {
     const token = getToken();
     if (!token) { router.replace('/login'); return; }
-    try {
-      const userData = getUser();
-      if (userData && userData.role === 'student') {
-        setStudent(userData as StudentUser);
-      } else {
-        setError('Data mahasiswa tidak ditemukan. Silakan login ulang.');
-      }
-    } catch {
-      setError('Tidak dapat memuat data profil mahasiswa.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router]);
 
-  // Load daftar dosen pembimbing untuk dropdown
-  useEffect(() => {
-    const fetchLecturers = async () => {
-      const token = getToken();
-      if (!token) return;
-      setIsLoadingLecturers(true);
+    // Fetch profil terbaru dari API — BUKAN dari localStorage cache
+    // agar assigned_lecturer_code selalu up-to-date setelah admin assign dosen
+    const loadProfile = async () => {
       try {
-        const res = await getLecturersList();
-        if (res.success && res.data) setLecturers(res.data);
+        const res = await getStudentProfile();
+        if (res.success && res.data) {
+          setStudent(res.data as StudentUser);
+        } else {
+          // Fallback ke cache jika API gagal
+          const userData = getUser();
+          if (userData && userData.role === 'student') {
+            setStudent(userData as StudentUser);
+          } else {
+            setError('Data mahasiswa tidak ditemukan. Silakan login ulang.');
+          }
+        }
       } catch {
-        // Biarkan kosong jika gagal
+        const userData = getUser();
+        if (userData && userData.role === 'student') {
+          setStudent(userData as StudentUser);
+        } else {
+          setError('Tidak dapat memuat data profil mahasiswa.');
+        }
       } finally {
-        setIsLoadingLecturers(false);
+        setIsLoading(false);
       }
     };
-    fetchLecturers();
-  }, []);
+
+    loadProfile();
+  }, [router]);
+
+  // Assigned lecturer sudah ada di data student (dari profile endpoint)
+  // Tidak perlu fetch daftar dosen lagi
 
   // Load daftar semester aktif untuk dropdown kode semester
   useEffect(() => {
@@ -364,7 +365,6 @@ export default function IsiDataKppmPage() {
     if (!form.mentorPosition.trim()) errors['mentorPosition'] = 'required';
     if (!form.mentorEmail.trim())    errors['mentorEmail']    = 'required';
     if (!form.mentorPhone.trim())    errors['mentorPhone']    = 'required';
-    if (!selectedLecturerId)         errors['lecturerId']     = 'required';
     if (!uploadedFile)               errors['suratToss']      = 'required';
 
     setFieldErrors(errors);
@@ -387,31 +387,6 @@ export default function IsiDataKppmPage() {
     }
   };
 
-  // ── Handler pembatalan pendaftaran ────────────────────────────────────────
-  const handleCancelRegistration = async () => {
-    if (!cancelConfirm) return;
-    setIsCancelling(true);
-    setCancelError('');
-    try {
-      const res = await cancelKppmRegistration(cancelConfirm.id);
-      if (res.success) {
-        // Refresh daftar setelah berhasil dibatalkan
-        const listRes = await getKppmRegistrations(listEntries, 0);
-        if (listRes.success && listRes.data) {
-          setRegistrations(listRes.data ?? []);
-          setListTotal(listRes.meta?.total ?? 0);
-        }
-        setListPage(1);
-        setCancelConfirm(null);
-      } else {
-        setCancelError(res.message || 'Gagal membatalkan pendaftaran.');
-      }
-    } catch {
-      setCancelError('Terjadi kesalahan jaringan. Silakan coba lagi.');
-    } finally {
-      setIsCancelling(false);
-    }
-  };
 
   // Peta pesan error backend → field yang perlu di-highlight
   const parseBackendError = (message: string): Record<string, string> => {
@@ -466,19 +441,24 @@ export default function IsiDataKppmPage() {
     return errs;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError('');
     setFieldErrors({});
 
-    // Cek field tidak kosong (hanya empty check, bukan validasi format)
-    // Semua validasi format dilakukan oleh backend
+    // Cek field tidak kosong
     if (!validateRequiredFields()) {
       setSubmitError('Harap lengkapi semua field yang ditandai sebelum mengirim pendaftaran.');
       return;
     }
 
+    // Tampilkan modal konfirmasi daripada langsung submit
+    setShowSubmitConfirm(true);
+  };
+
+  const executeSubmit = async () => {
     setIsSubmitting(true);
+    setShowSubmitConfirm(false);
 
     try {
       const formData = new FormData();
@@ -493,7 +473,6 @@ export default function IsiDataKppmPage() {
       formData.append('mentor_position', form.mentorPosition);
       formData.append('mentor_email',    form.mentorEmail);
       formData.append('mentor_phone',    form.mentorPhone);
-      formData.append('lecturer_nip',    selectedLecturerId);
       if (uploadedFile) formData.append('surat_toss', uploadedFile);
 
       const res = await submitKppmRegistration(formData);
@@ -510,7 +489,6 @@ export default function IsiDataKppmPage() {
         // Tampilkan pesan error dari backend
         const msg = res.message || 'Terjadi kesalahan. Silakan coba lagi.';
         setSubmitError(msg);
-        // Highlight field yang bermasalah berdasarkan pesan backend
         const fieldErrs = parseBackendError(msg);
         if (Object.keys(fieldErrs).length > 0) {
           setFieldErrors(fieldErrs);
@@ -680,7 +658,7 @@ export default function IsiDataKppmPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => { setDetailData(null); setView('list'); }}
-              className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors whitespace-nowrap flex-shrink-0"
             >
               <ArrowLeftIcon />
               Kembali
@@ -692,7 +670,7 @@ export default function IsiDataKppmPage() {
             </div>
           </div>
           {s && (
-            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${s.bg} ${s.text_color}`}>
+            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${s.bg} ${s.text_color} whitespace-nowrap flex-shrink-0`}>
               <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
               {s.text}
             </span>
@@ -907,6 +885,68 @@ export default function IsiDataKppmPage() {
     return (
       <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
 
+      {/* ── Modal Konfirmasi Submit ──────────────────────────────────── */}
+      {showSubmitConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowSubmitConfirm(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg p-6 border border-gray-100 dark:border-gray-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Konfirmasi Pengajuan</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  Periksa kembali data Anda. Setelah disubmit, pengajuan akan langsung dicatat oleh sistem dan <strong className="text-amber-600 dark:text-amber-400">tidak dapat dibatalkan atau diubah</strong>.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-5 space-y-3">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <span className="text-gray-500 dark:text-gray-400">Perusahaan:</span>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">{form.perusahaan}</span>
+                
+                <span className="text-gray-500 dark:text-gray-400">Posisi:</span>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">{form.posisiDivisi}</span>
+                
+                <span className="text-gray-500 dark:text-gray-400">Mentor:</span>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">{form.mentorName}</span>
+                
+                <span className="text-gray-500 dark:text-gray-400">Dosen PA:</span>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">{student?.assigned_lecturer_name || '-'}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => setShowSubmitConfirm(false)}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Kembali & Periksa
+              </button>
+              <button
+                type="button"
+                onClick={executeSubmit}
+                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-[#CC0000] text-white hover:bg-[#A30000] transition-colors flex items-center gap-2 shadow-lg shadow-red-500/30"
+              >
+                Ya, Kirim Sekarang
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
         {/* Page Header */}
         
         <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
@@ -926,7 +966,7 @@ export default function IsiDataKppmPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => { resetForm(); setView('list'); }}
-              className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors whitespace-nowrap flex-shrink-0"
             >
               <ArrowLeftIcon />
               Kembali
@@ -1187,7 +1227,7 @@ export default function IsiDataKppmPage() {
             </div>
           </div>
 
-          {/* SECTION 5: Pembimbing Akademik */}
+          {/* SECTION 5: Pembimbing Akademik (ditentukan oleh admin) */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 sm:p-6">
             <SectionHeader
               icon={
@@ -1196,38 +1236,38 @@ export default function IsiDataKppmPage() {
                 </svg>
               }
               title="Pembimbing Akademik"
-              subtitle="Pilih dosen pembimbing akademik dari Telkom University"
+              subtitle="Ditentukan oleh Admin KPPM — tidak dapat diubah"
               color="#CC0000"
             />
-            <div className="max-w-sm">
-              <FormField label="Dosen Pembimbing Akademik" required hasError={!!fieldErrors['lecturerId']}>
-                <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
-                  </svg>
-                  <select
-                    id="field-lecturer"
-                    value={selectedLecturerId}
-                    onChange={(e) => { setSelectedLecturerId(e.target.value); if(fieldErrors['lecturerId']) setFieldErrors(p=>({...p,lecturerId:''})); }}
-                    disabled={isLoadingLecturers}
-                    className={`w-full h-10 pl-9 pr-8 rounded-lg border text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all appearance-none disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-400
-                      ${fieldErrors['lecturerId'] ? 'border-red-400 bg-red-50/40 dark:bg-red-900/20 focus:ring-red-200 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-[#CC0000]/20 focus:border-[#CC0000]'}`}
-                  >
-                    <option value="">
-                      {isLoadingLecturers ? 'Memuat dosen...' : '— Pilih dosen pembimbing —'}
-                    </option>
-                    {lecturers.map((l) => (
-                      <option key={l.nip} value={l.nip}>
-                        {l.lecturer_name}
-                      </option>
-                    ))}
-                  </select>
-                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6,9 12,15 18,9" />
+            {student?.assigned_lecturer_name ? (
+              <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 max-w-sm">
+                <div className="w-9 h-9 rounded-lg bg-[#CC0000]/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
                   </svg>
                 </div>
-              </FormField>
-            </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{student.assigned_lecturer_name}</p>
+                  {student.assigned_lecturer_code && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Kode: <span className="font-mono font-bold text-[#CC0000]">{student.assigned_lecturer_code}</span></p>
+                  )}
+                </div>
+                <span className="flex items-center gap-1 text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-600 px-1.5 py-0.5 rounded-full">
+                  <LockIcon /> Auto
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3 max-w-md">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <div>
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Dosen Pembimbing Belum Ditentukan</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Hubungi Admin KPPM untuk mendapatkan dosen pembimbing sebelum melakukan pengajuan.</p>
+                </div>
+              </div>
+            )}
           </div>
 
 
@@ -1253,7 +1293,7 @@ export default function IsiDataKppmPage() {
                 className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50">
                 Batal
               </button>
-              <button id="btn-submit-form" type="submit" disabled={isSubmitting}
+              <button id="btn-submit-form" type="submit" disabled={isSubmitting || !student?.assigned_lecturer_name}
                 className="px-6 py-2.5 rounded-xl text-sm font-semibold bg-[#CC0000] text-white hover:bg-[#A30000] active:scale-95 transition-all shadow-sm flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                 {isSubmitting ? (
                   <>
@@ -1281,73 +1321,6 @@ export default function IsiDataKppmPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
-
-      {/* ── Modal Konfirmasi Pembatalan ──────────────────────────────────── */}
-      {cancelConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.5)' }}
-          onClick={() => { if (!isCancelling) { setCancelConfirm(null); setCancelError(''); } }}
-        >
-          <div
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100 dark:border-gray-700"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Icon warning */}
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Batalkan Pengajuan?</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                  Tindakan ini tidak dapat dibatalkan. Data pengajuan dan file TOSS akan dihapus permanen.
-                </p>
-              </div>
-            </div>
-
-            {/* Error message */}
-            {cancelError && (
-              <div className="mb-4 flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl px-4 py-3">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <p className="text-sm text-red-700 dark:text-red-400">{cancelError}</p>
-              </div>
-            )}
-
-            {/* Tombol aksi */}
-            <div className="flex items-center justify-end gap-3 mt-2">
-              <button
-                onClick={() => { setCancelConfirm(null); setCancelError(''); }}
-                disabled={isCancelling}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-              >
-                Tidak, Kembali
-              </button>
-              <button
-                id="btn-konfirmasi-batal"
-                onClick={handleCancelRegistration}
-                disabled={isCancelling}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#CC0000] text-white hover:bg-[#A30000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isCancelling ? (
-                  <>
-                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Membatalkan...
-                  </>
-                ) : (
-                  'Ya, Batalkan Pengajuan'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Header */}
             <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
@@ -1445,16 +1418,7 @@ export default function IsiDataKppmPage() {
                       <EyeIcon />
                       Lihat Detail
                     </button>
-                    {reg.status === 'pending_approval' && (
-                      <button
-                        id={`btn-batal-${reg.registration_id}`}
-                        onClick={() => { setCancelError(''); setCancelConfirm({ id: reg.registration_id }); }}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors"
-                      >
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        Batalkan
-                      </button>
-                    )}
+
                   </div>
                 </div>
               );
@@ -1465,7 +1429,7 @@ export default function IsiDataKppmPage() {
 
         {/* ── Desktop Table ── */}
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="bg-[#f4f4f6] dark:bg-gray-700/50 border-b-2 border-[#e5e7eb] dark:border-gray-600">
                 <th className="text-left px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-r border-[#e5e7eb] dark:border-gray-600">Tanggal Pengajuan</th>
@@ -1533,19 +1497,6 @@ export default function IsiDataKppmPage() {
                             <EyeIcon />
                             Detail
                           </button>
-                          {reg.status === 'pending_approval' && (
-                            <button
-                              id={`btn-batal-${reg.registration_id}`}
-                              onClick={() => { setCancelError(''); setCancelConfirm({ id: reg.registration_id }); }}
-                              className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-900/40 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors"
-                              title="Batalkan Pengajuan"
-                            >
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                              </svg>
-                              Batalkan
-                            </button>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -1557,27 +1508,27 @@ export default function IsiDataKppmPage() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 flex items-center justify-between gap-3 bg-[#f4f4f6] dark:bg-gray-800 border-t-2 border-[#e5e7eb] dark:border-gray-700">
-          <p className="text-xs text-gray-400 dark:text-gray-500">
+        <div className="px-5 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center sm:justify-between gap-3 bg-[#f4f4f6] dark:bg-gray-800 border-t-2 border-[#e5e7eb] dark:border-gray-700">
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center sm:text-left">
             {listTotal === 0
               ? 'Tidak ada data'
               : `Menampilkan ${(listPage - 1) * listEntries + 1}–${Math.min(listPage * listEntries, listTotal)} dari ${listTotal} data`}
           </p>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center sm:justify-end">
             <button
               onClick={() => setListPage(p => Math.max(1, p - 1))}
               disabled={listPage === 1}
-              className="px-3 py-1 text-xs text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
             >
               Sebelumnya
             </button>
-            <button className="px-3 py-1 text-xs font-bold bg-[#CC0000] text-white rounded-lg">
+            <button className="px-3 py-1.5 text-xs font-bold bg-[#CC0000] text-white rounded-lg">
               {listPage}
             </button>
             <button
               onClick={() => setListPage(p => p + 1)}
               disabled={listPage * listEntries >= listTotal}
-              className="px-3 py-1 text-xs text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
             >
               Selanjutnya
             </button>

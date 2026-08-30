@@ -25,7 +25,11 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response): Prom
 
   try {
     const [rows] = await pool.execute<any[]>(
-      'SELECT nim, student_name, class, email FROM students WHERE nim = ?',
+      `SELECT s.nim, s.student_name, s.class, s.email, s.assigned_lecturer_code,
+              l.nip AS assigned_lecturer_nip, l.lecturer_name AS assigned_lecturer_name
+       FROM students s
+       LEFT JOIN lecturers l ON l.lecturer_code = s.assigned_lecturer_code
+       WHERE s.nim = ?`,
       [nim]
     );
 
@@ -45,6 +49,9 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response): Prom
         prodi: getProdiFromClass(s.class),
         fakultas: 'Fakultas Informatika',
         foto_url: null,
+        assigned_lecturer_code: s.assigned_lecturer_code ?? null,
+        assigned_lecturer_nip:  s.assigned_lecturer_nip  ?? null,
+        assigned_lecturer_name: s.assigned_lecturer_name ?? null,
       },
     });
   } catch (err: any) {
@@ -95,9 +102,13 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
   }
 
   try {
-    // 1. Profil mahasiswa
+    // 1. Profil mahasiswa (include assigned lecturer)
     const [studentRows] = await pool.execute<any[]>(
-      'SELECT nim, student_name, class, email FROM students WHERE nim = ?',
+      `SELECT s.nim, s.student_name, s.class, s.email, s.assigned_lecturer_code,
+              l.nip AS assigned_lecturer_nip, l.lecturer_name AS assigned_lecturer_name
+       FROM students s
+       LEFT JOIN lecturers l ON l.lecturer_code = s.assigned_lecturer_code
+       WHERE s.nim = ?`,
       [nim]
     );
 
@@ -184,7 +195,17 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
         hasLecturerScore = lsRows.length > 0;
       }
 
-      const currentStep = hasLecturerScore ? 4
+      let hasUploadedDocs = false;
+      if (isApproved) {
+        const [docRows] = await pool.execute<any[]>(
+          'SELECT document_id FROM internship_documents WHERE registration_id = ? LIMIT 1',
+          [reg.registration_id]
+        );
+        hasUploadedDocs = docRows.length > 0;
+      }
+
+      const currentStep = hasUploadedDocs ? 5
+        : hasLecturerScore ? 4
         : hasMentorScore  ? 3
         : isApproved      ? 2
         : isPending        ? 1
@@ -205,14 +226,14 @@ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Pr
           { step: 2, label: 'Verifikasi Dosen',              completed: isApproved,        date: isApproved ? reg.approved_at : null },
           { step: 3, label: 'Penilaian Pembimbing Lapangan', completed: hasMentorScore,    date: null },
           { step: 4, label: 'Penilaian Pembimbing Akademik', completed: hasLecturerScore,  date: null },
-          { step: 5, label: 'Upload Hasil KP',              completed: false,              date: null },
+          { step: 5, label: 'Upload Hasil KP',              completed: hasUploadedDocs,   date: null },
         ],
         next_steps: [
           { label: 'Isi data pendaftaran KPPM',          completed: !isCancelled },
           { label: 'Verifikasi oleh Dosen Pembimbing',   completed: isApproved },
           { label: 'Penilaian Pembimbing Lapangan',      completed: hasMentorScore },
           { label: 'Penilaian Pembimbing Akademik',      completed: hasLecturerScore },
-          { label: 'Upload Hasil KP',                    completed: false },
+          { label: 'Upload Hasil KP',                    completed: hasUploadedDocs },
         ],
       };
     }

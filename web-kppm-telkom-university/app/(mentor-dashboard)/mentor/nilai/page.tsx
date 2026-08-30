@@ -9,41 +9,167 @@ import {
 import type { MentorDashboardData, MentorMentee, MentorGradeScores } from '@/lib/api';
 
 // ─── Indikator Penilaian ─────────────────────────────────────────────────────
+type RubricOption = { value: number; label: string };
+
 const INDICATORS: {
   field: keyof MentorGradeScores;
+  code: string;
   label: string;
   bobot: number;
+  options: RubricOption[];
 }[] = [
-  { field: 'attendance',      label: 'Kehadiran tepat waktu',                                                         bobot: 5  },
-  { field: 'discipline',      label: 'Kedisiplinan (kesesuaian dengan aturan)',                                        bobot: 5  },
-  { field: 'commitment',      label: 'Komitmen terhadap tugas / pekerjaan',                                           bobot: 5  },
-  { field: 'planning',        label: 'Mahasiswa mampu merencanakan penyelesaian tugas, bekerja efektif dan mandiri selama KP', bobot: 5 },
-  { field: 'teamwork',        label: 'Mahasiswa mampu bekerja sama dalam tim organisasi / perusahaan selama KP',      bobot: 10 },
-  { field: 'guidance',        label: 'Frekuensi bimbingan dengan pembimbing lapang',                                  bobot: 5  },
-  { field: 'report',          label: 'Kualitas laporan',                                                              bobot: 5  },
-  { field: 'problem_solving', label: 'Identifikasi dan Formulasi Masalah',                                            bobot: 5  },
+  {
+    field: 'attendance',
+    code: 'PLO05-CLO01',
+    label: 'Kehadiran Tepat Waktu',
+    bobot: 5,
+    options: [
+      { value: 0, label: 'Mahasiswa hadir tepat waktu saat pembekalan KP, dan kehadiran tepat waktu di tempat KP kurang dari 20% kehadiran yang seharusnya.' },
+      { value: 55, label: 'Mahasiswa hadir tepat waktu saat pembekalan KP, dan kehadiran tepat waktu di tempat KP mencapai 40% kehadiran yang seharusnya.' },
+      { value: 68, label: 'Mahasiswa hadir tepat waktu saat pembekalan KP, dan kehadiran tepat waktu di tempat KP mencapai 60% kehadiran yang seharusnya.' },
+      { value: 80, label: 'Mahasiswa hadir tepat waktu saat pembekalan KP, dan kehadiran tepat waktu di tempat KP mencapai 80% kehadiran yang seharusnya.' },
+      { value: 90, label: 'Mahasiswa hadir tepat waktu saat pembekalan KP, dan kehadiran tepat waktu di tempat KP lebih dari 80% kehadiran yang seharusnya.' }
+    ]
+  },
+  {
+    field: 'discipline',
+    code: 'PLO05-CLO01',
+    label: 'Kedisiplinan (kesesuaian dengan aturan)',
+    bobot: 5,
+    options: [
+      { value: 0, label: 'Mahasiswa tidak mengetahui prosedur dan peraturan lainnya yang berlaku di tempat KP serta sering tidak disiplin menjalankan penugasan dari pembimbing lapangan atau pun pembimbing akademik KP.' },
+      { value: 55, label: 'Mahasiswa tidak mengetahui prosedur dan peraturan lainnya yang berlaku di tempat KP namun disiplin menjalankan penugasan dari pembimbing lapangan atau pun pembimbing akademik KP.' },
+      { value: 68, label: 'Mahasiswa mengetahui sebagaian kecil prosedur dan peraturan lainnya yang berlaku di tempat kerja praktek dan mematuhinya, serta disiplin menjalankan penugasan dari pembimbing lapangan atau pun pembimbing akademik KP.' },
+      { value: 80, label: 'Mahasiswa mengetahui sebagaian besar prosedur dan peraturan lainnya yang berlaku di tempat KP dan mematuhinya, serta disiplin menjalankan penugasan dari pembimbing lapangan atau pun pembimbing akademik KP.' },
+      { value: 90, label: 'Mahasiswa mengetahui sepenuhnya prosedur dan peraturan lainnya yang berlaku di tempat KP dan mematuhinya serta disiplin menjalankan penugasan dari pembimbing lapangan atau pun pembimbing akademik KP.' }
+    ]
+  },
+  {
+    field: 'commitment',
+    code: 'PLO05-CLO01',
+    label: 'Komitmen terhadap tugas / pekerjaan',
+    bobot: 5,
+    options: [
+      { value: 0, label: 'Mahasiswa tidak dapat menyelesaikan sebagian besar tugas/ pekerjaan dan laporan KP yang diberikan oleh pembimbing lapangan atau pun pembimbing akademik KP.' },
+      { value: 55, label: 'Mahasiswa menyelesaikan sebagian kecil tugas/pekerjaan dan laporan KP sesuai arahan yang diberikan oleh pembimbing lapangan atau pun pembimbing akademik KP.' },
+      { value: 68, label: 'Mahasiswa dapat menyelesaikan sebagain besar tugas/ pekerjaan saat KP dan menyelesaikan sepenuhnya laporan KP sesuai arahan yang diberikan oleh pembimbing lapangan maupun pembimbing akademik KP namun melampaui batas waktu penugasan.' },
+      { value: 80, label: 'Mahasiswa dapat menyelesaikan sepenuhnya tugas/ pekerjaan saat KP maupun laporan KP sesuai arahan yang diberikan oleh pembimbing lapangan maupun pembimbing akademik KP namun melampaui batas waktu penugasan.' },
+      { value: 90, label: 'Mahasiswa dapat menyelesaikan sepenuhnya tugas/ pekerjaan saat KP maupun laporan KP dengan baik sesuai arahan yang diberikan oleh pembimbing lapangan maupun pembimbing akademik KP sesuai dengan batas waktu penugasan.' }
+    ]
+  },
+  {
+    field: 'planning',
+    code: 'PLO07-CLO02',
+    label: 'Mahasiswa mampu merencanakan penyelesaian tugas atau pekerjaan, bekerja efektif dan mandiri selama KP',
+    bobot: 10,
+    options: [
+      { value: 0, label: 'Mahasiswa membuat laporan rencana kegiatan dan kegiatan harian yang ditandatangi oleh pembimbing lapangan minimum 40%' },
+      { value: 55, label: 'Mahasiswa membuat laporan rencana kegiatan dan kegiatan harian yang ditandatangi oleh pembimbing lapangan minimum 60%' },
+      { value: 68, label: 'Mahasiswa membuat laporan rencana kegiatan dan kegiatan harian yang ditandatangi oleh pembimbing lapangan minimum 80%' },
+      { value: 80, label: 'Mahasiswa membuat laporan rencana kegiatan dan kegiatan harian yang ditandatangi oleh pembimbing lapangan minimum 90%' },
+      { value: 90, label: 'Mahasiswa membuat laporan rencana kegiatan dan kegiatan harian yang ditandatangi oleh pembimbing lapangan 100%' }
+    ]
+  },
+  {
+    field: 'teamwork',
+    code: 'PLO03-CLO03',
+    label: 'Mahasiswa mampu bekerjasama di dalam tim organisasi/perusahaan selama KP',
+    bobot: 5,
+    options: [
+      { value: 0, label: 'Mahasiswa tidak mampu mengerjakan penugasan KP serta menolak untuk bekerjasama dengan tim (penempatan KPPM)' },
+      { value: 55, label: 'Mahasiswa mengerjakan penugasan KP namun tidak aktif bekerjasama dengan tim (penempatan KPPM)' },
+      { value: 68, label: 'Mahasiswa mengerjakan penugasan KP namun kurang aktif bekerjasama dengan tim (penempatan KPPM)' },
+      { value: 80, label: 'Mahasiswa mengerjakan penugasan KP dan aktif bekerjasama dengan tim (penempatan KPPM)' },
+      { value: 90, label: 'Mahasiswa mengerjakan penugasan KP dengan sangat baik dan memilki inisiatif untuk melakukan kolaborasi dan bekerjasama dengan tim (divisi tempat KP)' }
+    ]
+  },
+  {
+    field: 'guidance',
+    code: 'PLO05-CLO04',
+    label: 'Frekuensi bimbingan dengan pembimbing lapangan / Mentor',
+    bobot: 5,
+    options: [
+      { value: 0, label: 'Frekuensi bimbingan dengan pembimbing lapangan <=1 kali' },
+      { value: 55, label: 'Frekuensi bimbingan dengan pembimbing lapangan 2 kali' },
+      { value: 68, label: 'Frekuensi bimbingan dengan pembimbing lapangan 3-4 kali' },
+      { value: 80, label: 'Frekuensi bimbingan dengan pembimbing lapangan 5-6 kali' },
+      { value: 90, label: 'Frekuensi bimbingan dengan pembimbing lapangan > 6 kali' }
+    ]
+  },
+  {
+    field: 'report',
+    code: 'PLO05-CLO04',
+    label: 'Kualitas Laporan',
+    bobot: 5,
+    options: [
+      { value: 0, label: 'Laporan KP tersusun tidak terstruktur (tidak mengikuti kaidah-kaidah penulisan di dalam buku pedoman KP), tidak rapi, dan sulit dimengerti' },
+      { value: 55, label: 'Laporan KP tersusun kurang terstruktur, kurang rapi, dan sulit dimengerti' },
+      { value: 68, label: 'Laporan KP tersusun cukup terstruktur, kurang dapat mengelaborasi kondisi yang didapat di lapangan dengan materi yang telah didapat diperkuliahan, cukup rapi, dan cukup dapat dimengerti' },
+      { value: 80, label: 'Laporan KP tersusun cukup terstruktur, kurang dapat mengelaborasi kondisi yang didapat di lapangan dengan materi yang telah didapat diperkuliahan, sangat rapi, dan cukup dapat dimengerti' },
+      { value: 90, label: 'Laporan KP tersusun terstruktur dengan baik, dapat mengelaborasi kondisi yang didapat di lapangan dengan materi yang telah didapat diperkuliahan, sangat rapi, dan mudah dimengerti' }
+    ]
+  },
+  {
+    field: 'problem_solving',
+    code: 'PLO01-CLO05 PA',
+    label: 'Identifikasi dan Formulasi Masalah',
+    bobot: 5,
+    options: [
+      { value: 0, label: 'Mahasiswa tidak mampu menyebutkan masalah yang ada di tempat KP (hanya mengungkapkan kegiatan aatau proses selama KP)' },
+      { value: 55, label: 'Mahasiswa dapat menyebutkan masalah yang ada di tempat KP menggunakan perspektif umum' },
+      { value: 68, label: 'Mahasiswa dapat mengidentifikasi masalah yang ada di tempat KP menggunakan perspektif ilmu yang dipelajari di program studinya' },
+      { value: 80, label: 'Mahasiswa dapat mengidentifikasi faktor-faktor penyebab masalah yang ada di tempat KP menggunakan perspektif ilmu yang dipelajari di program studinya' },
+      { value: 90, label: 'Mahasiswa dapat memformulasikan akar masalah di tempat KP dengan baik menggunakan metode analisis yang dipelajari di program studinya' }
+    ]
+  }
 ];
 
 const TOTAL_BOBOT = INDICATORS.reduce((s, i) => s + i.bobot, 0);
+const UNSET = -1;
 
 const EMPTY_SCORES: MentorGradeScores = {
-  attendance: 0, discipline: 0, commitment: 0, planning: 0,
-  teamwork: 0, guidance: 0, report: 0, problem_solving: 0,
+  attendance: UNSET, discipline: UNSET, commitment: UNSET, planning: UNSET,
+  teamwork: UNSET, guidance: UNSET, report: UNSET, problem_solving: UNSET,
 };
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 function calcTotal(scores: MentorGradeScores): number {
   return INDICATORS.reduce((sum, ind) => {
-    return sum + (ind.bobot / 100) * (scores[ind.field] || 0);
+    const v = scores[ind.field];
+    return sum + (v !== UNSET ? (ind.bobot / 100) * v : 0);
   }, 0);
 }
 
-function getGrade(total: number): { label: string; color: string } {
-  if (total >= 85) return { label: 'A', color: 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/30' };
-  if (total >= 70) return { label: 'B', color: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30' };
-  if (total >= 55) return { label: 'C', color: 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30' };
-  if (total >= 40) return { label: 'D', color: 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/30' };
-  return { label: 'E', color: 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/30' };
+function normalizeStoredScore(value: number, field: keyof MentorGradeScores): number {
+  const ind = INDICATORS.find(i => i.field === field);
+  if (!ind) return UNSET;
+  const found = ind.options.find(o => o.value === value);
+  return found ? value : UNSET;
+}
+
+function RubricCard({ option, selected, onSelect }: { option: RubricOption; selected: boolean; onSelect: () => void }) {
+  const scoreColor =
+    option.value >= 85 ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800' :
+      option.value >= 70 ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800' :
+        option.value >= 55 ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800' :
+          'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800';
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`w-full text-left rounded-xl border-2 px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-150 flex items-start gap-2 sm:gap-3 ${selected
+        ? 'border-[#CC0000] bg-red-50/70 dark:bg-red-900/20 shadow-sm'
+        : 'border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800/60 hover:border-gray-300 dark:hover:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-800'
+        }`}
+    >
+      <span className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center ${selected ? 'border-[#CC0000] bg-[#CC0000]' : 'border-gray-300 dark:border-slate-600'
+        }`}>
+        {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+      </span>
+      <span className="flex-1 text-[13px] sm:text-sm text-gray-700 dark:text-slate-300 leading-snug">{option.label}</span>
+      <span className={`flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-lg border ${scoreColor}`}>{option.value}</span>
+    </button>
+  );
 }
 
 // ─── Custom Select ────────────────────────────────────────────────────────────
@@ -131,7 +257,16 @@ function GradeForm({
       try {
         const res = await getMentorGrade(mentee.registration_id);
         if (res.success && res.data) {
-          setScores(res.data.scores);
+          setScores({
+            attendance: normalizeStoredScore(res.data.scores.attendance, 'attendance'),
+            discipline: normalizeStoredScore(res.data.scores.discipline, 'discipline'),
+            commitment: normalizeStoredScore(res.data.scores.commitment, 'commitment'),
+            planning: normalizeStoredScore(res.data.scores.planning, 'planning'),
+            teamwork: normalizeStoredScore(res.data.scores.teamwork, 'teamwork'),
+            guidance: normalizeStoredScore(res.data.scores.guidance, 'guidance'),
+            report: normalizeStoredScore(res.data.scores.report, 'report'),
+            problem_solving: normalizeStoredScore(res.data.scores.problem_solving, 'problem_solving'),
+          });
           setAlreadyGraded(true);
         }
       } catch { /* no existing grade */ }
@@ -140,12 +275,17 @@ function GradeForm({
     load();
   }, [mentee.registration_id]);
 
-  const handleChange = (field: keyof MentorGradeScores, raw: string) => {
-    const val = raw === '' ? 0 : Math.min(100, Math.max(0, Number(raw)));
-    setScores(prev => ({ ...prev, [field]: isNaN(val) ? 0 : val }));
+  const handleSelect = (field: keyof MentorGradeScores, value: number) => {
+    setScores(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async () => {
+    const unset = INDICATORS.filter(ind => scores[ind.field] === UNSET);
+    if (unset.length > 0) {
+      setError(`Pilih deskripsi untuk: ${unset.map(i => i.label).join(', ')}`);
+      return;
+    }
+
     setError('');
     setSuccess('');
     setSaving(true);
@@ -165,6 +305,8 @@ function GradeForm({
     }
   };
 
+  const allSelected = INDICATORS.every(ind => scores[ind.field] !== UNSET);
+  const selectedCount = INDICATORS.filter(ind => scores[ind.field] !== UNSET).length;
   const total = calcTotal(scores);
   const initials = mentee.student.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
@@ -210,98 +352,72 @@ function GradeForm({
             </div>
           ) : (
             <>
-              {/* Rubrik note */}
-              <p className="text-xs text-gray-500 dark:text-slate-400 mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 rounded-xl px-3 py-2">
-                Nilai Angka diisi sesuai <strong>rubrik penilaian KPPM</strong> (skala 0–100 untuk setiap indikator).
-              </p>
-
-              {/* Tabel indikator */}
-              <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-slate-700">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 text-[11px] uppercase tracking-wider border-b border-gray-100 dark:border-slate-700">
-                      <th className="px-3 py-2.5 text-center w-8">No</th>
-                      <th className="px-3 py-2.5 text-left">Indikator Penilaian</th>
-                      <th className="px-3 py-2.5 text-center w-16">Bobot (%)</th>
-                      <th className="px-3 py-2.5 text-center w-28">Nilai Angka</th>
-                      <th className="px-3 py-2.5 text-center w-28">Bobot × Nilai</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50 dark:divide-slate-700/50">
-                    {INDICATORS.map((ind, idx) => {
-                      const contrib = (ind.bobot / 100) * (scores[ind.field] || 0);
-                      return (
-                        <tr key={ind.field} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                          <td className="px-3 py-3 text-center text-gray-400 dark:text-slate-500 text-xs">{idx + 1}</td>
-                          <td className="px-3 py-3 text-gray-700 dark:text-slate-300 leading-tight text-xs">{ind.label}</td>
-                          <td className="px-3 py-3 text-center">
-                            <span className="inline-block bg-[#CC0000]/10 dark:bg-red-900/30 text-[#CC0000] dark:text-red-400 text-xs font-bold px-2 py-0.5 rounded-lg">
-                              {ind.bobot}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            <input
-                              type="number"
-                              min={0}
-                              max={100}
-                              value={scores[ind.field] === 0 ? '' : scores[ind.field]}
-                              placeholder="0"
-                              onChange={e => handleChange(ind.field, e.target.value)}
-                              className="w-20 text-center border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-xl px-2 py-1.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all"
-                            />
-                          </td>
-                          <td className="px-3 py-3 text-center text-gray-700 dark:text-slate-200 font-semibold text-sm">
-                            {contrib > 0 ? contrib.toFixed(2) : <span className="text-gray-300 dark:text-slate-600">—</span>}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-gray-50 dark:bg-slate-800 border-t-2 border-gray-200 dark:border-slate-700">
-                      <td colSpan={3} className="px-3 py-3 text-right font-bold text-gray-700 dark:text-slate-300 text-sm">
-                        Total Nilai Pembimbing Lapangan
-                        <span className="ml-2 text-xs text-gray-400 dark:text-slate-500 font-normal">(Bobot total: {TOTAL_BOBOT}%)</span>
-                      </td>
-                      <td className="px-3 py-3 text-center" />
-                      <td className="px-3 py-3 text-center">
-                        <span className="text-lg font-extrabold text-[#CC0000]">{total.toFixed(2)}</span>
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+              {/* Progress */}
+              <div className="flex items-center justify-between mb-5">
+                <p className="text-xs text-gray-500 dark:text-slate-400">Pilih satu deskripsi untuk setiap kriteria penilaian.</p>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${allSelected ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400'
+                  }`}>{selectedCount} / {INDICATORS.length} dipilih</span>
               </div>
 
-              {/* Feedback */}
-              {error && (
-                <p className="mt-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 rounded-xl px-3 py-2">
-                  {error}
-                </p>
-              )}
-              {success && (
-                <p className="mt-3 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/50 rounded-xl px-3 py-2">
-                  {success}
-                </p>
+              {/* Rubric criteria */}
+              <div className="space-y-6">
+                {INDICATORS.map((ind, idx) => {
+                  const selected = scores[ind.field];
+                  const isDone = selected !== UNSET;
+                  return (
+                    <div key={ind.field} className={`rounded-2xl border p-4 transition-colors ${isDone ? 'border-[#CC0000]/30 bg-red-50/30 dark:bg-red-900/10 dark:border-red-800/40' : 'border-gray-100 dark:border-slate-700'
+                      }`}>
+                      <div className="flex items-start gap-2 mb-3">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#CC0000]/10 dark:bg-red-900/40 text-[#CC0000] dark:text-red-400 text-[11px] font-extrabold flex items-center justify-center mt-0.5">
+                          {idx + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">{ind.code} &nbsp;·&nbsp; Bobot {ind.bobot}%</p>
+                          <p className="text-sm font-bold text-gray-800 dark:text-slate-100 leading-snug">{ind.label}</p>
+                        </div>
+                        {isDone && (
+                          <span className="flex-shrink-0 text-xs font-bold text-[#CC0000] bg-red-50 dark:bg-red-900/30 border border-[#CC0000]/20 px-2 py-0.5 rounded-lg">Nilai: {selected}</span>
+                        )}
+                      </div>
+                      <div className="space-y-2 pl-0 sm:pl-7 mt-2 sm:mt-0">
+                        {ind.options.map(opt => (
+                          <RubricCard
+                            key={opt.value}
+                            option={opt}
+                            selected={selected === opt.value}
+                            onSelect={() => handleSelect(ind.field, opt.value)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Summary */}
+              {allSelected && (
+                <div className="mt-5 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-700 rounded-2xl px-5 py-4 flex items-center justify-between border border-gray-200 dark:border-slate-600">
+                  <div>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 font-semibold">Total Nilai Pembimbing Lapang</p>
+                    <p className="text-[10px] text-gray-400 dark:text-slate-500">Bobot total: {TOTAL_BOBOT}%</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl font-extrabold text-gray-900 dark:text-slate-100">{total.toFixed(2)}</span>
+                  </div>
+                </div>
               )}
 
-              {/* Action buttons */}
+              {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 rounded-xl px-3 py-2">{error}</p>}
+              {success && <p className="mt-3 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/50 rounded-xl px-3 py-2">{success}</p>}
+
               <div className="mt-5 flex gap-3">
-                <button
-                  onClick={onClose}
-                  className="flex-1 px-4 py-3 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-2xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-                >
-                  Batal
-                </button>
+                <button onClick={onClose} className="flex-1 px-4 py-3 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-2xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">Batal</button>
                 <button
                   onClick={handleSubmit}
-                  disabled={saving}
-                  className="flex-1 px-4 py-3 bg-[#CC0000] text-white rounded-2xl text-sm font-bold hover:bg-[#A30000] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                  disabled={saving || !allSelected}
+                  className="flex-1 px-4 py-3 bg-[#CC0000] text-white rounded-2xl text-sm font-bold hover:bg-[#A30000] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {saving ? (
-                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Menyimpan...</>
-                  ) : (
-                    alreadyGraded ? 'Perbarui Nilai' : 'Simpan Nilai'
-                  )}
+                  {saving ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Menyimpan...</> : alreadyGraded ? 'Perbarui Nilai' : 'Simpan Nilai'}
                 </button>
               </div>
             </>
@@ -481,13 +597,15 @@ export default function MentorGradesPage() {
 
   if (error) {
     return (
-      <div className="p-6 max-w-lg mx-auto mt-8">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-center">
-          <p className="text-red-700 dark:text-red-400 font-semibold mb-3">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-[#CC0000] text-white rounded-xl text-sm font-bold"
-          >
+      <div className="flex items-center justify-center min-h-64 p-8">
+        <div className="text-center max-w-md bg-white dark:bg-slate-900 p-8 rounded-3xl border border-red-100 dark:border-red-900 shadow-sm">
+          <div className="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="text-red-600 dark:text-red-400 font-medium">{error}</p>
+          <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2.5 bg-[#CC0000] text-white rounded-xl text-sm font-bold hover:bg-[#A30000] transition-colors">
             Coba Lagi
           </button>
         </div>
@@ -496,155 +614,114 @@ export default function MentorGradesPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-5">
-
-      {/* Header */}
-      <div>
-        <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-2">
-            <li>
-              <span className="text-gray-500 dark:text-slate-400">Mentor</span>
-            </li>
-            <li>
-              <span className="text-gray-400 dark:text-slate-500 mx-1">/</span>
-            </li>
-            <li>
-              <span className="text-gray-900 dark:text-slate-100 font-semibold">Input Nilai</span>
-            </li>
-          </ol>
-        </nav>
-        <h1 className="text-2xl font-extrabold text-gray-900 dark:text-slate-100">Input Nilai Mahasiswa</h1>
-        <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Form Penilaian Pembimbing Lapang KPPM — Fakultas Rekayasa Industri</p>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 animate-in fade-in duration-500 py-6">
+      
+      {/* HEADER SECTION */}
+      <div className="bg-gradient-to-br from-[#CC0000] to-[#8B0000] rounded-3xl p-5 sm:p-8 text-white shadow-lg relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-black opacity-10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-row gap-4 items-start justify-between">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-3xl font-extrabold mb-1 sm:mb-2 tracking-tight">
+              Input Nilai Mahasiswa
+            </h1>
+            <p className="text-red-100 max-w-xl text-[11px] sm:text-sm md:text-base font-medium leading-relaxed pr-2">
+              Berikan penilaian kinerja mahasiswa selama melaksanakan Kerja Praktik di instansi Anda. Penilaian Anda sangat menentukan kelulusan mereka.
+            </p>
+          </div>
+          
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl sm:rounded-2xl px-4 py-3 sm:p-5 flex flex-col items-center justify-center flex-shrink-0">
+            <p className="text-red-200 text-[9px] sm:text-xs font-semibold mb-0.5 sm:mb-1 uppercase tracking-wider text-center">Dinilai</p>
+            <div className="flex items-baseline justify-center gap-0.5 sm:gap-1">
+              <span className="text-2xl sm:text-2xl md:text-xl lg:text-2xl font-bold">{gradedStudents}</span>
+              <span className="text-red-200 text-[10px] sm:text-sm font-semibold">/{totalStudents}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Statistik */}
-      {totalStudents > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Card Total */}
-          <div className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 dark:bg-blue-900/20 rounded-bl-full -mr-8 -mt-8 transition-transform duration-500 group-hover:scale-110" />
-            <div className="relative z-10 flex items-start justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-1">Total Mentee</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-extrabold text-gray-900 dark:text-slate-100 tracking-tight">{totalStudents}</span>
-                  <span className="text-sm font-semibold text-gray-400 dark:text-slate-500">orang</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 shadow-sm">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </div>
-            </div>
+      {/* FILTER & SEARCH */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-gray-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
-
-          {/* Card Sudah Dinilai */}
-          <div className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 dark:bg-green-900/20 rounded-bl-full -mr-8 -mt-8 transition-transform duration-500 group-hover:scale-110" />
-            <div className="relative z-10 flex items-start justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-1">Sudah Dinilai</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-extrabold text-green-600 dark:text-green-400 tracking-tight">{gradedStudents}</span>
-                  <span className="text-sm font-semibold text-gray-400 dark:text-slate-500">orang</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-400 flex items-center justify-center flex-shrink-0 shadow-sm">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Card Belum Dinilai */}
-          <div className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 dark:bg-amber-900/20 rounded-bl-full -mr-8 -mt-8 transition-transform duration-500 group-hover:scale-110" />
-            <div className="relative z-10 flex items-start justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-1">Belum Dinilai</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-extrabold text-amber-600 dark:text-amber-500 tracking-tight">{pendingStudents}</span>
-                  <span className="text-sm font-semibold text-gray-400 dark:text-slate-500">orang</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-500 flex items-center justify-center flex-shrink-0 shadow-sm">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </div>
-            </div>
-          </div>
+          <input
+            type="text"
+            placeholder="Cari nama atau NIM mahasiswa..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20 focus:border-[#CC0000] transition-all"
+          />
         </div>
-      )}
 
-      {/* Controls */}
-      {data && data.mentees.length > 0 && (
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="relative flex-1">
-            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input 
-              type="text" 
-              placeholder="Cari nama atau NIM..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20 focus:border-[#CC0000] transition-all"
-            />
-          </div>
-          <div className="flex gap-3">
-            <CustomSelect
-              value={filterStatus}
-              onChange={(v) => setFilterStatus(v as any)}
-              icon={<svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>}
-              options={[
-                { value: 'all', label: 'Semua Status' },
-                { value: 'graded', label: 'Sudah Dinilai' },
-                { value: 'ungraded', label: 'Belum Dinilai' }
-              ]}
-            />
-            <CustomSelect
-              value={sortBy}
-              onChange={(v) => setSortBy(v as any)}
-              icon={<svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>}
-              options={[
-                { value: 'name-asc', label: 'Nama (A-Z)' },
-                { value: 'name-desc', label: 'Nama (Z-A)' },
-                { value: 'nim-asc', label: 'NIM (Kecil-Besar)' },
-                { value: 'grade-desc', label: 'Nilai (Tertinggi)' },
-                { value: 'grade-asc', label: 'Nilai (Terendah)' }
-              ]}
-            />
-          </div>
+        <div className="grid grid-cols-2 md:flex md:flex-row gap-3 w-full md:w-auto">
+          <CustomSelect
+            value={filterStatus}
+            onChange={(val) => setFilterStatus(val as any)}
+            options={[
+              { value: 'all', label: 'Semua Status' },
+              { value: 'graded', label: 'Sudah Dinilai' },
+              { value: 'ungraded', label: 'Belum Dinilai' },
+            ]}
+            icon={<svg className="w-4 h-4 text-[#CC0000]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>}
+          />
+          <CustomSelect
+            value={sortBy}
+            onChange={(val) => setSortBy(val as any)}
+            options={[
+              { value: 'name-asc', label: 'Nama (A-Z)' },
+              { value: 'name-desc', label: 'Nama (Z-A)' },
+              { value: 'nim-asc', label: 'NIM' },
+              { value: 'grade-desc', label: 'Nilai Tertinggi' },
+              { value: 'grade-asc', label: 'Nilai Terendah' },
+            ]}
+            icon={<svg className="w-4 h-4 text-[#CC0000]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>}
+          />
         </div>
-      )}
+      </div>
 
-      {/* Daftar mahasiswa */}
-      {data && data.mentees.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-10 text-center">
-          <p className="text-gray-500 dark:text-slate-400 font-semibold text-sm">Tidak ada mahasiswa yang perlu dinilai</p>
-          <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">Mahasiswa akan muncul setelah pendaftaran disetujui.</p>
-        </div>
-      ) : processedMentees.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-10 text-center">
-          <p className="text-gray-500 dark:text-slate-400 font-semibold text-sm">Pencarian tidak ditemukan</p>
-          <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">Coba ubah kata kunci atau filter status.</p>
-        </div>
-      ) : (
+      {/* LIST MAHASISWA */}
+      {processedMentees.length > 0 ? (
         <div className="space-y-3">
-          {processedMentees.map((mentee, idx) => (
-            <MenteeRow
-              key={mentee.registration_id}
-              mentee={mentee}
-              idx={idx}
-              gradeMap={gradeMap}
-              onOpenForm={(m) => setActiveMentee(m)}
-            />
+          {processedMentees.map((m, i) => (
+            <MenteeRow key={m.registration_id} mentee={m} idx={i} gradeMap={gradeMap} onOpenForm={setActiveMentee} />
           ))}
         </div>
+      ) : (
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-gray-200 dark:border-slate-700 py-16 flex flex-col items-center justify-center text-center px-4">
+          <div className="w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-5">
+            <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-slate-200 mb-2">Tidak Ada Mahasiswa Ditemukan</h3>
+          <p className="text-gray-500 dark:text-slate-400 max-w-md">
+            {searchQuery || filterStatus !== 'all' 
+              ? 'Coba ubah kata kunci pencarian atau filter status untuk menemukan mahasiswa yang Anda cari.'
+              : 'Belum ada mahasiswa bimbingan yang dialokasikan kepada Anda.'}
+          </p>
+          {(searchQuery || filterStatus !== 'all') && (
+            <button
+              onClick={() => { setSearchQuery(''); setFilterStatus('all'); }}
+              className="mt-6 px-5 py-2.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 font-semibold rounded-xl transition-colors text-sm"
+            >
+              Reset Filter Pencarian
+            </button>
+          )}
+        </div>
       )}
 
-      {/* Form modal */}
+      {/* FORM MODAL */}
       {activeMentee && (
         <GradeForm
           mentee={activeMentee}
           onClose={() => setActiveMentee(null)}
           onSaved={() => {
-            if (data) loadGrades(data.mentees);
+            loadGrades(data?.mentees || []);
           }}
         />
       )}

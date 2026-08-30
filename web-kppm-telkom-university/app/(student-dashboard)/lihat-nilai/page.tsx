@@ -52,7 +52,7 @@ function ScoreBadge({ value }: { value: number }) {
     value >= 40 ? 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800' :
                   'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800';
   return (
-    <span className={`inline-block px-2.5 py-0.5 rounded-lg text-sm font-bold border ${color}`}>
+    <span className={`inline-block whitespace-nowrap px-2.5 py-0.5 rounded-lg text-sm font-bold border ${color}`}>
       {value.toFixed(1)}
     </span>
   );
@@ -81,11 +81,11 @@ function MentorGradeTable({ grades }: { grades: MyMentorGrades }) {
   return (
     <div>
       <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm min-w-[600px]">
           <thead>
-            <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
-              <th className="px-4 py-2.5 text-center w-8">No</th>
-              <th className="px-4 py-2.5 text-left">Indikator Penilaian</th>
+            <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 whitespace-nowrap">
+              <th className="px-4 py-2.5 text-center w-12 whitespace-nowrap">No</th>
+              <th className="px-4 py-2.5 text-left min-w-[250px]">Indikator Penilaian</th>
               <th className="px-4 py-2.5 text-center w-20">Bobot (%)</th>
               <th className="px-4 py-2.5 text-center w-24">Nilai</th>
               <th className="px-4 py-2.5 text-center w-28">Bobot × Nilai</th>
@@ -98,20 +98,20 @@ function MentorGradeTable({ grades }: { grades: MyMentorGrades }) {
               return (
                 <tr key={ind.key} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-4 py-3 text-center text-gray-400 text-sm">{i + 1}</td>
-                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-sm leading-snug">{ind.label}</td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-sm leading-snug min-w-[250px]">{ind.label}</td>
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <span className="text-sm font-bold text-[#CC0000] bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-lg">{ind.bobot}</span>
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <ScoreBadge value={val} />
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-200 font-semibold">{contrib.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-200 font-semibold whitespace-nowrap">{contrib.toFixed(2)}</td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
-            <tr className="bg-gray-50 dark:bg-slate-800 border-t-2 border-gray-200 dark:border-gray-700">
+            <tr className="bg-gray-50 dark:bg-slate-800 border-t-2 border-gray-200 dark:border-gray-700 whitespace-nowrap">
               <td colSpan={3} className="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300 text-sm">
                 Total Nilai Pembimbing Lapangan
                 <span className="ml-2 text-xs text-gray-400 font-normal">(Bobot total: {TOTAL_BOBOT}%)</span>
@@ -137,11 +137,11 @@ function LecturerGradeTable({ grades }: { grades: MyLecturerGrades }) {
   return (
     <div>
       <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm min-w-[600px]">
           <thead>
-            <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
-              <th className="px-4 py-2.5 text-center w-8">No</th>
-              <th className="px-4 py-2.5 text-left">Indikator Penilaian</th>
+            <tr className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 whitespace-nowrap">
+              <th className="px-4 py-2.5 text-center w-12 whitespace-nowrap">No</th>
+              <th className="px-4 py-2.5 text-left min-w-[250px]">Indikator Penilaian</th>
               <th className="px-4 py-2.5 text-center w-20">Bobot (%)</th>
               <th className="px-4 py-2.5 text-center w-24">Nilai</th>
               <th className="px-4 py-2.5 text-center w-28">Bobot × Nilai</th>
@@ -154,20 +154,20 @@ function LecturerGradeTable({ grades }: { grades: MyLecturerGrades }) {
               return (
                 <tr key={ind.key} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-4 py-3 text-center text-gray-400 text-sm">{i + 1}</td>
-                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-sm leading-snug">{ind.label}</td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-sm leading-snug min-w-[250px]">{ind.label}</td>
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <span className="text-sm font-bold text-[#CC0000] bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-lg">{ind.bobot}</span>
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <ScoreBadge value={val} />
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-200 font-semibold">{contrib.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-200 font-semibold whitespace-nowrap">{contrib.toFixed(2)}</td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
-            <tr className="bg-gray-50 dark:bg-slate-800 border-t-2 border-gray-200 dark:border-gray-700">
+            <tr className="bg-gray-50 dark:bg-slate-800 border-t-2 border-gray-200 dark:border-gray-700 whitespace-nowrap">
               <td colSpan={3} className="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300 text-sm">
                 Total Nilai Pembimbing Akademik
                 <span className="ml-2 text-xs text-gray-400 font-normal">(Bobot total: {TOTAL_BOBOT}%)</span>
@@ -326,7 +326,7 @@ export default function LihatNilaiPage() {
 
           {/* ── Desktop Table ── */}
           <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="bg-[#f4f4f6] dark:bg-gray-700/50 border-b-2 border-[#e5e7eb] dark:border-gray-600">
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-r border-[#e5e7eb] dark:border-gray-600">Tanggal Pengajuan</th>
@@ -377,18 +377,18 @@ export default function LihatNilaiPage() {
 
 
           {/* Footer */}
-          <div className="px-6 py-3 flex items-center justify-between gap-3 bg-[#f4f4f6] dark:bg-gray-800 border-t-2 border-[#e5e7eb] dark:border-gray-700">
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+          <div className="px-5 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center sm:justify-between gap-3 bg-[#f4f4f6] dark:bg-gray-800 border-t-2 border-[#e5e7eb] dark:border-gray-700">
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center sm:text-left">
               {!data ? 'Tidak ada data' : 'Menampilkan 1–1 dari 1 data'}
             </p>
-            <div className="flex items-center gap-1">
-              <button disabled className="px-3 py-1 text-xs text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 cursor-not-allowed">
+            <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center sm:justify-end">
+              <button disabled className="px-3 py-1.5 text-xs text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 cursor-not-allowed whitespace-nowrap">
                 Sebelumnya
               </button>
               {data && (
-                <button className="px-3 py-1 text-xs font-bold bg-[#CC0000] text-white rounded-lg">1</button>
+                <button className="px-3 py-1.5 text-xs font-bold bg-[#CC0000] text-white rounded-lg">1</button>
               )}
-              <button disabled className="px-3 py-1 text-xs text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 cursor-not-allowed">
+              <button disabled className="px-3 py-1.5 text-xs text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 cursor-not-allowed whitespace-nowrap">
                 Selanjutnya
               </button>
             </div>
@@ -431,7 +431,7 @@ export default function LihatNilaiPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setView('list')}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
           >
             <ArrowLeftIcon />
             Kembali
