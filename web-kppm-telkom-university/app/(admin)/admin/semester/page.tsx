@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAdminToken, getAdminSemesters, createAdminSemester, toggleAdminSemesterStatus } from '@/lib/api';
 
@@ -18,32 +18,22 @@ interface Semester {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Generate daftar tahun ajaran: 3 tahun lalu s.d. 2 tahun ke depan */
-function generateYearOptions(): { value: string; label: string }[] {
-  const now  = new Date().getFullYear();
-  const opts = [];
-  for (let y = now - 3; y <= now + 2; y++) {
-    const short = `${String(y).slice(2)}${String(y + 1).slice(2)}`; // e.g. "2526"
-    opts.push({ value: short, label: `${y}/${y + 1}` });
-  }
-  return opts.reverse(); // terbaru di atas
-}
+
 
 const SEMESTER_TYPES = [
   { value: '1', label: 'Ganjil' },
   { value: '2', label: 'Genap' },
 ];
 
-function buildCode(year: string, type: string) {
-  if (!year || !type) return '';
-  return `${year}-${type}`;
+function buildCode(year1: string, year2: string, type: string) {
+  if (!year1 || !year2 || !type) return '';
+  return `${year1.slice(2)}${year2.slice(2)}-${type}`;
 }
 
-function buildLabel(year: string, type: string) {
-  if (!year || !type) return '';
-  const yearLabel = `${2000 + parseInt(year.slice(0, 2))}/${2000 + parseInt(year.slice(2))}`;
+function buildLabel(year1: string, year2: string, type: string) {
+  if (!year1 || !year2 || !type) return '';
   const typeLabel = type === '1' ? 'Ganjil' : 'Genap';
-  return `Semester ${typeLabel} ${yearLabel}`;
+  return `Semester ${typeLabel} ${year1}/${year2}`;
 }
 
 function formatDate(dateStr: string) {
@@ -86,6 +76,100 @@ const AlertIcon = () => (
     <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
   </svg>
 );
+const ChevronLeftIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+const ChevronRightIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
+
+// ─── Custom Year Picker ───────────────────────────────────────────────────────
+
+function YearPicker({ value, onChange, allowedValues, disabled, placeholder }: { value: string, onChange: (v: string) => void, allowedValues?: string[], disabled?: boolean, placeholder?: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const currentYear = new Date().getFullYear();
+  // Ensure the base year snaps to a multiple of 12 for the grid pagination
+  const initialBase = value ? parseInt(value) - (parseInt(value) % 12) : currentYear - (currentYear % 12);
+  const [baseYear, setBaseYear] = useState(initialBase);
+
+  // Sync baseYear when value changes externally
+  useEffect(() => {
+    if (value && isOpen) {
+      setBaseYear(parseInt(value) - (parseInt(value) % 12));
+    }
+  }, [value, isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const years = Array.from({ length: 12 }, (_, i) => (baseYear + i).toString());
+
+  return (
+    <div className="relative w-full" ref={containerRef}>
+      <div
+        onClick={() => { if (!disabled) setIsOpen(!isOpen); }}
+        className={`w-full px-4 py-3 border rounded-xl text-sm transition-all flex justify-between items-center ${
+          disabled 
+            ? 'bg-gray-100 dark:bg-slate-800/50 border-gray-200 dark:border-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed'
+            : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 cursor-pointer focus-within:ring-2 focus-within:ring-[#CC0000]/30 focus-within:border-[#CC0000]'
+        }`}
+      >
+        <span className="whitespace-nowrap">{value || placeholder || 'Pilih Tahun'}</span>
+        <CalendarIcon />
+      </div>
+      {isOpen && !disabled && (
+        <div className="absolute top-full mt-2 left-0 min-w-[240px] bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-2xl rounded-xl p-3 z-50 animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between mb-3 px-1 border-b border-gray-100 dark:border-slate-700 pb-2">
+            <button type="button" onClick={() => setBaseYear(b => b - 12)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg text-gray-500 transition-colors">
+              <ChevronLeftIcon />
+            </button>
+            <div className="text-xs font-extrabold text-gray-700 dark:text-slate-300 uppercase tracking-widest">
+              {baseYear} - {baseYear + 11}
+            </div>
+            <button type="button" onClick={() => setBaseYear(b => b + 12)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg text-gray-500 transition-colors">
+              <ChevronRightIcon />
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {years.map(y => {
+              const isAllowed = !allowedValues || allowedValues.includes(y);
+              return (
+                <button
+                  key={y}
+                  type="button"
+                  disabled={!isAllowed}
+                  onClick={() => { onChange(y); setIsOpen(false); }}
+                  className={`p-2 text-sm rounded-lg font-bold transition-all ${
+                    !isAllowed
+                      ? 'text-gray-300 dark:text-slate-600 bg-gray-50/50 dark:bg-slate-800/30 cursor-not-allowed'
+                      : value === y
+                        ? 'bg-[#CC0000] text-white shadow-md shadow-red-500/20'
+                        : 'text-gray-700 dark:text-slate-300 bg-gray-50 dark:bg-slate-800/50 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-[#CC0000]'
+                  }`}
+                >
+                  {y}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -98,15 +182,16 @@ export default function AdminSemesterPage() {
   const [togglingId, setTogglingId]   = useState<number | null>(null);
 
   // ── Form state
-  const [selectedYear, setSelectedYear]   = useState('');
+  const [selectedYear1, setSelectedYear1] = useState('');
+  const [selectedYear2, setSelectedYear2] = useState('');
   const [selectedType, setSelectedType]   = useState('');
   const [creating, setCreating]           = useState(false);
   const [formError, setFormError]         = useState('');
   const [formSuccess, setFormSuccess]     = useState('');
+  const [toggleError, setToggleError]     = useState('');
 
-  const yearOptions     = generateYearOptions();
-  const previewCode     = buildCode(selectedYear, selectedType);
-  const previewLabel    = buildLabel(selectedYear, selectedType);
+  const previewCode       = buildCode(selectedYear1, selectedYear2, selectedType);
+  const previewLabel      = buildLabel(selectedYear1, selectedYear2, selectedType);
 
   useEffect(() => {
     if (!getAdminToken()) { router.replace('/admin-login'); return; }
@@ -126,8 +211,18 @@ export default function AdminSemesterPage() {
   // ── Create semester
   const handleCreate = async () => {
     setFormError(''); setFormSuccess('');
-    if (!selectedYear || !selectedType) {
-      setFormError('Silakan pilih tahun ajaran dan jenis semester terlebih dahulu.');
+    if (!selectedYear1 || !selectedYear2 || !selectedType) {
+      setFormError('Silakan lengkapi tahun ajaran dan jenis semester terlebih dahulu.');
+      return;
+    }
+    if (parseInt(selectedYear2) !== parseInt(selectedYear1) + 1) {
+      setFormError('Tahun akhir harus tepat 1 tahun setelah tahun awal (contoh: 2024/2025).');
+      return;
+    }
+    // Cegah pembuatan jika masih ada semester aktif
+    const activeSem = semesters.find(s => s.is_active === 1);
+    if (activeSem) {
+      setFormError(`Nonaktifkan semester "${activeSem.code}" terlebih dahulu sebelum membuat semester baru.`);
       return;
     }
     setCreating(true);
@@ -135,7 +230,8 @@ export default function AdminSemesterPage() {
       const res = await createAdminSemester(previewCode, previewLabel);
       if (res.success) {
         setFormSuccess(`Semester "${previewCode}" berhasil dibuat.`);
-        setSelectedYear('');
+        setSelectedYear1('');
+        setSelectedYear2('');
         setSelectedType('');
         fetchSemesters();
       } else {
@@ -151,6 +247,7 @@ export default function AdminSemesterPage() {
   // ── Toggle status
   const handleToggle = async (sem: Semester) => {
     setTogglingId(sem.semester_id);
+    setToggleError('');
     try {
       const res = await toggleAdminSemesterStatus(sem.semester_id);
       if (res.success) {
@@ -161,13 +258,17 @@ export default function AdminSemesterPage() {
               : s
           )
         );
+      } else {
+        setToggleError(res.message || 'Gagal mengubah status semester.');
       }
-    } catch { /* ignore */ }
-    finally { setTogglingId(null); }
+    } catch {
+      setToggleError('Tidak dapat terhubung ke server.');
+    } finally { setTogglingId(null); }
   };
 
   const activeSemesters   = semesters.filter(s => s.is_active === 1);
   const inactiveSemesters = semesters.filter(s => s.is_active === 0);
+  const hasActiveSemester = activeSemesters.length > 0;
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-5">
@@ -217,23 +318,48 @@ export default function AdminSemesterPage() {
           Buat Semester Baru
         </h2>
 
+        {/* Warning: ada semester aktif */}
+        {hasActiveSemester && (
+          <div className="mb-5 px-4 py-3.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-xl flex items-start gap-3">
+            <span className="mt-0.5 flex-shrink-0 text-amber-500"><AlertIcon /></span>
+            <div>
+              <p className="text-sm font-bold text-amber-700 dark:text-amber-400">Semester aktif terdeteksi</p>
+              <p className="text-xs text-amber-600 dark:text-amber-500 mt-0.5">
+                Nonaktifkan semester <strong>{activeSemesters[0].code}</strong> di daftar bawah sebelum membuat semester baru.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          {/* Dropdown Tahun Ajaran */}
+          {/* Dropdown Tahun Ajaran Ganda */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
               Tahun Ajaran
             </label>
-            <select
-              id="select-tahun-ajaran"
-              value={selectedYear}
-              onChange={e => { setSelectedYear(e.target.value); setFormError(''); setFormSuccess(''); }}
-              className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl text-sm bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all"
-            >
-              <option value="">-- Pilih Tahun Ajaran --</option>
-              {yearOptions.map(y => (
-                <option key={y.value} value={y.value}>{y.label}</option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <YearPicker
+                placeholder="Tahun"
+                value={selectedYear1}
+                onChange={val => {
+                  setSelectedYear1(val); 
+                  setFormError(''); 
+                  setFormSuccess(''); 
+                  setSelectedYear2((parseInt(val) + 1).toString());
+                }}
+              />
+              <span className="text-gray-400 font-bold">/</span>
+              <div
+                className={`w-full px-4 py-3 border rounded-xl text-sm transition-all flex justify-between items-center ${
+                  !selectedYear1
+                    ? 'bg-gray-100 dark:bg-slate-800/50 border-gray-200 dark:border-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed'
+                    : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 font-bold cursor-not-allowed'
+                }`}
+              >
+                <span className="whitespace-nowrap">{selectedYear2 || 'Tahun'}</span>
+                <CalendarIcon />
+              </div>
+            </div>
           </div>
 
           {/* Dropdown Jenis Semester */}
@@ -299,13 +425,22 @@ export default function AdminSemesterPage() {
         <button
           id="btn-create-semester"
           onClick={handleCreate}
-          disabled={creating || !previewCode}
+          disabled={creating || !previewCode || hasActiveSemester}
           className="flex items-center gap-2 px-6 py-3 bg-[#CC0000] hover:bg-[#A30000] disabled:bg-gray-200 dark:disabled:bg-slate-700 disabled:text-gray-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all duration-200 text-sm shadow-sm hover:shadow-md"
         >
           <PlusIcon />
           {creating ? 'Membuat...' : 'Buat Semester'}
         </button>
       </div>
+
+      {/* Toggle error banner */}
+      {toggleError && (
+        <div className="px-4 py-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm flex items-start gap-2.5">
+          <span className="mt-0.5 flex-shrink-0"><AlertIcon /></span>
+          <span>{toggleError}</span>
+          <button type="button" onClick={() => setToggleError('')} className="ml-auto text-red-400 hover:text-red-600 font-bold">✕</button>
+        </div>
+      )}
 
       {/* ── Daftar Semester ── */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">

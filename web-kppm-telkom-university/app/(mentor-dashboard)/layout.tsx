@@ -124,13 +124,22 @@ export default function MentorDashboardLayout({ children }: { children: React.Re
     if (!user || user.role !== 'mentor') { router.replace('/login'); return; }
     setMentor(user as MentorUser);
 
-    // Ambil nama asli mentor dari backend (internship_registrations)
+    // Ambil nama asli mentor dari backend + cek apakah akses masih aktif
+    // Jika response gagal DENGAN status 401/403 → akses dicabut/session expired → paksa logout
     getMentorDashboard().then((res) => {
+      if (!res.success && (res.httpStatus === 401 || res.httpStatus === 403)) {
+        removeToken();
+        router.replace('/login');
+        return;
+      }
       const mentorName = res.data?.mentor?.name;
-      if (res.success && mentorName) {
+      if (mentorName) {
         setMentor((prev) => prev ? { ...prev, name: mentorName } : null);
       }
-    }).catch(console.error);
+    }).catch(() => {
+      removeToken();
+      router.replace('/login');
+    });
   }, [router]);
 
   // Close dropdown saat klik di luar

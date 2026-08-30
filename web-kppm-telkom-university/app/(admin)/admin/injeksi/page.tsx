@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useCallback } from 'react';
 import { injectStudents, injectLecturers, InjectResult } from '@/lib/api';
@@ -73,14 +73,14 @@ function downloadTemplate(type: TabType) {
   if (type === 'mahasiswa') {
     sheetName = 'Data Mahasiswa';
     data = [
-      { nim: '1234567890', student_name: 'Budi Santoso', class: 'IF-46-01' },
-      { nim: '0987654321', student_name: 'Siti Rahayu', class: 'IF-46-02' },
+      { 'NIM': '1234567890', 'Nama Lengkap': 'Budi Santoso', 'Kelas': 'IF-46-01', 'Email': 'budi@student.telkomuniversity.ac.id' },
+      { 'NIM': '0987654321', 'Nama Lengkap': 'Siti Rahayu', 'Kelas': 'IF-46-02', 'Email': '' },
     ];
   } else {
     sheetName = 'Data Dosen';
     data = [
-      { nip: '19800101200501001', lecturer_name: 'Dr. Ahmad Fauzi', email: 'ahmad@telkomuniversity.ac.id' },
-      { nip: '19750215200312002', lecturer_name: 'Prof. Dewi Lestari', email: '' },
+      { 'NIP': '19800101200501001', 'Nama Dosen': 'Dr. Ahmad Fauzi', 'Kode Dosen': 'AFZ', 'Email': 'ahmad@telkomuniversity.ac.id' },
+      { 'NIP': '19750215200312002', 'Nama Dosen': 'Prof. Dewi Lestari', 'Kode Dosen': 'DWL', 'Email': '' },
     ];
   }
 
@@ -458,11 +458,13 @@ const STUDENT_COLUMNS = [
   { key: 'nim', label: 'NIM', required: true, desc: 'Nomor Induk Mahasiswa — dijadikan password default' },
   { key: 'student_name', label: 'Nama', required: true, desc: 'Nama lengkap mahasiswa' },
   { key: 'class', label: 'Kelas', required: true, desc: 'Kode kelas, misal: IF-46-01' },
+  { key: 'email', label: 'Email', required: false, desc: 'Email mahasiswa (opsional)' },
 ];
 
 const LECTURER_COLUMNS = [
   { key: 'nip', label: 'NIP', required: true, desc: 'Nomor Induk Pegawai — dijadikan password default' },
   { key: 'lecturer_name', label: 'Nama', required: true, desc: 'Nama lengkap dosen' },
+  { key: 'lecturer_code', label: 'Kode Dosen', required: true, desc: 'Kode dosen (maks. 3 karakter, kapital)' },
   { key: 'email', label: 'Email', required: false, desc: 'Email dosen (opsional)' },
 ];
 

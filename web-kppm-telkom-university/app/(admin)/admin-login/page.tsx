@@ -213,7 +213,7 @@ export default function AdminLoginPage() {
       <div
         className="relative z-10 w-full max-w-5xl flex rounded-2xl sm:rounded-3xl overflow-hidden"
         style={{
-          minHeight: '520px',
+          minHeight: '580px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 32px 80px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.35)',
         }}
       >

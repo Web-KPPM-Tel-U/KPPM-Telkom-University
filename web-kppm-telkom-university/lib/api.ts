@@ -169,6 +169,15 @@ export const getStudentProfile = async (): Promise<ApiResponse<StudentUser>> => 
   return res.json();
 };
 
+export const updateStudentProfile = async (data: { email: string }): Promise<ApiResponse<null>> => {
+  const res = await fetch(`${API_BASE_URL}/student/profile`, {
+    method: 'PATCH',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
 export const getStudentDashboard = async (): Promise<ApiResponse<unknown>> => {
   const res = await fetch(`${API_BASE_URL}/student/dashboard`, {
     headers: authHeaders(),
@@ -384,6 +393,26 @@ export interface ActiveSemester {
   label: string;
 }
 
+
+
+export const addAdminStudent = async (data: { nim: string; student_name: string; class: string; email?: string }): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/admin/students/add`, {
+    method: 'POST',
+    headers: { ...adminAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const addAdminLecturer = async (data: { nip: string; lecturer_name: string; lecturer_code?: string; email?: string }): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/admin/lecturers/add`, {
+    method: 'POST',
+    headers: { ...adminAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
 export const getActiveSemesters = async (): Promise<ApiResponse<ActiveSemester[]>> => {
   const res = await fetch(`${API_BASE_URL}/student/semesters/active`, {
     headers: authHeaders(),
@@ -510,11 +539,12 @@ export interface MentorDashboardData {
 /**
  * Ambil dashboard mentor (data mahasiswa yang dibimbing)
  */
-export const getMentorDashboard = async (): Promise<ApiResponse<MentorDashboardData>> => {
+export const getMentorDashboard = async (): Promise<ApiResponse<MentorDashboardData> & { httpStatus?: number }> => {
   const res = await fetch(`${API_BASE_URL}/student/mentor/dashboard`, {
     headers: authHeaders(),
   });
-  return res.json();
+  const data = await res.json();
+  return { ...data, httpStatus: res.status };
 };
 
 /**
@@ -871,11 +901,26 @@ export const toggleAdminSemesterStatus = async (id: number): Promise<ApiResponse
  */
 export const updateAdminLecturer = async (
   nip: string,
-  data: { lecturer_name?: string; email?: string }
+  data: { lecturer_name?: string; lecturer_code?: string; email?: string }
 ): Promise<ApiResponse<any>> => {
   const res = await fetch(`${API_BASE_URL}/admin/lecturers/${nip}`, {
     method: 'PATCH',
     headers: adminAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+/**
+ * Update data mahasiswa (nama, kelas, email) — hanya PIC
+ */
+export const updateAdminStudent = async (
+  nim: string,
+  data: { student_name?: string; class?: string; email?: string }
+): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/admin/students/${nim}`, {
+    method: 'PATCH',
+    headers: { ...adminAuthHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   return res.json();

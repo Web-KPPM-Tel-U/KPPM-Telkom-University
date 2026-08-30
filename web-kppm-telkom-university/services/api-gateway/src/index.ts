@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -20,6 +21,29 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json());
+
+// ─── Rate Limiters ────────────────────────────────────────────────────────────
+
+// Global: semua request (anti-DDoS umum)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 menit
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak permintaan. Coba lagi dalam 15 menit.' },
+});
+
+// Upload: untuk endpoint upload file besar
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 jam
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak upload. Coba lagi dalam 1 jam.' },
+});
+
+app.use(globalLimiter);
+
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req: Request, res: Response) => {
@@ -100,8 +124,14 @@ async function proxyRequest(
 // ─── Proxy Routes ─────────────────────────────────────────────────────────────
 
 // /auth/* → Auth Service (port 4001)
+// Rate limiting granular ditangani langsung oleh auth-service per endpoint
 app.all('/auth/*', (req: Request, res: Response) => {
   proxyRequest(req, res, AUTH_SERVICE);
+});
+
+// /student/kppm/results → Student Service — rate limit upload
+app.all('/student/kppm/results', uploadLimiter, (req: Request, res: Response) => {
+  proxyRequest(req, res, STUDENT_SERVICE);
 });
 
 // /student/* → Student Service (port 4002)

@@ -1,10 +1,11 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getStudentProfile,
   changeStudentPassword,
+  updateStudentProfile,
   getToken,
   getUser,
   type StudentUser,
@@ -118,6 +119,41 @@ export default function PengaturanPage() {
 
   const [activeTab, setActiveTab]         = useState<'profil' | 'keamanan'>('profil');
   const strength = getPasswordStrength(newPw);
+
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [editEmailForm, setEditEmailForm] = useState('');
+  const [emailSaving, setEmailSaving] = useState(false);
+
+  const handleEditEmail = () => {
+    setEditEmailForm(profile?.email || '');
+    setIsEditingEmail(true);
+  };
+
+  const handleSaveEmail = async () => {
+    setEmailSaving(true);
+    try {
+      const res = await updateStudentProfile({ email: editEmailForm });
+      if (res.success) {
+         setProfile(prev => prev ? { ...prev, email: editEmailForm } : null);
+         
+         const user = getUser();
+         if (user) {
+           (user as any).email = editEmailForm;
+           localStorage.setItem('kppm_user', JSON.stringify(user));
+         }
+         setIsEditingEmail(false);
+         setPwSuccess('Email berhasil diperbarui!');
+         setTimeout(() => setPwSuccess(''), 3000);
+      } else {
+         setProfileError(res.message || 'Gagal mengubah email.');
+         setTimeout(() => setProfileError(''), 3000);
+      }
+    } catch {
+      setProfileError('Terjadi kesalahan server.');
+      setTimeout(() => setProfileError(''), 3000);
+    }
+    setEmailSaving(false);
+  };
 
   useEffect(() => {
     if (!getToken()) { router.replace('/login'); return; }
@@ -251,11 +287,25 @@ export default function PengaturanPage() {
                 <>
                   <ProfileRow label="Nama Lengkap"  value={profile?.name || '-'} />
                   <ProfileRow label="NIM"            value={profile?.nim || '-'} />
-                  <ProfileRow label="Email"          value={profile?.email || '-'} />
+                  <div className="flex flex-col sm:flex-row sm:items-center py-2.5 border-b border-gray-50 dark:border-slate-800 last:border-0 transition-colors gap-2">
+                    <span className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider w-28 sm:w-36 flex-shrink-0 leading-tight">Email</span>
+                    {isEditingEmail ? (
+                      <div className="flex-1 flex gap-2 items-center">
+                         <input type="email" value={editEmailForm} onChange={e => setEditEmailForm(e.target.value)} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded focus:outline-none focus:border-[#CC0000]" placeholder="Email aktif" />
+                         <button onClick={handleSaveEmail} disabled={emailSaving} className="text-xs font-semibold bg-[#CC0000] text-white px-3 py-1.5 rounded hover:bg-[#a00000] disabled:bg-gray-400 transition-colors whitespace-nowrap flex-shrink-0">Simpan</button>
+                         <button onClick={() => setIsEditingEmail(false)} disabled={emailSaving} className="text-xs font-semibold bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-300 px-3 py-1.5 rounded hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors whitespace-nowrap flex-shrink-0">Batal</button>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex justify-between items-center group">
+                        <span className="text-sm text-gray-800 dark:text-slate-200 font-medium break-all">{profile?.email || '-'}</span>
+                        <button onClick={handleEditEmail} className="text-[#CC0000] transition-colors hover:bg-red-100 text-xs font-semibold px-3 py-1 bg-red-50 dark:bg-red-500/10 rounded whitespace-nowrap flex-shrink-0">
+                          Edit
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <ProfileRow label="Kelas"          value={profile?.class || '-'} />
                   <ProfileRow label="Program Studi"  value={profile ? getProdiFromClass(profile.class) : '-'} />
-                  <ProfileRow label="Fakultas"       value="Fakultas Informatika" />
-                  <ProfileRow label="Universitas"    value="Telkom University" />
                 </>
               )}
 

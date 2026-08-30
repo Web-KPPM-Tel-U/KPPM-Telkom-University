@@ -810,6 +810,35 @@ export const getKpResults = async (req: AuthenticatedRequest, res: Response): Pr
   }
 };
 
+// ─── Helper: Cabut Akses Mentor ───────────────────────────────────────────────
+
+/**
+ * Setelah mahasiswa mengupload dokumen hasil KP, akses mentor dicabut:
+ * 1. Set mentor_access_revoked = 1 pada registration
+ * 2. Hapus semua session aktif mentor
+ * 3. Hapus semua OTP pending mentor
+ * Mentor tidak dapat login kembali ke sistem setelah ini.
+ */
+const revokeMentorAccess = async (registrationId: number): Promise<void> => {
+  try {
+    await pool.execute(
+      'UPDATE internship_registrations SET mentor_access_revoked = 1 WHERE registration_id = ?',
+      [registrationId]
+    );
+    await pool.execute(
+      'DELETE FROM mentor_sessions WHERE registration_id = ?',
+      [registrationId]
+    );
+    await pool.execute(
+      'DELETE FROM mentor_otps WHERE registration_id = ?',
+      [registrationId]
+    );
+    console.log(`[KPPM] Akses mentor dicabut untuk registration_id=${registrationId}`);
+  } catch (err: any) {
+    console.error(`[KPPM] Gagal mencabut akses mentor (registration_id=${registrationId}):`, err.message);
+  }
+};
+
 // ─── Upload KP Results ────────────────────────────────────────────────────────
 
 /**
@@ -907,6 +936,10 @@ export const uploadKpResults = async (req: AuthenticatedRequest, res: Response):
          WHERE registration_id = ?`,
         [certPath, fieldPath, acadPath, iaPath, registrationId]
       );
+
+      // Cabut akses mentor (update dokumen berarti proses selesai)
+      await revokeMentorAccess(registrationId);
+
       res.status(200).json({ success: true, message: 'Dokumen hasil KP berhasil diperbarui.' });
     } else {
       // Insert dokumen baru
@@ -916,6 +949,10 @@ export const uploadKpResults = async (req: AuthenticatedRequest, res: Response):
          VALUES (?, ?, ?, ?, ?)`,
         [registrationId, certPath, fieldPath, acadPath, iaPath]
       );
+
+      // Cabut akses mentor setelah mahasiswa upload pertama kali
+      await revokeMentorAccess(registrationId);
+
       res.status(201).json({ success: true, message: 'Dokumen hasil KP berhasil diupload.' });
     }
   } catch (err: any) {
