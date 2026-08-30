@@ -6,6 +6,8 @@ import rateLimit from 'express-rate-limit';
 import adminRoutes from './routes/adminRoutes';
 
 const app = express();
+// Percayai header X-Forwarded-For dari API Gateway supaya rate limiter membaca IP klien asli
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4003;
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
@@ -16,10 +18,11 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(express.json());
 
-// ─── Rate Limiter (Admin panel — lebih ketat) ────────────────────────────────
+// ─── Rate Limiter (Admin panel) ──────────────────────────────────────────────────
+// Admin panel hanya diakses PIC/admin (bukan mahasiswa), 500/15mnt sudah lebih dari cukup
 const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Terlalu banyak permintaan admin. Coba lagi dalam 15 menit.' },

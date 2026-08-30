@@ -59,6 +59,7 @@ const MIGRATIONS = [
     sql: `CREATE TABLE IF NOT EXISTS internship_management.lecturers (
       nip              VARCHAR(30)  NOT NULL PRIMARY KEY,
       lecturer_name    VARCHAR(100) NOT NULL,
+      lecturer_code    VARCHAR(3)   NULL DEFAULT NULL,
       email            VARCHAR(100) NULL DEFAULT NULL,
       password         VARCHAR(255) NOT NULL,
       is_verified      TINYINT(1)   NOT NULL DEFAULT 0,
@@ -91,6 +92,7 @@ const MIGRATIONS = [
       approved_at  DATETIME NULL,
       cancelled_at DATETIME NULL,
       rejected_at  DATETIME NULL,
+      mentor_access_revoked TINYINT(1) DEFAULT 0,
       created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       CONSTRAINT fk_registration_student
@@ -246,6 +248,14 @@ const MIGRATIONS = [
   {
     description: 'Add is_active column to students (if missing)',
     sql: `ALTER TABLE internship_management.students
+          ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1 AFTER password_changed;`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME
+  },
+
+  // ── v4f: Add is_active column to lecturers (if missing) ────────────────────
+  {
+    description: 'Add is_active column to lecturers (if missing)',
+    sql: `ALTER TABLE internship_management.lecturers
           ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1 AFTER password_changed;`,
     ignoreErrorCode: 1060, // ER_DUP_FIELDNAME
   },

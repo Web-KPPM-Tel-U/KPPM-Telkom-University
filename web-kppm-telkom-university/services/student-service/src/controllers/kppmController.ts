@@ -502,7 +502,8 @@ export const getLecturerStudents = async (
   const offset = Number(req.query.offset) || 0;
 
   try {
-    // Ambil semua pengajuan yang ditujukan ke dosen ini, beserta data mahasiswa
+    // Ambil semua mahasiswa yang ditugaskan ke dosen ini (dari students) 
+    // DAN/ATAU pengajuan yang ditujukan ke dosen ini (dari internship_registrations)
     const [rows] = await pool.execute<any[]>(
       `SELECT
          s.nim,
@@ -528,20 +529,25 @@ export const getLecturerStudents = async (
          r.mentor_phone,
          r.toss_cover_letter_file,
          IF(ls.registration_id IS NOT NULL, 1, 0) AS is_graded
-       FROM internship_registrations r
-       JOIN students s ON s.nim = r.nim
+       FROM students s
+       LEFT JOIN lecturers l ON l.nip = ?
+       LEFT JOIN internship_registrations r ON s.nim = r.nim
        LEFT JOIN lecturer_scores ls ON ls.registration_id = r.registration_id
-       WHERE r.lecturer_nip = ?
-       ORDER BY r.submitted_at DESC
+       WHERE s.assigned_lecturer_code = l.lecturer_code
+          OR r.lecturer_nip = ?
+       ORDER BY r.submitted_at DESC, s.nim ASC
        LIMIT ? OFFSET ?`,
-      [lecturerNip, limit, offset]
+      [lecturerNip, lecturerNip, limit, offset]
     );
 
     const [countRows] = await pool.execute<any[]>(
-      `SELECT COUNT(*) AS total
-       FROM internship_registrations
-       WHERE lecturer_nip = ?`,
-      [lecturerNip]
+      `SELECT COUNT(DISTINCT s.nim) AS total
+       FROM students s
+       LEFT JOIN lecturers l ON l.nip = ?
+       LEFT JOIN internship_registrations r ON s.nim = r.nim
+       WHERE s.assigned_lecturer_code = l.lecturer_code
+          OR r.lecturer_nip = ?`,
+      [lecturerNip, lecturerNip]
     );
 
     res.status(200).json({

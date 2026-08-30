@@ -25,18 +25,21 @@ app.use(express.json());
 // ─── Rate Limiters ────────────────────────────────────────────────────────────
 
 // Global: semua request (anti-DDoS umum)
+// Kalkulasi: 600 user × rata-rata 3 req/menit × 15 menit = ~27000, tapi burst normalnya jauh lebih sedikit
+// Limit 2000/IP/15mnt = sudah sangat aman untuk user normal, tapi mencegah script abuse
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 menit
-  max: 300,
+  max: 2000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Terlalu banyak permintaan. Coba lagi dalam 15 menit.' },
 });
 
 // Upload: untuk endpoint upload file besar
+// 50/jam per IP = masih sangat longgar untuk 1 mahasiswa (realistisnya upload 1-3x saja)
 const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 jam
-  max: 20,
+  max: 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Terlalu banyak upload. Coba lagi dalam 1 jam.' },
@@ -79,7 +82,11 @@ async function proxyRequest(
   const isMultipart = contentType.includes('multipart/form-data');
 
   try {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      // Teruskan IP asli klien ke microservice supaya rate limiter di sana
+      // tidak melihat semua request dari 1 IP (localhost si Gateway)
+      'X-Forwarded-For': (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '',
+    };
 
     if (req.headers.authorization) {
       headers['Authorization'] = req.headers.authorization;
