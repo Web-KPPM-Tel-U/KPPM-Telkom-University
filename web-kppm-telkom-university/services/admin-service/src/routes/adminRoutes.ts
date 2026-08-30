@@ -15,6 +15,7 @@ import {
   createStudent,
   createLecturer,
   updateStudent,
+  assignLecturerToStudent,
 } from '../controllers/adminController';
 import { verifyAdminToken } from '../middleware/authMiddleware';
 
@@ -59,6 +60,7 @@ router.patch('/lecturers/:nip',               verifyAdminToken, updateLecturer);
 router.patch('/students/:nim',                verifyAdminToken, updateStudent);
 router.patch('/lecturers/:nip/toggle-status', verifyAdminToken, toggleLecturerStatus);
 router.patch('/students/:nim/toggle-status',  verifyAdminToken, toggleStudentStatus);
+router.patch('/students/:nim/assign-lecturer', verifyAdminToken, assignLecturerToStudent);
 router.post('/semesters',                     verifyAdminToken, createSemester);
 router.patch('/semesters/:id/toggle-status',  verifyAdminToken, toggleSemesterStatus);
 

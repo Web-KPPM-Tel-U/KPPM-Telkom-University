@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -497,43 +497,46 @@ export default function UploadHasilKpPage() {
         <div className="border-t border-gray-100 dark:border-gray-700" />
 
         {/* ── Footer: Status kiri, Aksi kanan ── */}
-        <div className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="px-5 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:justify-between">
 
           {/* Status badges */}
-          <div className="flex flex-wrap gap-2 flex-1">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <GradeStatusBadge done={data!.grades_status?.mentor ?? false} label="Pembimbing Lapang" />
             <GradeStatusBadge done={data!.grades_status?.lecturer ?? false} label="Pembimbing Akademik" />
           </div>
 
           {/* Aksi */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
             {docs && (
-              <>
-                <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 mr-1">
-                  <CheckCircleIcon size={13} />
-                  <span>Diupload {fmtDate(docs.updated_at)}</span>
-                </div>
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 justify-start sm:justify-center mr-0 sm:mr-2">
+                <CheckCircleIcon size={14} />
+                <span className="whitespace-nowrap font-medium">Diupload {fmtDate(docs.updated_at)}</span>
+              </div>
+            )}
+            
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {docs && (
                 <button
                   onClick={() => setView('done')}
-                  className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap shadow-sm"
                 >
                   <ExternalLinkIcon /> Lihat
                 </button>
-              </>
-            )}
-            {data!.eligible ? (
-              <button
-                onClick={() => { setSlots(makeSlots()); setSubmitError(''); setUploadProgress(0); setView('form'); }}
-                className="flex items-center gap-2 px-4 py-2 bg-[#CC0000] hover:bg-red-700 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow-md active:scale-[0.99]"
-              >
-                <UploadCloudIcon /> {docs ? 'Upload Ulang' : 'Upload Dokumen'}
-              </button>
-            ) : (
-              <button onClick={fetchData} className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23,4 23,10 17,10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
-                Perbarui Status
-              </button>
-            )}
+              )}
+              {data!.eligible ? (
+                <button
+                  onClick={() => { setSlots(makeSlots()); setSubmitError(''); setUploadProgress(0); setView('form'); }}
+                  className="flex-[2] sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-[#CC0000] hover:bg-red-700 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow-md active:scale-[0.99] whitespace-nowrap"
+                >
+                  <UploadCloudIcon /> {docs ? 'Upload Ulang' : 'Upload Dokumen'}
+                </button>
+              ) : (
+                <button onClick={fetchData} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23,4 23,10 17,10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
+                  Perbarui Status
+                </button>
+              )}
+            </div>
           </div>
 
         </div>

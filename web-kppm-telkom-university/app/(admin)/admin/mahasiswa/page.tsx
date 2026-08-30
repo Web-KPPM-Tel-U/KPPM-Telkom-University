@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getAdminStudents, toggleAdminStudentStatus, addAdminStudent, updateAdminStudent } from '@/lib/api';
+import { getAdminStudents, toggleAdminStudentStatus, addAdminStudent, updateAdminStudent, assignLecturerToStudent, getAdminLecturers } from '@/lib/api';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -65,6 +65,14 @@ interface Student {
   password_changed: number;
   is_active: number;
   created_at: string;
+  assigned_lecturer_code: string | null;
+  assigned_lecturer_name: string | null;
+}
+
+interface LecturerOption {
+  nip: string;
+  lecturer_name: string;
+  lecturer_code: string | null;
 }
 
 function getProdi(kelas: string): string {
@@ -110,6 +118,16 @@ export default function KelolaMahasiswaPage() {
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState('');
+
+  // ── Assign Dosen
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<Student | null>(null);
+  const [assignCode, setAssignCode] = useState('');
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [assignError, setAssignError] = useState('');
+  const [assignSuccess, setAssignSuccess] = useState('');
+  const [lecturerOptions, setLecturerOptions] = useState<LecturerOption[]>([]);
+  const [lecturerOptionsLoaded, setLecturerOptionsLoaded] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -196,8 +214,49 @@ export default function KelolaMahasiswaPage() {
     }
   };
 
+  const openAssignModal = async (s: Student) => {
+    setAssignTarget(s);
+    setAssignCode(s.assigned_lecturer_code || '');
+    setAssignError(''); setAssignSuccess('');
+    setShowAssignModal(true);
+    if (!lecturerOptionsLoaded) {
+      try {
+        const res = await getAdminLecturers(200, 0, '');
+        if (res.success && res.data) {
+          setLecturerOptions(res.data.filter((l: any) => l.lecturer_code));
+          setLecturerOptionsLoaded(true);
+        }
+      } catch { /* silent */ }
+    }
+  };
+
+  const handleAssignLecturer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assignTarget) return;
+    setAssignLoading(true); setAssignError(''); setAssignSuccess('');
+    try {
+      const res = await assignLecturerToStudent(assignTarget.nim, assignCode || null);
+      if (res.success) {
+        setAssignSuccess(res.message || 'Berhasil.');
+        setStudents(prev => prev.map(x =>
+          x.nim === assignTarget.nim
+            ? { ...x, assigned_lecturer_code: res.data?.assigned_lecturer_code ?? null, assigned_lecturer_name: res.data?.assigned_lecturer_name ?? null }
+            : x
+        ));
+        setTimeout(() => setShowAssignModal(false), 1500);
+      } else {
+        setAssignError(res.message || 'Gagal mengassign dosen.');
+      }
+    } catch (err: any) {
+      setAssignError(err.message || 'Terjadi kesalahan jaringan.');
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
   const activeCount = students.filter(s => s.is_active === 1).length;
   const verifiedCount = students.filter(s => s.is_verified === 1).length;
+  const assignedCount = students.filter(s => !!s.assigned_lecturer_code).length;
 
   return (
     <>
@@ -257,6 +316,7 @@ export default function KelolaMahasiswaPage() {
               <span className="ml-auto flex items-center gap-4">
                 <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" />Aktif: <strong className="text-gray-700 dark:text-slate-300">{activeCount}</strong></span>
                 <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />Verified: <strong className="text-gray-700 dark:text-slate-300">{verifiedCount}</strong></span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />Ada Dosen: <strong className="text-gray-700 dark:text-slate-300">{assignedCount}</strong></span>
               </span>
             </div>
           )}
@@ -319,6 +379,17 @@ export default function KelolaMahasiswaPage() {
                               <EditIcon /> Edit
                             </button>
                             <button
+                              onClick={() => openAssignModal(s)}
+                              className={`flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border transition-all ${
+                                s.assigned_lecturer_code
+                                  ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100'
+                                  : 'border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50'
+                              }`}
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                              {s.assigned_lecturer_code ? s.assigned_lecturer_code : 'Dosen'}
+                            </button>
+                            <button
                               id={`btn-toggle-mahasiswa-mobile-${s.nim}`}
                               onClick={() => handleToggle(s)}
                               disabled={toggling}
@@ -348,6 +419,7 @@ export default function KelolaMahasiswaPage() {
                       <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell whitespace-nowrap">Kelas</th>
                       <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden xl:table-cell whitespace-nowrap">Program Studi</th>
                       <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Email</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Dosen PA</th>
                       <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Status Akun</th>
                       <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Aksi</th>
                     </tr>
@@ -376,6 +448,26 @@ export default function KelolaMahasiswaPage() {
                           <td className="px-4 py-4 text-xs text-gray-500 dark:text-slate-400 hidden xl:table-cell whitespace-nowrap">{getProdi(s.class)}</td>
                           <td className="px-4 py-4 text-xs text-gray-500 dark:text-slate-400 hidden lg:table-cell truncate max-w-[200px]">
                             {s.email || <span className="text-gray-300 dark:text-slate-600 italic">Belum diisi</span>}
+                          </td>
+                          <td className="px-4 py-4 text-center whitespace-nowrap">
+                            {s.assigned_lecturer_code ? (
+                              <button
+                                onClick={() => openAssignModal(s)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
+                                title={s.assigned_lecturer_name || ''}
+                              >
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                                {s.assigned_lecturer_code}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => openAssignModal(s)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-50 dark:bg-slate-800 text-gray-400 border border-gray-200 dark:border-slate-700 hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                              >
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Assign
+                              </button>
+                            )}
                           </td>
                           <td className="px-4 py-4 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5 flex-wrap">
@@ -536,6 +628,47 @@ export default function KelolaMahasiswaPage() {
                 <button type="button" onClick={() => setShowEditModal(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Batal</button>
                 <button type="submit" disabled={editLoading || !!editSuccess} className="inline-flex items-center justify-center min-w-[120px] px-5 py-2.5 text-sm font-bold text-white bg-[#CC0000] hover:bg-[#B00000] rounded-xl shadow-lg shadow-red-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                   {editLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Dosen Modal */}
+      {showAssignModal && assignTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-gray-100 dark:border-slate-800">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between bg-amber-50/70 dark:bg-amber-900/20">
+              <div>
+                <h3 className="font-extrabold text-gray-900 dark:text-slate-100 text-lg">Assign Dosen Pembimbing</h3>
+                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{assignTarget.student_name} · {assignTarget.nim}</p>
+              </div>
+              <button onClick={() => setShowAssignModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"><XIcon /></button>
+            </div>
+            <form onSubmit={handleAssignLecturer} className="p-6 space-y-4">
+              {assignError && <div className="p-3 text-sm text-red-600 bg-red-50 rounded-xl border border-red-100 font-medium">{assignError}</div>}
+              {assignSuccess && <div className="p-3 text-sm text-green-600 bg-green-50 rounded-xl border border-green-100 font-medium">{assignSuccess}</div>}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Dosen Pembimbing Akademik</label>
+                <select
+                  value={assignCode}
+                  onChange={e => setAssignCode(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400 text-gray-900 dark:text-slate-100"
+                >
+                  <option value="">— Lepas assignment / Tidak ada —</option>
+                  {lecturerOptions.map(l => (
+                    <option key={l.nip} value={l.lecturer_code || ''}>
+                      [{l.lecturer_code}] {l.lecturer_name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1.5">Hanya dosen yang memiliki kode dosen yang ditampilkan. Pilih kosong untuk melepas assignment.</p>
+              </div>
+              <div className="pt-2 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowAssignModal(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Batal</button>
+                <button type="submit" disabled={assignLoading || !!assignSuccess} className="inline-flex items-center justify-center min-w-[120px] px-5 py-2.5 text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-lg shadow-amber-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                  {assignLoading ? 'Menyimpan...' : 'Simpan'}
                 </button>
               </div>
             </form>

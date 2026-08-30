@@ -140,10 +140,13 @@ export const getAdminStudents = async (
   try {
     const searchParam = `%${search}%`;
     const [rows] = await pool.execute<any[]>(
-      `SELECT nim, student_name, class, email, is_verified, password_changed, is_active, created_at
-       FROM students
-       WHERE student_name LIKE ? OR nim LIKE ?
-       ORDER BY student_name ASC
+      `SELECT s.nim, s.student_name, s.class, s.email, s.is_verified, s.password_changed,
+              s.is_active, s.created_at, s.assigned_lecturer_code,
+              l.lecturer_name AS assigned_lecturer_name
+       FROM students s
+       LEFT JOIN lecturers l ON l.lecturer_code = s.assigned_lecturer_code
+       WHERE s.student_name LIKE ? OR s.nim LIKE ?
+       ORDER BY s.student_name ASC
        LIMIT ? OFFSET ?`,
       [searchParam, searchParam, limit, offset]
     );
@@ -563,6 +566,79 @@ export const updateStudent = async (
     });
   } catch (err: any) {
     console.error('[Admin] updateStudent error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Admin: Assign Dosen Pembimbing ke Mahasiswa ──────────────────────────────
+
+/**
+ * PATCH /admin/students/:nim/assign-lecturer
+ * Menetapkan dosen pembimbing ke mahasiswa berdasarkan lecturer_code.
+ * Kirim { lecturer_code: null } untuk melepas assignment.
+ */
+export const assignLecturerToStudent = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { nim } = req.params;
+  const { lecturer_code } = req.body as { lecturer_code: string | null };
+
+  if (lecturer_code === undefined) {
+    res.status(400).json({ success: false, message: 'Field lecturer_code wajib disertakan (kirim null untuk melepas).' });
+    return;
+  }
+
+  try {
+    // Cek mahasiswa ada
+    const [studentRows] = await pool.execute<any[]>(
+      'SELECT nim FROM students WHERE nim = ?',
+      [nim]
+    );
+    if (!studentRows || studentRows.length === 0) {
+      res.status(404).json({ success: false, message: 'Mahasiswa tidak ditemukan.' });
+      return;
+    }
+
+    let assignedLecturer: any = null;
+
+    if (lecturer_code) {
+      // Validasi lecturer_code ada di DB
+      const code = String(lecturer_code).trim().toUpperCase().slice(0, 3);
+      const [lecturerRows] = await pool.execute<any[]>(
+        'SELECT nip, lecturer_name, lecturer_code FROM lecturers WHERE lecturer_code = ?',
+        [code]
+      );
+      if (!lecturerRows || lecturerRows.length === 0) {
+        res.status(400).json({ success: false, message: `Kode dosen "${code}" tidak ditemukan. Pastikan kode dosen sudah terdaftar.` });
+        return;
+      }
+      assignedLecturer = lecturerRows[0];
+      await pool.execute(
+        'UPDATE students SET assigned_lecturer_code = ?, updated_at = NOW() WHERE nim = ?',
+        [code, nim]
+      );
+    } else {
+      // Lepas assignment
+      await pool.execute(
+        'UPDATE students SET assigned_lecturer_code = NULL, updated_at = NOW() WHERE nim = ?',
+        [nim]
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: assignedLecturer
+        ? `Dosen ${assignedLecturer.lecturer_name} (${assignedLecturer.lecturer_code}) berhasil di-assign ke mahasiswa ${nim}.`
+        : `Assignment dosen untuk mahasiswa ${nim} berhasil dilepas.`,
+      data: {
+        nim,
+        assigned_lecturer_code: assignedLecturer?.lecturer_code ?? null,
+        assigned_lecturer_name: assignedLecturer?.lecturer_name ?? null,
+      },
+    });
+  } catch (err: any) {
+    console.error('[Admin] assignLecturerToStudent error:', err.message);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
 };

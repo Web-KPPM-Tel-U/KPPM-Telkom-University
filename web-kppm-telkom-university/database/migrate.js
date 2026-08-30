@@ -41,15 +41,17 @@ const MIGRATIONS = [
   {
     description: 'Create students table',
     sql: `CREATE TABLE IF NOT EXISTS internship_management.students (
-      nim              VARCHAR(20)  NOT NULL PRIMARY KEY,
-      student_name     VARCHAR(100) NOT NULL,
-      class            VARCHAR(20)  NOT NULL,
-      email            VARCHAR(100) NULL DEFAULT NULL,
-      password         VARCHAR(255) NOT NULL,
-      is_verified      TINYINT(1)   NOT NULL DEFAULT 0,
-      password_changed TINYINT(1)   NOT NULL DEFAULT 0,
-      created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      nim                    VARCHAR(20)  NOT NULL PRIMARY KEY,
+      student_name           VARCHAR(100) NOT NULL,
+      class                  VARCHAR(20)  NOT NULL,
+      email                  VARCHAR(100) NULL DEFAULT NULL,
+      password               VARCHAR(255) NOT NULL,
+      is_verified            TINYINT(1)   NOT NULL DEFAULT 0,
+      password_changed       TINYINT(1)   NOT NULL DEFAULT 0,
+      is_active              TINYINT(1)   NOT NULL DEFAULT 1,
+      assigned_lecturer_code VARCHAR(3)   NULL DEFAULT NULL,
+      created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB;`,
   },
   {
@@ -83,6 +85,7 @@ const MIGRATIONS = [
       mentor_position     VARCHAR(100) NOT NULL,
       mentor_email        VARCHAR(100) NOT NULL,
       mentor_phone        VARCHAR(20)  NOT NULL,
+      mentor_access_revoked TINYINT(1) NOT NULL DEFAULT 0,
       status ENUM('pending_approval','approved','cancelled','rejected') DEFAULT 'pending_approval',
       submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       approved_at  DATETIME NULL,
@@ -213,6 +216,38 @@ const MIGRATIONS = [
     sql: `ALTER TABLE internship_management.internship_registrations
           ADD COLUMN mentor_nip VARCHAR(30) NOT NULL DEFAULT '' AFTER mentor_name;`,
     ignoreErrorCode: 1060, // ER_DUP_FIELDNAME — kolom sudah ada
+  },
+
+  // ── v4b: Add mentor_access_revoked column to internship_registrations ────────
+  {
+    description: 'Add mentor_access_revoked column to internship_registrations (if missing)',
+    sql: `ALTER TABLE internship_management.internship_registrations
+          ADD COLUMN mentor_access_revoked TINYINT(1) NOT NULL DEFAULT 0 AFTER mentor_phone;`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME
+  },
+
+  // ── v4c: Add lecturer_code column to lecturers ────────
+  {
+    description: 'Add lecturer_code column to lecturers (if missing)',
+    sql: `ALTER TABLE internship_management.lecturers
+          ADD COLUMN lecturer_code VARCHAR(3) NULL DEFAULT NULL AFTER lecturer_name;`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME
+  },
+
+  // ── v4d: Add assigned_lecturer_code column to students ────────────────────
+  {
+    description: 'Add assigned_lecturer_code column to students (if missing)',
+    sql: `ALTER TABLE internship_management.students
+          ADD COLUMN assigned_lecturer_code VARCHAR(3) NULL DEFAULT NULL AFTER is_active;`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME
+  },
+
+  // ── v4e: Add is_active column to students (if missing) ────────────────────
+  {
+    description: 'Add is_active column to students (if missing)',
+    sql: `ALTER TABLE internship_management.students
+          ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1 AFTER password_changed;`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME
   },
 
   // ── v5: Tabel admin_users untuk Admin/PIC ────────────────────────────────────
