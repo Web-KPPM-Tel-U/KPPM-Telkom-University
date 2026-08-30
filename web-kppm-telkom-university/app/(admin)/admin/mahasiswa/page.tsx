@@ -290,7 +290,7 @@ export default function KelolaMahasiswaPage() {
                   const isActive = s.is_active === 1;
                   const toggling = togglingNim === s.nim;
                   return (
-                    <div key={s.nim} className={`px-4 py-3.5 ${!isActive ? 'opacity-60' : ''}`}>
+                    <div key={s.nim} className="px-4 py-3.5">
                       <div className="flex items-start gap-3">
                         <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold flex-shrink-0 mt-0.5 ${color}`}>{initials}</div>
                         <div className="flex-1 min-w-0">
@@ -308,27 +308,29 @@ export default function KelolaMahasiswaPage() {
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">Verified</span>
                             )}
                           </div>
-                          <button
-                            onClick={() => {
-                              setEditForm({ nim: s.nim, student_name: s.student_name, class: s.class || '', email: s.email || '' });
-                              setEditError(''); setEditSuccess(''); setShowEditModal(true);
-                            }}
-                            className="mt-2.5 w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#CC0000]/50 hover:text-[#CC0000] hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
-                          >
-                            <EditIcon /> Edit
-                          </button>
-                          <button
-                            id={`btn-toggle-mahasiswa-mobile-${s.nim}`}
-                            onClick={() => handleToggle(s)}
-                            disabled={toggling}
-                            className={`mt-2.5 w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${isActive
-                                ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
-                                : 'border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                              }`}
-                          >
-                            {toggling ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg> : <PowerOnIcon />}
-                            {isActive ? 'Nonaktifkan' : 'Aktifkan'}
-                          </button>
+                          <div className="flex gap-2 mt-2.5">
+                            <button
+                              onClick={() => {
+                                setEditForm({ nim: s.nim, student_name: s.student_name, class: s.class || '', email: s.email || '' });
+                                setEditError(''); setEditSuccess(''); setShowEditModal(true);
+                              }}
+                              className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#CC0000]/50 hover:text-[#CC0000] hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
+                            >
+                              <EditIcon /> Edit
+                            </button>
+                            <button
+                              id={`btn-toggle-mahasiswa-mobile-${s.nim}`}
+                              onClick={() => handleToggle(s)}
+                              disabled={toggling}
+                              className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${isActive
+                                  ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                  : 'border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                                }`}
+                            >
+                              {toggling ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg> : <PowerOnIcon />}
+                              {isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -342,11 +344,11 @@ export default function KelolaMahasiswaPage() {
                   <thead>
                     <tr className="bg-gray-50/80 dark:bg-slate-800/50">
                       <th className="px-6 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Mahasiswa</th>
-                      <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">NIM</th>
-                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Kelas</th>
-                      <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden xl:table-cell">Program Studi</th>
+                      <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">NIM</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell whitespace-nowrap">Kelas</th>
+                      <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden xl:table-cell whitespace-nowrap">Program Studi</th>
                       <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Email</th>
-                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status Akun</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Status Akun</th>
                       <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Aksi</th>
                     </tr>
                   </thead>
@@ -358,7 +360,7 @@ export default function KelolaMahasiswaPage() {
                       const isActive = s.is_active === 1;
                       const toggling = togglingNim === s.nim;
                       return (
-                        <tr key={s.nim} className={`hover:bg-gray-50/70 dark:hover:bg-slate-800/30 transition-colors ${!isActive ? 'opacity-60' : ''}`}>
+                        <tr key={s.nim} className="hover:bg-gray-50/70 dark:hover:bg-slate-800/30 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold flex-shrink-0 ${color}`}>{initials}</div>
@@ -367,15 +369,15 @@ export default function KelolaMahasiswaPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-4 text-gray-600 dark:text-slate-300 font-mono text-xs">{s.nim}</td>
-                          <td className="px-4 py-4 text-center hidden lg:table-cell">
+                          <td className="px-4 py-4 text-gray-600 dark:text-slate-300 font-mono text-xs whitespace-nowrap">{s.nim}</td>
+                          <td className="px-4 py-4 text-center hidden lg:table-cell whitespace-nowrap">
                             <span className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 text-xs font-bold">{s.class || '—'}</span>
                           </td>
-                          <td className="px-4 py-4 text-xs text-gray-500 dark:text-slate-400 hidden xl:table-cell">{getProdi(s.class)}</td>
+                          <td className="px-4 py-4 text-xs text-gray-500 dark:text-slate-400 hidden xl:table-cell whitespace-nowrap">{getProdi(s.class)}</td>
                           <td className="px-4 py-4 text-xs text-gray-500 dark:text-slate-400 hidden lg:table-cell truncate max-w-[200px]">
                             {s.email || <span className="text-gray-300 dark:text-slate-600 italic">Belum diisi</span>}
                           </td>
-                          <td className="px-4 py-4 text-center">
+                          <td className="px-4 py-4 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5 flex-wrap">
                               <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${isActive
                                   ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
@@ -400,7 +402,7 @@ export default function KelolaMahasiswaPage() {
                                 id={`btn-toggle-mahasiswa-${s.nim}`}
                                 onClick={() => handleToggle(s)}
                                 disabled={toggling}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${isActive
+                                className={`inline-flex items-center justify-center min-w-[110px] gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${isActive
                                     ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                                     : 'border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
                                   }`}

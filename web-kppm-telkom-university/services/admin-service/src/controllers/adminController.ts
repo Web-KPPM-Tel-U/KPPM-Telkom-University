@@ -199,6 +199,7 @@ const LECTURER_FIELD_MAP: Record<string, string> = {
   nip: 'nip', 'nomor induk pegawai': 'nip', 'no induk pegawai': 'nip',
   lecturer_name: 'lecturer_name', 'nama': 'lecturer_name', 'nama dosen': 'lecturer_name',
   'nama lengkap': 'lecturer_name',
+  lecturer_code: 'lecturer_code', 'kode': 'lecturer_code', 'kode dosen': 'lecturer_code',
   email: 'email',
 };
 
@@ -271,6 +272,10 @@ export const createLecturer = async (
 
   if (!nip?.trim() || !lecturer_name?.trim() || !lecturer_code?.trim()) {
     res.status(400).json({ success: false, message: 'NIP, Nama Dosen, dan Kode Dosen wajib diisi.' });
+    return;
+  }
+  if (lecturer_code.trim().length > 3) {
+    res.status(400).json({ success: false, message: 'Kode Dosen maksimal 3 karakter.' });
     return;
   }
 
@@ -403,6 +408,7 @@ export const injectLecturers = async (
     if (!row.nip)           { result.errors.push({ row: rowNum, message: 'Kolom NIP kosong atau tidak ditemukan.' }); continue; }
     if (!row.lecturer_name) { result.errors.push({ row: rowNum, message: `NIP ${row.nip}: Kolom nama dosen kosong.` }); continue; }
     if (!row.lecturer_code) { result.errors.push({ row: rowNum, message: `NIP ${row.nip}: Kolom kode dosen kosong (wajib diisi).` }); continue; }
+    if (row.lecturer_code.trim().length > 3) { result.errors.push({ row: rowNum, message: `NIP ${row.nip}: Kode dosen maksimal 3 karakter.` }); continue; }
 
     try {
       const hashedPassword = await bcrypt.hash(row.nip, 10);
@@ -464,7 +470,7 @@ export const updateLecturer = async (
       values.push(lecturer_name.trim());
     }
     if (lecturer_code !== undefined) {
-      const code = lecturer_code?.trim().toUpperCase().slice(0, 10) || null;
+      const code = lecturer_code?.trim().toUpperCase().slice(0, 3) || null;
       fields.push('lecturer_code = ?');
       values.push(code);
     }

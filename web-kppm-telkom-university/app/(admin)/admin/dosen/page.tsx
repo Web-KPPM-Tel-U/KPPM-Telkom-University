@@ -149,15 +149,16 @@ function EditModal({ lecturer, onClose, onSaved }: {
           </div>
           <div>
             <label htmlFor="edit-lecturer-code" className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-              Kode Dosen <span className="text-[#CC0000]">*</span> <span className="font-normal text-gray-400 normal-case tracking-normal">(maks. 10 huruf kapital)</span>
+              Kode Dosen <span className="text-[#CC0000]">*</span> <span className="font-normal text-gray-400 normal-case tracking-normal">(maks. 3 huruf kapital)</span>
             </label>
             <input
               id="edit-lecturer-code"
               required
               type="text"
               value={form.lecturer_code}
-              onChange={e => setForm(f => ({ ...f, lecturer_code: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 10) }))}
+              onChange={e => setForm(f => ({ ...f, lecturer_code: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) }))}
               placeholder="Contoh: ABC"
+              maxLength={3}
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-mono font-bold tracking-widest text-gray-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] transition-all uppercase"
             />
           </div>
@@ -362,7 +363,7 @@ export default function KelolaDosen() {
                   const isActive = l.is_active === 1;
                   const toggling = togglingNip === l.nip;
                   return (
-                    <div key={l.nip} className={`px-4 py-3.5 ${!isActive ? 'opacity-60' : ''}`}>
+                    <div key={l.nip} className="px-4 py-3.5">
                       <div className="flex items-start gap-3">
                         <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold flex-shrink-0 mt-0.5 ${color}`}>{initials}</div>
                         <div className="flex-1 min-w-0">
@@ -417,12 +418,12 @@ export default function KelolaDosen() {
                   <thead>
                     <tr className="bg-gray-50/80 dark:bg-slate-800/50">
                       <th className="px-6 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Dosen</th>
-                      <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">NIP</th>
-                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Kode</th>
+                      <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">NIP</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell whitespace-nowrap">Kode</th>
                       <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Email</th>
-                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status Akun</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Status Akun</th>
                       <th className="px-4 py-3.5 text-left text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden xl:table-cell">Terdaftar</th>
-                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Aksi</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-extrabold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
@@ -433,7 +434,7 @@ export default function KelolaDosen() {
                       const isActive = l.is_active === 1;
                       const toggling = togglingNip === l.nip;
                       return (
-                        <tr key={l.nip} className={`hover:bg-gray-50/70 dark:hover:bg-slate-800/30 transition-colors ${!isActive ? 'opacity-60' : ''}`}>
+                        <tr key={l.nip} className="hover:bg-gray-50/70 dark:hover:bg-slate-800/30 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold flex-shrink-0 ${color}`}>{initials}</div>
@@ -442,8 +443,8 @@ export default function KelolaDosen() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-4 text-gray-600 dark:text-slate-300 font-mono text-xs">{l.nip}</td>
-                          <td className="px-4 py-4 text-center hidden md:table-cell">
+                          <td className="px-4 py-4 text-gray-600 dark:text-slate-300 font-mono text-xs whitespace-nowrap">{l.nip}</td>
+                          <td className="px-4 py-4 text-center hidden md:table-cell whitespace-nowrap">
                             <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 text-xs font-extrabold tracking-widest font-mono">
                               {l.lecturer_code || '—'}
                             </span>
@@ -451,7 +452,7 @@ export default function KelolaDosen() {
                           <td className="px-4 py-4 text-xs text-gray-500 dark:text-slate-400 hidden lg:table-cell truncate max-w-[200px]">
                             {l.email || <span className="text-gray-300 dark:text-slate-600 italic">Belum diisi</span>}
                           </td>
-                          <td className="px-4 py-4 text-center">
+                          <td className="px-4 py-4 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5 flex-wrap">
                               <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${isActive
                                   ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
@@ -467,7 +468,7 @@ export default function KelolaDosen() {
                             </div>
                           </td>
                           <td className="px-4 py-4 text-xs text-gray-400 dark:text-slate-500 whitespace-nowrap hidden xl:table-cell">{formatDate(l.created_at)}</td>
-                          <td className="px-4 py-4">
+                          <td className="px-4 py-4 whitespace-nowrap">
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 id={`btn-edit-dosen-${l.nip}`}
@@ -480,7 +481,7 @@ export default function KelolaDosen() {
                                 id={`btn-toggle-dosen-${l.nip}`}
                                 onClick={() => handleToggle(l)}
                                 disabled={toggling}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${isActive
+                                className={`inline-flex items-center justify-center min-w-[110px] gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${isActive
                                     ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                                     : 'border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
                                   }`}
@@ -568,16 +569,16 @@ export default function KelolaDosen() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">
-                  Kode Dosen <span className="text-red-500">*</span> <span className="font-normal text-gray-400 lowercase tracking-normal">(maks. 10 huruf kapital)</span>
+                  Kode Dosen <span className="text-red-500">*</span> <span className="font-normal text-gray-400 lowercase tracking-normal">(maks. 3 huruf kapital)</span>
                 </label>
                 <input
                   required
                   type="text"
                   value={addForm.lecturer_code}
-                  onChange={e => setAddForm(f => ({ ...f, lecturer_code: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 10) }))}
+                  onChange={e => setAddForm(f => ({ ...f, lecturer_code: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) }))}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-mono font-bold tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]"
                   placeholder="Contoh: ABC"
-                  maxLength={10}
+                  maxLength={3}
                 />
               </div>
               <div>

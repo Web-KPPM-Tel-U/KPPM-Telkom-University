@@ -26,8 +26,6 @@
 
 * {
   box-sizing: border-box;
-  /* Prevent any element from causing horizontal overflow */
-  max-width: 100%;
 }
 
 html, body {

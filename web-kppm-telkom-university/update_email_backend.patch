@@ -1,0 +1,47 @@
+--- services/student-service/src/controllers/studentController.ts
++++ services/student-service/src/controllers/studentController.ts
+@@ -57,6 +57,29 @@
+   }
+ };
+ 
++// ─── Update Profile (Email) ───────────────────────────────────────────────────
++export const updateProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
++  const nim = req.user?.nim || String(req.user?.sub || '');
++  if (!nim) {
++    res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
++    return;
++  }
++
++  const { email } = req.body;
++
++  try {
++    await pool.execute(
++      'UPDATE students SET email = ?, updated_at = NOW() WHERE nim = ?',
++      [email?.trim() || null, nim]
++    );
++
++    res.status(200).json({ success: true, message: 'Email berhasil diperbarui' });
++  } catch (err: any) {
++    console.error('[Student Service] updateProfile error:', err.message);
++    res.status(500).json({ success: false, message: 'Terjadi kesalahan internal pada server.' });
++  }
++};
++
+ // ─── Get Dashboard ────────────────────────────────────────────────────────────
+ export const getDashboard = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+--- services/student-service/src/routes/studentRoutes.ts
++++ services/student-service/src/routes/studentRoutes.ts
+@@ -1,5 +1,5 @@
+ import { Router } from 'express';
+-import { getProfile, getDashboard, changePassword, getMyGrades } from '../controllers/studentController';
++import { getProfile, updateProfile, getDashboard, changePassword, getMyGrades } from '../controllers/studentController';
+ import { submitRegistration, getRegistrations, getRegistrationDetail, getLecturers, getActiveSemesters, cancelRegistration, getLecturerStudents, updateRegistrationStatus, upload, uploadKpDocuments, getKpResults, uploadKpResults, getLecturerKpResults } from '../controllers/kppmController';
+ import { getMentorDashboard } from '../controllers/mentorController';
+ import { submitMentorGrade, getMentorGrade, getAllMentorGrades } from '../controllers/mentorGradesController';
+@@ -11,6 +11,7 @@
+ // ─── Student Routes ───────────────────────────────────────────────────────────
+ router.get('/profile',   verifyToken, getProfile);
++router.patch('/profile', verifyToken, updateProfile);
+ router.get('/dashboard', verifyToken, getDashboard);
+ router.get('/grades',    verifyToken, getMyGrades);
+ router.patch('/change-password', verifyToken, changePassword);

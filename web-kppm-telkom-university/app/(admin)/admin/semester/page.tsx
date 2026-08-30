@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -127,7 +127,7 @@ function YearPicker({ value, onChange, allowedValues, disabled, placeholder }: {
             : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 cursor-pointer focus-within:ring-2 focus-within:ring-[#CC0000]/30 focus-within:border-[#CC0000]'
         }`}
       >
-        <span>{value || placeholder || 'Pilih Tahun'}</span>
+        <span className="whitespace-nowrap">{value || placeholder || 'Pilih Tahun'}</span>
         <CalendarIcon />
       </div>
       {isOpen && !disabled && (
@@ -356,7 +356,7 @@ export default function AdminSemesterPage() {
                     : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 font-bold cursor-not-allowed'
                 }`}
               >
-                <span>{selectedYear2 || 'Tahun'}</span>
+                <span className="whitespace-nowrap">{selectedYear2 || 'Tahun'}</span>
                 <CalendarIcon />
               </div>
             </div>

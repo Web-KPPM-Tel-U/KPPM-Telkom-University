@@ -169,6 +169,15 @@ export const getStudentProfile = async (): Promise<ApiResponse<StudentUser>> => 
   return res.json();
 };
 
+export const updateStudentProfile = async (data: { email: string }): Promise<ApiResponse<null>> => {
+  const res = await fetch(`${API_BASE_URL}/student/profile`, {
+    method: 'PATCH',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
 export const getStudentDashboard = async (): Promise<ApiResponse<unknown>> => {
   const res = await fetch(`${API_BASE_URL}/student/dashboard`, {
     headers: authHeaders(),
