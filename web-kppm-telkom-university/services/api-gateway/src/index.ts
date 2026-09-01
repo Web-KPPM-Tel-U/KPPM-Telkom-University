@@ -114,9 +114,24 @@ async function proxyRequest(
     };
 
     const response = await fetch(targetUrl, fetchOptions);
-    const data = await response.json();
+    const resContentType = response.headers.get('content-type') || '';
 
-    res.status(response.status).json(data);
+    if (resContentType.includes('application/json')) {
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } else {
+      // Forward specific headers for file downloads
+      const contentDisposition = response.headers.get('content-disposition');
+      if (contentDisposition) {
+        res.setHeader('Content-Disposition', contentDisposition);
+      }
+      if (resContentType) {
+        res.setHeader('Content-Type', resContentType);
+      }
+
+      const buffer = await response.arrayBuffer();
+      res.status(response.status).send(Buffer.from(buffer));
+    }
   } catch (err: any) {
     if (err.name === 'TimeoutError' || err.name === 'AbortError') {
       console.error(`[Gateway] Timeout proxying to ${targetUrl}`);
