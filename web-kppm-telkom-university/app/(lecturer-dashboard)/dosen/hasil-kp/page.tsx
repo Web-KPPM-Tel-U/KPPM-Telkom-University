@@ -569,8 +569,19 @@ export default function HasilKPPage() {
       ) : error ? (
         <div className="text-center py-20 text-red-500 dark:text-red-400">{error}</div>
       ) : processedData.length === 0 ? (
-        <div className="text-center py-20 text-gray-400 dark:text-slate-500 text-sm">
-          {search || filter !== 'all' ? 'Tidak ada mahasiswa yang sesuai filter.' : 'Belum ada mahasiswa KP yang disetujui.'}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-10 text-center">
+          <div className="w-14 h-14 bg-purple-50 dark:bg-purple-950 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9333EA" strokeWidth="1.5">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14,2 14,8 20,8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+          </div>
+          <p className="text-gray-500 dark:text-slate-400 font-semibold text-sm">
+            {search || filter !== 'all' ? 'Pencarian tidak ditemukan' : 'Belum ada mahasiswa KP yang disetujui'}
+          </p>
+          <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">
+            {search || filter !== 'all' ? 'Coba ubah kata kunci atau filter status.' : 'Mahasiswa akan muncul di sini setelah pengajuan KPPM-nya disetujui.'}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">

@@ -148,6 +148,36 @@ export const verifyMentorOtp = async (
 };
 
 /**
+ * Lupa Password: Kirim OTP
+ */
+export const forgotPasswordSendOtp = async (
+  email: string
+): Promise<ApiResponse<void>> => {
+  const res = await fetch(`${API_BASE_URL}/auth/forgot-password/send-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  return res.json();
+};
+
+/**
+ * Lupa Password: Verifikasi OTP & Reset
+ */
+export const forgotPasswordVerifyReset = async (
+  email: string,
+  otp: string,
+  newPassword: string
+): Promise<ApiResponse<void>> => {
+  const res = await fetch(`${API_BASE_URL}/auth/forgot-password/verify-reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp, newPassword }),
+  });
+  return res.json();
+};
+
+/**
  * Logout — hapus token lokal dan notify backend
  */
 export const logout = async (): Promise<void> => {

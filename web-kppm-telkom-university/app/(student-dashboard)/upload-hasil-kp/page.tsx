@@ -417,28 +417,21 @@ export default function UploadHasilKpPage() {
   if (!data?.registration) return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
       <PageHeader subtitle="Daftar KP aktif & upload dokumen" />
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
-        <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-          </div>
-          <div>
-            <p className="text-white font-bold text-base">Tidak Ada KP Aktif</p>
-            <p className="text-amber-100 text-sm mt-0.5">Belum ada pendaftaran KPPM yang disetujui.</p>
-          </div>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-10 text-center">
+        <div className="w-14 h-14 bg-purple-50 dark:bg-purple-950 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9333EA" strokeWidth="1.5">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+            <polyline points="14,2 14,8 20,8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
         </div>
-        <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-5">
-          <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl">
-            <div className="text-amber-500 mt-0.5 flex-shrink-0"><AlertCircleIcon /></div>
-            <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
-              Anda belum memiliki pendaftaran KPPM yang disetujui. Silakan ajukan pendaftaran terlebih dahulu melalui menu <strong>Isi Data KPPM</strong>.
-            </p>
-          </div>
-          <button onClick={fetchData} className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23,4 23,10 17,10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
-            Perbarui Status
-          </button>
-        </div>
+        <p className="text-gray-500 dark:text-slate-400 font-semibold text-sm">Tidak Ada KP Aktif</p>
+        <p className="text-gray-400 dark:text-slate-500 text-xs mt-1 max-w-md mx-auto">
+          Anda belum memiliki pendaftaran KPPM yang disetujui. Silakan ajukan pendaftaran terlebih dahulu melalui menu <strong className="text-gray-500 dark:text-slate-300">Isi Data KPPM</strong>.
+        </p>
+        <button onClick={fetchData} className="mt-6 mx-auto inline-flex items-center justify-center gap-2 px-5 py-2 border border-gray-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23,4 23,10 17,10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
+          Perbarui Status
+        </button>
       </div>
     </div>
   );

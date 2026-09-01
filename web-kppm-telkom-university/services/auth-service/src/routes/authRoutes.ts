@@ -14,6 +14,7 @@ import {
   logout,
   adminLogin,
 } from '../controllers/authController';
+import { forgotPasswordSendOtp, forgotPasswordVerifyReset } from '../controllers/forgotPasswordController';
 
 const router = Router();
 
@@ -62,6 +63,10 @@ router.patch('/lecturer/change-password', passwordLimiter, changeLecturerPasswor
 // ─── Mentor ───────────────────────────────────────────────────────────────────
 router.post('/mentor/send-otp',   otpLimiter,   mentorSendOtp);
 router.post('/mentor/verify-otp', loginLimiter, mentorVerifyOtp);
+
+// ─── Forgot Password Routes ───────────────────────────────────────────────────
+router.post('/forgot-password/send-otp', forgotPasswordSendOtp);
+router.post('/forgot-password/verify-reset', forgotPasswordVerifyReset);
 
 // ─── Logout (semua role) ──────────────────────────────────────────────────────
 router.post('/logout', logout);
