@@ -458,25 +458,25 @@ export interface LecturerStudentEntry {
   student_class: string;
   student_email: string;
   // Data pengajuan
-  registration_id: number;
-  semester_code: string;
-  company_name: string;
-  internship_position: string;
-  internship_start: string;
-  internship_end: string;
-  status: 'pending_approval' | 'approved' | 'cancelled' | 'rejected';
-  submitted_at: string;
+  registration_id: number | null;
+  semester_code: string | null;
+  company_name: string | null;
+  internship_position: string | null;
+  internship_start: string | null;
+  internship_end: string | null;
+  status: 'pending_approval' | 'approved' | 'cancelled' | 'rejected' | null;
+  submitted_at: string | null;
   approved_at: string | null;
   cancelled_at: string | null;
   rejected_at: string | null;
-  whatsapp_number: string;
-  mentor_name: string;
-  mentor_nip: string;
-  mentor_position: string;
-  mentor_email: string;
-  mentor_phone: string;
+  whatsapp_number: string | null;
+  mentor_name: string | null;
+  mentor_nip: string | null;
+  mentor_position: string | null;
+  mentor_email: string | null;
+  mentor_phone: string | null;
   toss_cover_letter_file: string | null;
-  is_graded: number;
+  is_graded: number | null;
 }
 
 export interface LecturerStudentsApiResponse {
