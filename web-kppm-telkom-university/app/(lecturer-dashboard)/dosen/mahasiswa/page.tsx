@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getLecturerStudents, LecturerStudentEntry, updateLecturerRegistrationStatus } from '@/lib/api';
 
-// â”€â”€â”€ Entries Dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Entries Dropdown ─────────────────────────────────────────────────────────
 
 function EntriesDropdown({
   value,
@@ -99,7 +99,7 @@ function EntriesDropdown({
   );
 }
 
-// â”€â”€â”€ Status Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: LecturerStudentEntry['status'] }) {
   if (!status) {
@@ -151,10 +151,10 @@ function StatusBadge({ status }: { status: LecturerStudentEntry['status'] }) {
   );
 }
 
-// â”€â”€â”€ Format tanggal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Format tanggal ───────────────────────────────────────────────────────────
 
 function fmt(dateStr: string | null) {
-  if (!dateStr) return 'â€”';
+  if (!dateStr) return '—';
   return new Date(dateStr).toLocaleDateString('id-ID', {
     day: '2-digit',
     month: 'short',
@@ -162,7 +162,7 @@ function fmt(dateStr: string | null) {
   });
 }
 
-// â”€â”€â”€ Skeleton row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Skeleton row ─────────────────────────────────────────────────────────────
 
 function SkeletonRow() {
   return (
@@ -176,7 +176,7 @@ function SkeletonRow() {
   );
 }
 
-// â”€â”€â”€ Detail Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Detail Modal ─────────────────────────────────────────────────────────────
 
 function DetailModal({
   entry,
@@ -196,7 +196,7 @@ function DetailModal({
 
   return (
     <>
-      {/* â”€â”€ TOSS Document Overlay â”€â”€ */}
+      {/* ── TOSS Document Overlay ── */}
       {showDoc && fileUrl && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center p-4"
@@ -280,7 +280,7 @@ function DetailModal({
         </div>
       )}
 
-      {/* â”€â”€ Detail Full Page â”€â”€ */}
+      {/* ── Detail Full Page ── */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 max-w-4xl mx-auto space-y-6">
               {/* Status */}
               <div className="flex items-center gap-3">
@@ -384,7 +384,7 @@ function Row({ label, value }: { label: string; value: string | null }) {
   );
 }
 
-// â”€â”€â”€ Confirm Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Confirm Modal ─────────────────────────────────────────────────────────────
 
 type ConfirmAction = { registrationId: number; action: 'approved' | 'rejected'; studentName: string };
 
@@ -472,7 +472,7 @@ function ConfirmModal({
   );
 }
 
-// â”€â”€â”€ Filter Chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Filter Chip ──────────────────────────────────────────────────────────────
 
 type FilterStatus = 'all' | LecturerStudentEntry['status'];
 
@@ -508,7 +508,7 @@ function FilterChip({
   );
 }
 
-// â”€â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function DosenMahasiswaPage() {
   const [students, setStudents] = useState<LecturerStudentEntry[]>([]);
@@ -633,7 +633,7 @@ export default function DosenMahasiswaPage() {
 
 
 
-        {/* â”€â”€ Header â”€â”€ */}
+        {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
           <div>
             <nav className="flex text-sm font-medium mb-3" aria-label="Breadcrumb">
@@ -727,7 +727,7 @@ export default function DosenMahasiswaPage() {
           </div>
         </div>
 
-        {/* â”€â”€ Table â”€â”€ */}
+        {/* ── Table ── */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700/60 shadow-sm overflow-hidden">
 
           {/* Error state */}
@@ -750,7 +750,7 @@ export default function DosenMahasiswaPage() {
             </div>
           )}
 
-          {/* Empty â€” no data at all */}
+          {/* Empty — no data at all */}
           {!error && !loading && students.length === 0 && (
             <div className="flex flex-col items-center py-16 gap-3">
               <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center">
@@ -768,7 +768,7 @@ export default function DosenMahasiswaPage() {
             </div>
           )}
 
-          {/* Empty â€” filtered but no match */}
+          {/* Empty — filtered but no match */}
           {!error && !loading && students.length > 0 && filtered.length === 0 && (
             <div className="flex flex-col items-center py-12 gap-2">
               <p className="text-sm font-medium text-gray-600 dark:text-slate-300">Tidak ada data yang cocok</p>
@@ -779,7 +779,7 @@ export default function DosenMahasiswaPage() {
           {/* Table (desktop) / Card list (mobile) */}
           {(loading || filtered.length > 0) && (
             <>
-              {/* â”€â”€ Mobile Card List â”€â”€ */}
+              {/* ── Mobile Card List ── */}
               <div className="md:hidden divide-y divide-gray-100 dark:divide-slate-800">
                 {loading
                   ? [...Array(4)].map((_, i) => (
@@ -834,7 +834,7 @@ export default function DosenMahasiswaPage() {
                     ))}
               </div>
 
-              {/* â”€â”€ Desktop Table â”€â”€ */}
+              {/* ── Desktop Table ── */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -905,7 +905,7 @@ export default function DosenMahasiswaPage() {
           )}
 
 
-          {/* Footer â€” info + pagination */}
+          {/* Footer — info + pagination */}
           {!loading && totalFiltered > 0 && (
             <div className="px-4 py-3 border-t-2 border-[#e5e7eb] dark:border-slate-700 bg-[#f4f4f6] dark:bg-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
               {/* Info teks */}
@@ -939,7 +939,7 @@ export default function DosenMahasiswaPage() {
                   }, [])
                   .map((item, i) =>
                     item === '...' ? (
-                      <span key={`ellipsis-${i}`} className="px-2 text-xs text-gray-400">â€¦</span>
+                      <span key={`ellipsis-${i}`} className="px-2 text-xs text-gray-400">…</span>
                     ) : (
                       <button
                         key={item}
@@ -972,9 +972,9 @@ export default function DosenMahasiswaPage() {
         </div>
       </div>
 
-      {/* â”€â”€ Detail View Rendered At Top â”€â”€ */}
+      {/* ── Detail View Rendered At Top ── */}
 
-      {/* â”€â”€ Modal Konfirmasi Approve / Reject â”€â”€ */}
+      {/* ── Modal Konfirmasi Approve / Reject ── */}
       {confirm && (
         <ConfirmModal
           confirm={confirm}
