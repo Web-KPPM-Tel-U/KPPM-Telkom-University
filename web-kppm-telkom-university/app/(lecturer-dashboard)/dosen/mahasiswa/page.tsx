@@ -37,7 +37,7 @@ function EntriesDropdown({
           hover:border-gray-300 dark:hover:border-slate-600
           hover:bg-gray-50 dark:hover:bg-slate-800
           transition-all duration-150 select-none
-          shadow-sm
+          shadow-sm whitespace-nowrap
         "
       >
         <span className="text-gray-400 dark:text-slate-500 font-normal">Tampilkan</span>
@@ -102,8 +102,17 @@ function EntriesDropdown({
 // â”€â”€â”€ Status Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StatusBadge({ status }: { status: LecturerStudentEntry['status'] }) {
+  if (!status) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+        <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+        Belum Mengajukan
+      </span>
+    );
+  }
+
   const map: Record<
-    LecturerStudentEntry['status'],
+    NonNullable<LecturerStudentEntry['status']>,
     { label: string; bg: string; text: string; dot: string }
   > = {
     pending_approval: {
@@ -134,7 +143,7 @@ function StatusBadge({ status }: { status: LecturerStudentEntry['status'] }) {
   const s = map[status];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${s.bg} ${s.text}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${s.bg} ${s.text}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
       {s.label}
@@ -364,7 +373,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="flex items-start justify-between px-4 py-2.5 gap-4">
       <span className="text-xs text-gray-400 dark:text-slate-400 flex-shrink-0 w-24 sm:w-32">{label}</span>
@@ -481,7 +490,7 @@ function FilterChip({
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
         active
           ? 'bg-[#CC0000] text-white shadow-sm'
           : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
@@ -562,8 +571,8 @@ export default function DosenMahasiswaPage() {
       !q ||
       s.student_name.toLowerCase().includes(q) ||
       s.nim.toLowerCase().includes(q) ||
-      s.company_name.toLowerCase().includes(q) ||
-      s.student_email.toLowerCase().includes(q);
+      (s.company_name?.toLowerCase() || '').includes(q) ||
+      (s.student_email?.toLowerCase() || '').includes(q);
     return matchStatus && matchSearch;
   });
 
@@ -612,7 +621,7 @@ export default function DosenMahasiswaPage() {
               <span className="text-gray-300 dark:text-gray-600">|</span>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Pengajuan KPPM</h1>
-                <p className="text-gray-500 text-sm mt-0.5">ID Pengajuan: #{selected.registration_id}</p>
+                <p className="text-gray-500 text-sm mt-0.5">ID Pengajuan: #{selected.registration_id || '-'}</p>
               </div>
             </div>
           </div>
@@ -666,8 +675,8 @@ export default function DosenMahasiswaPage() {
         </div>
 
 
-        {/* â”€â”€ Filters & Search â”€â”€ */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        {/* ─── Filters & Search ─── */}
+        <div className="flex flex-col xl:flex-row gap-3 mb-4">
           {/* Filter chips */}
           <div className="flex items-center gap-2 flex-wrap">
             {(
@@ -680,17 +689,17 @@ export default function DosenMahasiswaPage() {
               ] as { key: FilterStatus; label: string }[]
             ).map((f) => (
               <FilterChip
-                key={f.key}
+                key={f.key || 'null'}
                 label={f.label}
                 active={filterStatus === f.key}
-                count={counts[f.key]}
+                count={counts[f.key as keyof typeof counts]}
                 onClick={() => setFilterStatus(f.key)}
               />
             ))}
           </div>
 
           {/* Search + Tampilkan */}
-          <div className="flex items-center gap-2 sm:ml-auto">
+          <div className="flex items-center gap-2 xl:ml-auto">
             {/* Custom entries dropdown */}
             <EntriesDropdown
               value={entriesPerPage}
@@ -780,7 +789,7 @@ export default function DosenMahasiswaPage() {
                       </div>
                     ))
                   : paginated.map((s) => (
-                      <div key={s.registration_id} className="px-4 py-3.5">
+                      <div key={s.nim} className="px-4 py-3.5">
                         <div className="flex items-start gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2 mb-1">
@@ -788,35 +797,37 @@ export default function DosenMahasiswaPage() {
                               <StatusBadge status={s.status} />
                             </div>
                             <p className="text-[11px] font-mono text-gray-400 dark:text-slate-500">{s.nim} &middot; {s.student_class}</p>
-                            <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5 break-words">{s.company_name}</p>
-                            <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{fmt(s.internship_start)} &rarr; {fmt(s.internship_end)}</p>
-                            <div className="flex gap-2 mt-2.5">
-                              {s.status === 'pending_approval' && (
-                                <>
-                                  <button
-                                    onClick={() => setConfirm({ registrationId: s.registration_id, action: 'approved', studentName: s.student_name })}
-                                    className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border-2 border-emerald-500 bg-emerald-500/90 text-white hover:bg-emerald-600 transition-all"
-                                  >
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
-                                    Setuju
-                                  </button>
-                                  <button
-                                    onClick={() => setConfirm({ registrationId: s.registration_id, action: 'rejected', studentName: s.student_name })}
-                                    className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border-2 border-red-400/70 bg-red-50/80 text-red-500 hover:bg-red-100 transition-all"
-                                  >
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                                    Tolak
-                                  </button>
-                                </>
-                              )}
-                              <button
-                                onClick={() => setSelected(s)}
-                                className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border-2 border-emerald-400/60 bg-emerald-50/60 text-emerald-600 hover:bg-emerald-100/80 transition-all"
-                              >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="22" y2="22" /></svg>
-                                Detail
-                              </button>
-                            </div>
+                            <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5 break-words">{s.registration_id ? (s.company_name || '-') : '-'}</p>
+                            <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{s.registration_id ? `${fmt(s.internship_start)} \u2192 ${fmt(s.internship_end)}` : '-'}</p>
+                            {s.registration_id && (
+                              <div className="flex gap-2 mt-2.5">
+                                {s.status === 'pending_approval' && (
+                                  <>
+                                    <button
+                                      onClick={() => setConfirm({ registrationId: s.registration_id!, action: 'approved', studentName: s.student_name })}
+                                      className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border-2 border-emerald-500 bg-emerald-500/90 text-white hover:bg-emerald-600 transition-all"
+                                    >
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
+                                      Setuju
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirm({ registrationId: s.registration_id!, action: 'rejected', studentName: s.student_name })}
+                                      className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border-2 border-red-400/70 bg-red-50/80 text-red-500 hover:bg-red-100 transition-all"
+                                    >
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                      Tolak
+                                    </button>
+                                  </>
+                                )}
+                                <button
+                                  onClick={() => setSelected(s)}
+                                  className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-bold rounded-lg border-2 border-emerald-400/60 bg-emerald-50/60 text-emerald-600 hover:bg-emerald-100/80 transition-all"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="22" y2="22" /></svg>
+                                  Detail
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -837,41 +848,53 @@ export default function DosenMahasiswaPage() {
                     {loading
                       ? [...Array(5)].map((_, i) => <SkeletonRow key={i} />)
                       : paginated.map((s, idx) => (
-                          <tr key={s.registration_id} className={`transition-colors hover:bg-red-50/30 dark:hover:bg-red-900/10 border-b border-[#f0f0f0] dark:border-slate-700 group ${idx % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-[#fafafa] dark:bg-slate-800/60'}`}>
-                            <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700">
+                          <tr key={s.nim} className={`transition-colors hover:bg-red-50/30 dark:hover:bg-red-900/10 border-b border-[#f0f0f0] dark:border-slate-700 group ${idx % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-[#fafafa] dark:bg-slate-800/60'}`}>
+                            <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700 whitespace-nowrap">
                               <span className="font-mono text-xs font-semibold text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded">{s.nim}</span>
                             </td>
                             <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700">
                               <p className="font-semibold text-gray-800 dark:text-slate-100 whitespace-nowrap">{s.student_name}</p>
-                              <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">{s.student_email}</p>
                             </td>
                             <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700 text-gray-600 dark:text-slate-300 whitespace-nowrap">{s.student_class}</td>
                             <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700">
-                              <p className="text-gray-800 dark:text-slate-200 font-medium whitespace-nowrap max-w-[160px] truncate">{s.company_name}</p>
-                              <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5 truncate max-w-[160px]">{s.internship_position}</p>
+                              {s.registration_id ? (
+                                <>
+                                  <p className="text-gray-800 dark:text-slate-200 font-medium whitespace-nowrap max-w-[160px] truncate">{s.company_name || '-'}</p>
+                                </>
+                              ) : (
+                                <p className="text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">-</p>
+                              )}
                             </td>
                             <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700 text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">
-                              <span>{fmt(s.internship_start)}</span>
-                              <span className="mx-1 text-gray-300 dark:text-slate-600">&rarr;</span>
-                              <span>{fmt(s.internship_end)}</span>
+                              {s.registration_id ? (
+                                <>
+                                  <span>{fmt(s.internship_start)}</span>
+                                  <span className="mx-1 text-gray-300 dark:text-slate-600">&rarr;</span>
+                                  <span>{fmt(s.internship_end)}</span>
+                                </>
+                              ) : (
+                                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">-</span>
+                              )}
                             </td>
                             <td className="px-4 py-4 border-r border-[#f0f0f0] dark:border-slate-700"><StatusBadge status={s.status} /></td>
                             <td className="px-4 py-3.5">
-                              <div className="flex items-center gap-1.5">
-                                {s.status === 'pending_approval' && (
-                                  <>
-                                    <button title="Setujui Pengajuan" onClick={() => setConfirm({ registrationId: s.registration_id, action: 'approved', studentName: s.student_name })} className="inline-flex items-center justify-center w-9 h-9 rounded-lg border-2 border-emerald-500 dark:border-emerald-400 bg-emerald-500/90 dark:bg-emerald-500/80 text-white hover:bg-emerald-600 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-150 shadow-sm">
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
-                                    </button>
-                                    <button title="Tolak Pengajuan" onClick={() => setConfirm({ registrationId: s.registration_id, action: 'rejected', studentName: s.student_name })} className="inline-flex items-center justify-center w-9 h-9 rounded-lg border-2 border-red-400/70 dark:border-red-500/60 bg-red-50/80 dark:bg-red-950/40 text-red-500 dark:text-red-400 hover:bg-red-100/90 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-150 shadow-sm">
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                                    </button>
-                                  </>
-                                )}
-                                <button onClick={() => setSelected(s)} title="Lihat Detail" className="inline-flex items-center justify-center w-9 h-9 rounded-lg border-2 border-emerald-400/60 dark:border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/80 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-150 shadow-sm">
-                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="22" y2="22" /></svg>
-                                </button>
-                              </div>
+                              {s.registration_id && (
+                                <div className="flex items-center gap-1.5">
+                                  {s.status === 'pending_approval' && (
+                                    <>
+                                      <button title="Setujui Pengajuan" onClick={() => setConfirm({ registrationId: s.registration_id!, action: 'approved', studentName: s.student_name })} className="inline-flex items-center justify-center w-9 h-9 rounded-lg border-2 border-emerald-500 dark:border-emerald-400 bg-emerald-500/90 dark:bg-emerald-500/80 text-white hover:bg-emerald-600 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-150 shadow-sm">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
+                                      </button>
+                                      <button title="Tolak Pengajuan" onClick={() => setConfirm({ registrationId: s.registration_id!, action: 'rejected', studentName: s.student_name })} className="inline-flex items-center justify-center w-9 h-9 rounded-lg border-2 border-red-400/70 dark:border-red-500/60 bg-red-50/80 dark:bg-red-950/40 text-red-500 dark:text-red-400 hover:bg-red-100/90 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-150 shadow-sm">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                      </button>
+                                    </>
+                                  )}
+                                  <button onClick={() => setSelected(s)} title="Lihat Detail" className="inline-flex items-center justify-center w-9 h-9 rounded-lg border-2 border-emerald-400/60 dark:border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/80 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-150 shadow-sm">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="22" y2="22" /></svg>
+                                  </button>
+                                </div>
+                              )}
                             </td>
                           </tr>
                         ))}

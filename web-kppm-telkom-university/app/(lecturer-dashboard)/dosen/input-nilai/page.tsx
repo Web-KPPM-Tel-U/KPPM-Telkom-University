@@ -232,6 +232,7 @@ function GradeForm({ student, onClose, onSaved }: {
   useEffect(() => {
     const load = async () => {
       try {
+        if (!student.registration_id) return;
         const res = await getLecturerGrade(student.registration_id);
         if (res.success && res.data) {
           setScores({
@@ -261,6 +262,7 @@ function GradeForm({ student, onClose, onSaved }: {
     }
     setError(''); setSuccess(''); setSaving(true);
     try {
+      if (!student.registration_id) return;
       const res = await submitLecturerGrade(student.registration_id, scores);
       if (res.success) {
         setSuccess('Nilai berhasil disimpan!');
@@ -513,6 +515,7 @@ function GradeDetailModal({
   useEffect(() => {
     const load = async () => {
       try {
+        if (!student.registration_id) return;
         const res = await getLecturerStudentFullGrades(student.registration_id);
         if (res.success && res.data) setData(res.data);
       } catch { /* ignore */ }
@@ -635,10 +638,10 @@ function GradeDetailModal({
 
 // ─── Student Row ─────────────────────────────────────────────────────────────
 function StudentRow({ student, idx, gradeMap, onOpenForm, onOpenDetail }: {
-  student: LecturerStudentEntry; idx: number;
+  student: LecturerStudentEntry & { registration_id: number }; idx: number;
   gradeMap: Record<number, { total: number; avg: number } | null>;
-  onOpenForm: (s: LecturerStudentEntry) => void;
-  onOpenDetail: (s: LecturerStudentEntry) => void;
+  onOpenForm: (s: LecturerStudentEntry & { registration_id: number }) => void;
+  onOpenDetail: (s: LecturerStudentEntry & { registration_id: number }) => void;
 }) {
   const initials = student.student_name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
   const entry = gradeMap[student.registration_id];
@@ -692,15 +695,15 @@ export default function DosenInputNilaiPage() {
   const [gradeMap, setGradeMap] = useState<Record<number, { total: number; avg: number } | null>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeStudent, setActiveStudent] = useState<LecturerStudentEntry | null>(null);
-  const [detailStudent, setDetailStudent] = useState<LecturerStudentEntry | null>(null);
+  const [activeStudent, setActiveStudent] = useState<(LecturerStudentEntry & { registration_id: number }) | null>(null);
+  const [detailStudent, setDetailStudent] = useState<(LecturerStudentEntry & { registration_id: number }) | null>(null);
 
   // Filter & Sort State
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'graded' | 'ungraded'>('all');
   const [sortBy, setSortBy] = useState<'name-asc' | 'name-desc' | 'nim-asc' | 'grade-desc' | 'grade-asc'>('name-asc');
 
-  const approvedStudents = students.filter(s => s.status === 'approved');
+  const approvedStudents = students.filter((s): s is LecturerStudentEntry & { registration_id: number } => s.status === 'approved' && s.registration_id !== null);
 
   const totalStudents = approvedStudents.length;
   const gradedStudents = approvedStudents.filter(s => gradeMap[s.registration_id] !== null && gradeMap[s.registration_id] !== undefined).length;
@@ -746,7 +749,7 @@ export default function DosenInputNilaiPage() {
     return result;
   }, [approvedStudents, gradeMap, searchQuery, filterStatus, sortBy]);
 
-  const loadGrades = async (list: LecturerStudentEntry[]) => {
+  const loadGrades = async (list: (LecturerStudentEntry & { registration_id: number })[]) => {
     const map: Record<number, { total: number; avg: number } | null> = {};
     await Promise.all(list.map(async (s) => {
       try {
@@ -775,7 +778,7 @@ export default function DosenInputNilaiPage() {
 
         if (res.success && res.data) {
           setStudents(res.data);
-          const approved = res.data.filter(s => s.status === 'approved');
+          const approved = res.data.filter((s): s is LecturerStudentEntry & { registration_id: number } => s.status === 'approved' && s.registration_id !== null);
           await loadGrades(approved);
         } else { setError(res.message || 'Gagal memuat data.'); }
       } catch { setError('Tidak dapat terhubung ke server backend.'); }
