@@ -10,6 +10,8 @@ import {
   setToken,
   setUser,
   getToken,
+  forgotPasswordSendOtp,
+  forgotPasswordVerifyReset,
 } from '@/lib/api';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -180,6 +182,73 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // ── Forgot Password state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotStep, setForgotStep] = useState<1 | 2>(1);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isForgotLoading, setIsForgotLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Toggle Forgot Password modal
+  const openForgotPassword = () => {
+    setShowForgotPassword(true);
+    setForgotStep(1);
+    setForgotEmail('');
+    setForgotOtp('');
+    setNewPassword('');
+    setConfirmPassword('');
+  };
+
+  // Mock handlers for Forgot Password -> Now connected to API
+  const handleSendForgotOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setIsForgotLoading(true);
+    setError('');
+    try {
+      const res = await forgotPasswordSendOtp(forgotEmail);
+      if (res.success) {
+        setForgotStep(2);
+      } else {
+        setError(res.message || 'Gagal mengirim OTP.');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi.');
+    } finally {
+      setIsForgotLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotOtp || !newPassword || !confirmPassword) return;
+    
+    if (newPassword !== confirmPassword) {
+      setError('Password baru dan konfirmasi tidak cocok.');
+      return;
+    }
+    
+    setIsForgotLoading(true);
+    setError('');
+    try {
+      const res = await forgotPasswordVerifyReset(forgotEmail, forgotOtp, newPassword);
+      if (res.success) {
+        setShowForgotPassword(false);
+        setSuccess('Password berhasil direset. Silakan login menggunakan password baru.');
+      } else {
+        setError(res.message || 'Gagal mereset password.');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi.');
+    } finally {
+      setIsForgotLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (getToken()) router.replace('/dashboard');
@@ -482,7 +551,7 @@ export default function LoginPage() {
                 </button>
 
                 <div className="text-center mt-3">
-                  <a href="#" className="text-[#CC0000] text-sm hover:underline font-semibold">Lupa Password?</a>
+                  <button type="button" onClick={openForgotPassword} className="text-[#CC0000] text-sm hover:underline font-semibold">Lupa Password?</button>
                 </div>
               </form>
             )}
@@ -547,7 +616,7 @@ export default function LoginPage() {
                 </button>
 
                 <div className="text-center mt-3">
-                  <a href="#" className="text-[#CC0000] text-sm hover:underline font-semibold">Lupa Password?</a>
+                  <button type="button" onClick={openForgotPassword} className="text-[#CC0000] text-sm hover:underline font-semibold">Lupa Password?</button>
                 </div>
               </form>
             )}
@@ -633,6 +702,147 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      {/* ── Forgot Password Modal ── */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-[500px] bg-white rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Red Header Background */}
+            <div className="bg-[#CC0000] pt-6 pb-8 px-8 text-center text-white relative">
+              <div className="w-12 h-12 bg-white/20 border border-white/30 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm backdrop-blur-md">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold mb-1">{forgotStep === 1 ? 'Verifikasi Email' : 'Ganti Password'}</h2>
+              <p className="text-red-100 text-sm font-medium">Langkah {forgotStep} dari 2</p>
+            </div>
+
+            {/* Content Area */}
+            <div className="px-8 pt-0 pb-8 bg-white relative">
+              {/* Stepper */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-5 sm:px-6 py-3 rounded-full shadow-md border border-gray-100 flex items-center gap-2 sm:gap-4 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-gray-400 whitespace-nowrap">
+                <div className={`flex items-center gap-1.5 sm:gap-2 ${forgotStep === 1 ? 'text-[#CC0000]' : 'text-gray-400'}`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white flex-shrink-0 ${forgotStep === 1 ? 'bg-[#CC0000]' : 'bg-gray-300'}`}>1</span>
+                  <span>Verifikasi Email</span>
+                </div>
+                <div className="w-4 sm:w-8 h-px bg-gray-200"></div>
+                <div className={`flex items-center gap-1.5 sm:gap-2 ${forgotStep === 2 ? 'text-[#CC0000]' : 'text-gray-400'}`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white flex-shrink-0 ${forgotStep === 2 ? 'bg-[#CC0000]' : 'bg-gray-300'}`}>2</span>
+                  <span>Ganti Password</span>
+                </div>
+              </div>
+
+              <div className="pt-10 sm:pt-12">
+                {forgotStep === 1 ? (
+                  <form onSubmit={handleSendForgotOtp}>
+                    <p className="text-sm text-gray-600 text-center leading-relaxed mb-6">
+                      Untuk keamanan akun, harap verifikasi email Telkom University Anda. Kode OTP akan dikirim ke email yang Anda masukkan.
+                    </p>
+                    <div className="mb-6">
+                      <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Email Telkom University</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="email"
+                          value={forgotEmail}
+                          onChange={(e) => setForgotEmail(e.target.value)}
+                          placeholder="@student.telkomuniversity.ac.id"
+                          className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] bg-gray-50 focus:bg-white transition-all"
+                          required
+                        />
+                        <button
+                          type="submit"
+                          disabled={isForgotLoading || !forgotEmail}
+                          className="px-5 py-3 bg-[#CC0000] hover:bg-[#A30000] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all whitespace-nowrap"
+                        >
+                          {isForgotLoading ? 'Memproses...' : 'Kirim OTP'}
+                        </button>
+                      </div>
+                      <p className="text-center text-xs text-gray-400 mt-3">Klik &quot;Kirim OTP&quot; untuk menerima kode verifikasi via email</p>
+                    </div>
+                  </form>
+                ) : (
+                  <form onSubmit={handleResetPassword} className="space-y-4 mb-6">
+                    <div>
+                      <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Kode OTP (6 Digit)</label>
+                      <input
+                        type="text"
+                        value={forgotOtp}
+                        onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="000000"
+                        maxLength={6}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] text-center text-xl font-mono tracking-[0.5em] bg-gray-50 focus:bg-white transition-all"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Password Baru</label>
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? 'text' : 'password'}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Masukkan password baru"
+                          className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] bg-gray-50 focus:bg-white transition-all"
+                          required
+                        />
+                        <button type="button" onClick={() => setShowNewPassword((v) => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                          {showNewPassword ? <EyeOffIcon /> : <EyeIcon />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Konfirmasi Password Baru</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Ketik ulang password baru"
+                          className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] bg-gray-50 focus:bg-white transition-all"
+                          required
+                        />
+                        <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                          {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isForgotLoading || !forgotOtp || !newPassword || !confirmPassword || (newPassword !== confirmPassword)}
+                      className="w-full mt-2 bg-[#CC0000] hover:bg-[#A30000] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all text-sm tracking-wide"
+                    >
+                      {isForgotLoading ? 'Memproses...' : 'Simpan Password Baru'}
+                    </button>
+                    {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                      <p className="text-red-500 text-xs text-center">Password tidak cocok</p>
+                    )}
+                  </form>
+                )}
+
+                <div className="border-t border-gray-100 pt-5">
+                  <p className="text-center text-[11px] text-gray-400 mb-4 max-w-[320px] mx-auto">
+                    Anda harus menyelesaikan kedua langkah ini untuk dapat mengakses semua fitur KPPM.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(false)}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-[#CC0000] text-[#CC0000] hover:bg-red-50 rounded-xl text-sm font-bold transition-all"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="19" y1="12" x2="5" y2="12"></line>
+                      <polyline points="12,19 5,12 12,5"></polyline>
+                    </svg>
+                    Kembali ke halaman Login
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
