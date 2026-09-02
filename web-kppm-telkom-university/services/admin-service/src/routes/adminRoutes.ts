@@ -16,6 +16,8 @@ import {
   createLecturer,
   updateStudent,
   assignLecturerToStudent,
+  exportGradesBySemester,
+  getPreviewGrades,
 } from '../controllers/adminController';
 import { verifyAdminToken } from '../middleware/authMiddleware';
 
@@ -52,6 +54,8 @@ router.get('/stats',                              verifyAdminToken, getAdminStat
 router.get('/lecturers',                          verifyAdminToken, getAdminLecturers);
 router.get('/students',                           verifyAdminToken, getAdminStudents);
 router.get('/semesters',                          verifyAdminToken, getAdminSemesters);
+router.get('/export/grades',                      verifyAdminToken, exportGradesBySemester);
+router.get('/export/preview',                     verifyAdminToken, getPreviewGrades);
 router.post('/students/add',                      verifyAdminToken, createStudent);
 router.post('/lecturers/add',                     verifyAdminToken, createLecturer);
 router.post('/inject/students',  verifyAdminToken, uploadInMemory.single('file'), injectStudents);

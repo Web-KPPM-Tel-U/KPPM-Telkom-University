@@ -1143,3 +1143,39 @@ export const getLecturerKpResults = async (): Promise<ApiResponse<LecturerKpResu
   });
   return res.json();
 };
+
+/**
+ * Unduh Nilai Mahasiswa berdasarkan semester (XLSX)
+ */
+export const exportAdminGrades = async (semesterCode: string): Promise<void> => {
+  const res = await fetch(`${API_BASE_URL}/admin/export/grades?semester_code=${encodeURIComponent(semesterCode)}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.message || 'Gagal mengunduh nilai');
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Nilai_Mahasiswa_Semester_${semesterCode}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+/**
+ * Preview Nilai Mahasiswa berdasarkan semester
+ */
+export const getAdminPreviewGrades = async (semesterCode: string): Promise<ApiResponse<any[]>> => {
+  const res = await fetch(`${API_BASE_URL}/admin/export/preview?semester_code=${encodeURIComponent(semesterCode)}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+  });
+  return res.json();
+};

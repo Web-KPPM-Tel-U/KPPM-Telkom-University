@@ -3,6 +3,7 @@ import { Request as ExpressRequest } from 'express';
 import pool from '../config/db';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { parse as csvParse } from 'csv-parse/sync';
 import bcrypt from 'bcryptjs';
 
@@ -816,5 +817,233 @@ export const toggleSemesterStatus = async (
   } catch (err: any) {
     console.error('[Admin] toggleSemesterStatus error:', err.message);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Admin: Export Grades by Semester ────────────────────────────────────────
+
+/**
+ * GET /admin/export/grades?semester_code=...
+ * Mengunduh nilai mahasiswa dalam format XLSX untuk semester tertentu.
+ */
+export const exportGradesBySemester = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const semesterCode = req.query.semester_code as string;
+  
+  if (!semesterCode) {
+    res.status(400).json({ success: false, message: 'semester_code diperlukan.' });
+    return;
+  }
+
+  try {
+    const [rows] = await pool.execute<any[]>(
+      `SELECT 
+        s.class, 
+        s.student_name, 
+        s.nim,
+        ls.plo05_clo01_commitment AS pa_commitment,
+        ls.plo07_clo02_planning AS pa_planning,
+        ls.plo05_clo04_guidance AS pa_guidance,
+        ls.plo05_clo04_presentation AS pa_presentation,
+        ls.plo05_clo04_report AS pa_report,
+        ls.plo01_clo05_identification AS pa_identification,
+        ms.attendance AS pl_attendance,
+        ms.discipline AS pl_discipline,
+        ms.commitment AS pl_commitment,
+        ms.planning AS pl_planning,
+        ms.teamwork AS pl_teamwork,
+        ms.guidance AS pl_guidance,
+        ms.report AS pl_report,
+        ms.problem_solving AS pl_problem_solving
+       FROM internship_registrations r
+       JOIN students s ON r.nim = s.nim
+       LEFT JOIN lecturer_scores ls ON r.registration_id = ls.registration_id
+       LEFT JOIN mentor_scores ms ON r.registration_id = ms.registration_id
+       WHERE r.semester_code = ?
+       ORDER BY s.class ASC, s.student_name ASC`,
+      [semesterCode]
+    );
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheetPA = workbook.addWorksheet('Penilaian Pembimbing Akademik');
+    const worksheetPL = workbook.addWorksheet('Penilaian Pembimbing Lapangan');
+
+    // Definisi kolom Pembimbing Akademik
+    worksheetPA.columns = [
+      { header: 'No', key: 'no', width: 5 },
+      { header: 'Kelas', key: 'kelas', width: 15 },
+      { header: 'Nama', key: 'nama', width: 35 },
+      { header: 'NIM', key: 'nim', width: 20 },
+      { header: 'PLO05-CLO01 - Komitmen terhadap tugas / pekerjaan', key: 'pa_commitment', width: 25 },
+      { header: 'PLO07-CLO02 - Mahasiswa mampu merencanakan penyelesaian tugas atau pekerjaan, bekerja efektif dan mandiri selama KP', key: 'pa_planning', width: 30 },
+      { header: 'PLO05-CLO04 - Frekuensi bimbingan dengan pembimbing akademik', key: 'pa_guidance', width: 30 },
+      { header: 'PLO05-CLO04 - Kualitas Presentasi', key: 'pa_presentation', width: 25 },
+      { header: 'PLO05-CLO04 - Kualitas Laporan', key: 'pa_report', width: 25 },
+      { header: 'PLO01-CLO05 PA - Identifikasi dan Formulasi Masalah', key: 'pa_identification', width: 30 }
+    ];
+
+    // Definisi kolom Pembimbing Lapangan
+    worksheetPL.columns = [
+      { header: 'No', key: 'no', width: 5 },
+      { header: 'Kelas', key: 'kelas', width: 15 },
+      { header: 'Nama', key: 'nama', width: 35 },
+      { header: 'NIM', key: 'nim', width: 20 },
+      { header: 'PLO05-CLO01 - Kehadiran Tepat Waktu', key: 'pl_attendance', width: 25 },
+      { header: 'PLO05-CLO01 - Kedisiplinan', key: 'pl_discipline', width: 25 },
+      { header: 'PLO05-CLO01 - Komitmen terhadap tugas / pekerjaan', key: 'pl_commitment', width: 25 },
+      { header: 'PLO07-CLO02 - Mahasiswa mampu merencanakan penyelesaian tugas atau pekerjaan, bekerja efektif dan mandiri selama KP', key: 'pl_planning', width: 30 },
+      { header: 'PLO03-CLO03 - Mahasiswa mampu bekerjasama di dalam tim organisasi/perusahaan selama KP', key: 'pl_teamwork', width: 30 },
+      { header: 'PLO05-CLO04 - Frekuensi bimbingan dengan pembimbing lapangan / Mentor', key: 'pl_guidance', width: 30 },
+      { header: 'PLO05-CLO04 - Kualitas Laporan', key: 'pl_report', width: 25 },
+      { header: 'PLO01-CLO05 PA - Identifikasi dan Formulasi Masalah', key: 'pl_problem_solving', width: 30 }
+    ];
+
+    // Helper styling header
+    const styleHeader = (ws: ExcelJS.Worksheet, gradeStartCol: number) => {
+      const headerRow = ws.getRow(1);
+      headerRow.height = 40;
+      headerRow.eachCell((cell, colNumber) => {
+        cell.font = { bold: true };
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        
+        // Warna hijau terang untuk header nilai
+        if (colNumber >= gradeStartCol) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFC6EFCE' } // Light green
+          };
+        }
+      });
+    };
+
+    styleHeader(worksheetPA, 5);
+    styleHeader(worksheetPL, 5);
+
+    // Tambah baris data & beri styling
+    rows.forEach((r, i) => {
+      // Untuk NIM (dan lain-lain yang bisa dianggap numerik oleh Excel tapi aslinya string), kita tidak memaksakan tanda kutip tunggal di exceljs karena type 'string' sudah cukup
+      // Atau bisa tambahkan ' jika benar-benar butuh: `'${r.nim || '-'}`
+      const rowPA = worksheetPA.addRow({
+        no: i + 1,
+        kelas: r.class || '-',
+        nama: r.student_name || '-',
+        nim: r.nim ? `'${r.nim}` : '-', // Format khusus NIM agar seperti string di excel
+        pa_commitment: r.pa_commitment ?? '-',
+        pa_planning: r.pa_planning ?? '-',
+        pa_guidance: r.pa_guidance ?? '-',
+        pa_presentation: r.pa_presentation ?? '-',
+        pa_report: r.pa_report ?? '-',
+        pa_identification: r.pa_identification ?? '-'
+      });
+
+      const rowPL = worksheetPL.addRow({
+        no: i + 1,
+        kelas: r.class || '-',
+        nama: r.student_name || '-',
+        nim: r.nim ? `'${r.nim}` : '-',
+        pl_attendance: r.pl_attendance ?? '-',
+        pl_discipline: r.pl_discipline ?? '-',
+        pl_commitment: r.pl_commitment ?? '-',
+        pl_planning: r.pl_planning ?? '-',
+        pl_teamwork: r.pl_teamwork ?? '-',
+        pl_guidance: r.pl_guidance ?? '-',
+        pl_report: r.pl_report ?? '-',
+        pl_problem_solving: r.pl_problem_solving ?? '-'
+      });
+
+      // Styling cell data
+      [rowPA, rowPL].forEach(row => {
+        row.eachCell((cell, colNumber) => {
+          cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+          
+          if (colNumber === 3) {
+            // Nama mahasiswa rata kiri, yang lain rata tengah
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+          } else {
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          }
+          
+          if (colNumber >= 5) {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFC6EFCE' }
+            };
+          }
+        });
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader('Content-Disposition', `attachment; filename="Nilai_Mahasiswa_Semester_${semesterCode}.xlsx"`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    
+    res.status(200).send(buffer);
+
+  } catch (err: any) {
+    console.error('[Admin] exportGradesBySemester error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server saat mengunduh nilai.' });
+  }
+};
+
+// ─── Admin: Preview Grades by Semester ────────────────────────────────────────
+
+/**
+ * GET /admin/export/preview?semester_code=...
+ * Mengembalikan maksimal 5 baris pertama dari data nilai mahasiswa untuk preview.
+ */
+export const getPreviewGrades = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const semesterCode = req.query.semester_code as string;
+  
+  if (!semesterCode) {
+    res.status(400).json({ success: false, message: 'semester_code diperlukan.' });
+    return;
+  }
+
+  try {
+    const [rows] = await pool.execute<any[]>(
+      `SELECT 
+        s.class, 
+        s.student_name, 
+        s.nim,
+        ls.plo05_clo01_commitment AS pa_commitment,
+        ls.plo07_clo02_planning AS pa_planning,
+        ls.plo05_clo04_guidance AS pa_guidance,
+        ls.plo05_clo04_presentation AS pa_presentation,
+        ls.plo05_clo04_report AS pa_report,
+        ls.plo01_clo05_identification AS pa_identification,
+        ms.attendance AS pl_attendance,
+        ms.discipline AS pl_discipline,
+        ms.commitment AS pl_commitment,
+        ms.planning AS pl_planning,
+        ms.teamwork AS pl_teamwork,
+        ms.guidance AS pl_guidance,
+        ms.report AS pl_report,
+        ms.problem_solving AS pl_problem_solving
+       FROM internship_registrations r
+       JOIN students s ON r.nim = s.nim
+       LEFT JOIN lecturer_scores ls ON r.registration_id = ls.registration_id
+       LEFT JOIN mentor_scores ms ON r.registration_id = ms.registration_id
+       WHERE r.semester_code = ?
+       ORDER BY s.class ASC, s.student_name ASC
+       LIMIT 5`,
+      [semesterCode]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows
+    });
+  } catch (err: any) {
+    console.error('[Admin] getPreviewGrades error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server saat mengambil preview nilai.' });
   }
 };
