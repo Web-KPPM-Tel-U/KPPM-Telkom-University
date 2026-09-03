@@ -42,6 +42,7 @@ interface RegistrationDetail {
   submitted_at: string;
   lecturer_score_total: string | null;
   mentor_score_total: string | null;
+  combined_total: string | null;
   has_lecturer_score: boolean;
   has_mentor_score: boolean;
 }
@@ -482,7 +483,7 @@ export default function PengajuanKPPMPage() {
 
                 {/* Nilai */}
                 <Section title="Nilai">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 mb-3">
                     <ScoreCard
                       label="Nilai Dosen (Rata-rata)"
                       value={detail.lecturer_score_total}
@@ -494,6 +495,55 @@ export default function PengajuanKPPMPage() {
                       hasValue={detail.has_mentor_score}
                     />
                   </div>
+
+                  {/* Akumulasi total — hanya tampil jika keduanya sudah ada nilai */}
+                  {detail.has_lecturer_score && detail.has_mentor_score && detail.lecturer_score_total && detail.mentor_score_total && (() => {
+                    const pa    = parseFloat(detail.lecturer_score_total);
+                    const pl    = parseFloat(detail.mentor_score_total);
+                    const total = detail.combined_total ?? (pa + pl).toFixed(2);
+                    return (
+                      <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4">
+                        <p className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-3 text-center">
+                          Akumulasi Total Nilai
+                        </p>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          {/* PA */}
+                          <div className="flex-1 bg-gray-50 dark:bg-slate-800/60 rounded-xl p-3 text-center">
+                            <p className="text-[10px] text-gray-400 dark:text-slate-500 mb-1">Nilai PA</p>
+                            <p className="text-xl font-black text-gray-700 dark:text-slate-200">{pa.toFixed(2)}</p>
+                            <p className="text-[9px] text-gray-300 dark:text-slate-600 mt-0.5">bobot 55%</p>
+                          </div>
+
+                          {/* Plus */}
+                          <div className="flex-shrink-0 text-gray-300 dark:text-slate-600">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                          </div>
+
+                          {/* Mentor */}
+                          <div className="flex-1 bg-gray-50 dark:bg-slate-800/60 rounded-xl p-3 text-center">
+                            <p className="text-[10px] text-gray-400 dark:text-slate-500 mb-1">Nilai Mentor</p>
+                            <p className="text-xl font-black text-gray-700 dark:text-slate-200">{pl.toFixed(2)}</p>
+                            <p className="text-[9px] text-gray-300 dark:text-slate-600 mt-0.5">bobot 45%</p>
+                          </div>
+
+                          {/* Equals */}
+                          <div className="flex-shrink-0 text-gray-300 dark:text-slate-600">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                              <line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/>
+                            </svg>
+                          </div>
+
+                          {/* Total */}
+                          <div className="flex-1 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3 text-center">
+                            <p className="text-[10px] font-bold text-[#CC0000]/70 dark:text-red-400 mb-1">Total Gabungan</p>
+                            <p className="text-xl font-black text-[#CC0000]">{total}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </Section>
 
                 {/* Ganti Semester — hanya tampil jika belum dinilai */}
