@@ -1047,3 +1047,308 @@ export const getPreviewGrades = async (
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server saat mengambil preview nilai.' });
   }
 };
+
+// ─── Admin: Get Registrations by Semester ─────────────────────────────────────
+
+/**
+ * GET /admin/registrations?semester_code=...&search=...&limit=...&offset=...
+ * Mengembalikan daftar semua pengajuan KPPM (termasuk mahasiswa yang belum mengajukan)
+ * berdasarkan semester. Mahasiswa yang belum mengajukan tetap ditampilkan dengan status "belum_daftar".
+ */
+export const getRegistrationsBySemester = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const semesterCode = (req.query.semester_code as string) || '';
+  const search       = (req.query.search as string) || '';
+  const limit        = Math.min(Number(req.query.limit)  || 50, 200);
+  const offset       = Number(req.query.offset) || 0;
+
+  try {
+    const searchParam = `%${search}%`;
+
+    if (semesterCode) {
+      // Hanya tampilkan mahasiswa yang sudah mengajukan di semester ini (INNER JOIN)
+      const [rows] = await pool.execute<any[]>(
+        `SELECT
+           s.nim,
+           s.student_name,
+           s.class,
+           r.registration_id,
+           r.semester_code,
+           r.status,
+           r.company_name,
+           r.submitted_at
+         FROM internship_registrations r
+         INNER JOIN students s ON r.nim = s.nim
+         WHERE r.semester_code = ?
+           AND (s.student_name LIKE ? OR s.nim LIKE ?)
+         ORDER BY s.student_name ASC
+         LIMIT ? OFFSET ?`,
+        [semesterCode, searchParam, searchParam, limit, offset]
+      );
+
+      const [[countRow]] = await pool.execute<any[]>(
+        `SELECT COUNT(*) AS total
+         FROM internship_registrations r
+         INNER JOIN students s ON r.nim = s.nim
+         WHERE r.semester_code = ?
+           AND (s.student_name LIKE ? OR s.nim LIKE ?)`,
+        [semesterCode, searchParam, searchParam]
+      );
+
+      res.status(200).json({
+        success: true,
+        data: rows,
+        meta: { total: countRow?.total ?? 0, limit, offset },
+      });
+    } else {
+      // Tanpa filter semester: tampilkan semua pengajuan yang ada
+      const [rows] = await pool.execute<any[]>(
+        `SELECT
+           s.nim,
+           s.student_name,
+           s.class,
+           r.registration_id,
+           r.semester_code,
+           r.status,
+           r.company_name,
+           r.submitted_at
+         FROM internship_registrations r
+         JOIN students s ON r.nim = s.nim
+         WHERE (s.student_name LIKE ? OR s.nim LIKE ?)
+         ORDER BY r.submitted_at DESC
+         LIMIT ? OFFSET ?`,
+        [searchParam, searchParam, limit, offset]
+      );
+
+      const [[countRow]] = await pool.execute<any[]>(
+        `SELECT COUNT(*) AS total FROM internship_registrations r
+         JOIN students s ON r.nim = s.nim
+         WHERE (s.student_name LIKE ? OR s.nim LIKE ?)`,
+        [searchParam, searchParam]
+      );
+
+      res.status(200).json({
+        success: true,
+        data: rows,
+        meta: { total: countRow?.total ?? 0, limit, offset },
+      });
+    }
+  } catch (err: any) {
+    console.error('[Admin] getRegistrationsBySemester error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Admin: Get Registration Detail ──────────────────────────────────────────
+
+/**
+ * GET /admin/registrations/:id
+ * Mengembalikan detail lengkap satu pengajuan KPPM termasuk info mahasiswa,
+ * dosen, nilai dosen, dan nilai mentor.
+ */
+export const getRegistrationDetail = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { id } = req.params;
+
+  try {
+    const [rows] = await pool.execute<any[]>(
+      `SELECT
+         r.registration_id,
+         r.nim,
+         r.lecturer_nip,
+         r.semester_code,
+         r.status,
+         r.company_name,
+         r.internship_position,
+         r.internship_start,
+         r.internship_end,
+         r.mentor_name,
+         r.mentor_email,
+         r.submitted_at,
+         s.student_name,
+         s.class,
+         s.email AS student_email,
+         l.lecturer_name,
+         l.lecturer_code,
+         l.email AS lecturer_email,
+         /* Nilai Dosen (Pembimbing Akademik) */
+         ls.plo05_clo01_commitment  AS pa_commitment,
+         ls.plo07_clo02_planning    AS pa_planning,
+         ls.plo05_clo04_guidance    AS pa_guidance,
+         ls.plo05_clo04_presentation AS pa_presentation,
+         ls.plo05_clo04_report      AS pa_report,
+         ls.plo01_clo05_identification AS pa_identification,
+         /* Nilai Mentor (Pembimbing Lapangan) */
+         ms.attendance    AS pl_attendance,
+         ms.discipline    AS pl_discipline,
+         ms.commitment    AS pl_commitment,
+         ms.planning      AS pl_planning,
+         ms.teamwork      AS pl_teamwork,
+         ms.guidance      AS pl_guidance,
+         ms.report        AS pl_report,
+         ms.problem_solving AS pl_problem_solving
+       FROM internship_registrations r
+       JOIN    students s  ON r.nim = s.nim
+       LEFT JOIN lecturers l  ON r.lecturer_nip = l.nip
+       LEFT JOIN lecturer_scores ls ON r.registration_id = ls.registration_id
+       LEFT JOIN mentor_scores   ms ON r.registration_id = ms.registration_id
+       WHERE r.registration_id = ?`,
+      [id]
+    );
+
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Data pengajuan tidak ditemukan.' });
+      return;
+    }
+
+    const row = rows[0];
+
+    // Hitung nilai total dosen (rata-rata 6 komponen)
+    const paFields = [
+      row.pa_commitment, row.pa_planning, row.pa_guidance,
+      row.pa_presentation, row.pa_report, row.pa_identification,
+    ];
+    const paHasValue = paFields.some(v => v !== null && v !== undefined);
+    const paTotal = paHasValue
+      ? (paFields.reduce((s, v) => s + (parseFloat(v) || 0), 0) / paFields.length).toFixed(2)
+      : null;
+
+    // Hitung nilai total mentor (rata-rata 8 komponen)
+    const plFields = [
+      row.pl_attendance, row.pl_discipline, row.pl_commitment, row.pl_planning,
+      row.pl_teamwork, row.pl_guidance, row.pl_report, row.pl_problem_solving,
+    ];
+    const plHasValue = plFields.some(v => v !== null && v !== undefined);
+    const plTotal = plHasValue
+      ? (plFields.reduce((s, v) => s + (parseFloat(v) || 0), 0) / plFields.length).toFixed(2)
+      : null;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        registration_id:    row.registration_id,
+        nim:                row.nim,
+        student_name:       row.student_name,
+        student_class:      row.class,
+        student_email:      row.student_email,
+        lecturer_nip:       row.lecturer_nip,
+        lecturer_name:      row.lecturer_name,
+        lecturer_code:      row.lecturer_code,
+        lecturer_email:     row.lecturer_email,
+        semester_code:      row.semester_code,
+        status:             row.status,
+        company_name:       row.company_name,
+        internship_position: row.internship_position,
+        internship_start:   row.internship_start,
+        internship_end:     row.internship_end,
+        mentor_name:        row.mentor_name,
+        mentor_email:       row.mentor_email,
+        submitted_at:       row.submitted_at,
+        lecturer_score_total: paTotal,
+        mentor_score_total:   plTotal,
+        has_lecturer_score: paHasValue,
+        has_mentor_score:   plHasValue,
+      },
+    });
+  } catch (err: any) {
+    console.error('[Admin] getRegistrationDetail error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Admin: Update Registration Semester ──────────────────────────────────────
+
+/**
+ * PATCH /admin/registrations/:id/semester
+ * Mengganti kode semester pada pengajuan KPPM.
+ * Hanya diizinkan jika dosen DAN mentor belum memberikan nilai.
+ */
+export const updateRegistrationSemester = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { id } = req.params;
+  const { semester_code } = req.body as { semester_code: string };
+
+  if (!semester_code?.trim()) {
+    res.status(400).json({ success: false, message: 'Kode semester baru wajib diisi.' });
+    return;
+  }
+
+  try {
+    // Cek pengajuan ada
+    const [regRows] = await pool.execute<any[]>(
+      'SELECT registration_id, semester_code FROM internship_registrations WHERE registration_id = ?',
+      [id]
+    );
+    if (!regRows || regRows.length === 0) {
+      res.status(404).json({ success: false, message: 'Data pengajuan tidak ditemukan.' });
+      return;
+    }
+
+    // Cek apakah sudah ada nilai dosen
+    const [lecturerScoreRows] = await pool.execute<any[]>(
+      'SELECT lecturer_score_id FROM lecturer_scores WHERE registration_id = ?',
+      [id]
+    );
+    if (lecturerScoreRows && lecturerScoreRows.length > 0) {
+      res.status(409).json({
+        success: false,
+        message: 'Semester tidak dapat diubah karena dosen pembimbing sudah memberikan nilai.',
+      });
+      return;
+    }
+
+    // Cek apakah sudah ada nilai mentor
+    const [mentorScoreRows] = await pool.execute<any[]>(
+      'SELECT mentor_score_id FROM mentor_scores WHERE registration_id = ?',
+      [id]
+    );
+    if (mentorScoreRows && mentorScoreRows.length > 0) {
+      res.status(409).json({
+        success: false,
+        message: 'Semester tidak dapat diubah karena pembimbing lapangan (mentor) sudah memberikan nilai.',
+      });
+      return;
+    }
+
+    // Cek semester tujuan ada & aktif
+    const [semRows] = await pool.execute<any[]>(
+      'SELECT code, is_active FROM semester_codes WHERE code = ?',
+      [semester_code.trim()]
+    );
+    if (!semRows || semRows.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: `Kode semester "${semester_code.trim()}" tidak terdaftar di sistem.`,
+      });
+      return;
+    }
+    if (!semRows[0].is_active) {
+      res.status(400).json({
+        success: false,
+        message: `Semester "${semester_code.trim()}" tidak aktif. Mahasiswa hanya dapat dipindahkan ke semester yang sedang aktif.`,
+      });
+      return;
+    }
+
+    // Update semester
+    await pool.execute(
+      'UPDATE internship_registrations SET semester_code = ?, updated_at = NOW() WHERE registration_id = ?',
+      [semester_code.trim(), id]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Kode semester pengajuan berhasil diubah ke "${semester_code.trim()}".`,
+      data: { registration_id: parseInt(id), semester_code: semester_code.trim() },
+    });
+  } catch (err: any) {
+    console.error('[Admin] updateRegistrationSemester error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};

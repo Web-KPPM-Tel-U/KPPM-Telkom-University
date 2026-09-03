@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -356,12 +356,6 @@ export default function DashboardPage() {
               className="px-5 py-2.5 bg-[#CC0000] hover:bg-[#A30000] text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
             >
               Ajukan Pendaftaran
-            </button>
-            <button
-              id="btn-cek-syarat"
-              className="px-5 py-2.5 border-2 border-[#CC0000] dark:border-red-500 text-[#CC0000] dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 text-sm font-semibold rounded-xl transition-all"
-            >
-              Cek Syarat &amp; Ketentuan
             </button>
           </div>
         </div>
