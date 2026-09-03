@@ -191,6 +191,7 @@ export default function LoginPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isForgotLoading, setIsForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -200,25 +201,33 @@ export default function LoginPage() {
     setForgotStep(1);
     setForgotEmail('');
     setForgotOtp('');
+    setForgotError('');
     setNewPassword('');
     setConfirmPassword('');
   };
 
-  // Mock handlers for Forgot Password -> Now connected to API
+  // Forgot Password handlers (connected to API)
   const handleSendForgotOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail) return;
+
+    // Validasi domain — hanya email Telkom University yang diperbolehkan
+    if (!forgotEmail.toLowerCase().endsWith('telkomuniversity.ac.id')) {
+      setForgotError('Email harus menggunakan domain telkomuniversity.ac.id');
+      return;
+    }
+
     setIsForgotLoading(true);
-    setError('');
+    setForgotError('');
     try {
       const res = await forgotPasswordSendOtp(forgotEmail);
       if (res.success) {
         setForgotStep(2);
       } else {
-        setError(res.message || 'Gagal mengirim OTP.');
+        setForgotError(res.message || 'Gagal mengirim OTP.');
       }
     } catch (err) {
-      setError('Terjadi kesalahan koneksi.');
+      setForgotError('Terjadi kesalahan koneksi.');
     } finally {
       setIsForgotLoading(false);
     }
@@ -227,24 +236,24 @@ export default function LoginPage() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotOtp || !newPassword || !confirmPassword) return;
-    
+
     if (newPassword !== confirmPassword) {
-      setError('Password baru dan konfirmasi tidak cocok.');
+      setForgotError('Password baru dan konfirmasi tidak cocok.');
       return;
     }
-    
+
     setIsForgotLoading(true);
-    setError('');
+    setForgotError('');
     try {
       const res = await forgotPasswordVerifyReset(forgotEmail, forgotOtp, newPassword);
       if (res.success) {
         setShowForgotPassword(false);
         setSuccess('Password berhasil direset. Silakan login menggunakan password baru.');
       } else {
-        setError(res.message || 'Gagal mereset password.');
+        setForgotError(res.message || 'Gagal mereset password.');
       }
     } catch (err) {
-      setError('Terjadi kesalahan koneksi.');
+      setForgotError('Terjadi kesalahan koneksi.');
     } finally {
       setIsForgotLoading(false);
     }
@@ -747,7 +756,7 @@ export default function LoginPage() {
                           type="email"
                           value={forgotEmail}
                           onChange={(e) => setForgotEmail(e.target.value)}
-                          placeholder="@student.telkomuniversity.ac.id"
+                          placeholder="nama@telkomuniversity.ac.id"
                           className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] bg-gray-50 focus:bg-white transition-all"
                           required
                         />
@@ -819,6 +828,13 @@ export default function LoginPage() {
                       <p className="text-red-500 text-xs text-center">Password tidak cocok</p>
                     )}
                   </form>
+                )}
+
+                {/* Error message untuk forgot password */}
+                {forgotError && (
+                  <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-red-700 text-sm text-center leading-snug">{forgotError}</p>
+                  </div>
                 )}
 
                 <div className="border-t border-gray-100 pt-5">

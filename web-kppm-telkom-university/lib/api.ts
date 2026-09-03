@@ -1179,3 +1179,50 @@ export const getAdminPreviewGrades = async (semesterCode: string): Promise<ApiRe
   });
   return res.json();
 };
+
+// ─── Admin: Pengajuan KPPM ────────────────────────────────────────────────────
+
+/**
+ * Daftar pengajuan berdasarkan semester (termasuk yg belum daftar jika semester dipilih)
+ */
+export const getAdminRegistrations = async (params: {
+  semester_code?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<ApiResponse<any[]>> => {
+  const q = new URLSearchParams();
+  if (params.semester_code) q.set('semester_code', params.semester_code);
+  if (params.search)        q.set('search', params.search);
+  if (params.limit)         q.set('limit', String(params.limit));
+  if (params.offset)        q.set('offset', String(params.offset));
+  const res = await fetch(`${API_BASE_URL}/admin/registrations?${q.toString()}`, {
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
+/**
+ * Detail satu pengajuan KPPM
+ */
+export const getAdminRegistrationDetail = async (id: number): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/admin/registrations/${id}`, {
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
+/**
+ * Ganti kode semester pengajuan (hanya jika belum dinilai)
+ */
+export const updateAdminRegistrationSemester = async (
+  id: number,
+  semesterCode: string
+): Promise<ApiResponse<any>> => {
+  const res = await fetch(`${API_BASE_URL}/admin/registrations/${id}/semester`, {
+    method: 'PATCH',
+    headers: adminAuthHeaders(),
+    body: JSON.stringify({ semester_code: semesterCode }),
+  });
+  return res.json();
+};

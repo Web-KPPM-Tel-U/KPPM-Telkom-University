@@ -92,7 +92,6 @@ const MIGRATIONS = [
       approved_at  DATETIME NULL,
       cancelled_at DATETIME NULL,
       rejected_at  DATETIME NULL,
-      mentor_access_revoked TINYINT(1) DEFAULT 0,
       created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       CONSTRAINT fk_registration_student

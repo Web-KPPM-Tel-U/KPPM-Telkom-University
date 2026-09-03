@@ -18,6 +18,9 @@ import {
   assignLecturerToStudent,
   exportGradesBySemester,
   getPreviewGrades,
+  getRegistrationsBySemester,
+  getRegistrationDetail,
+  updateRegistrationSemester,
 } from '../controllers/adminController';
 import { verifyAdminToken } from '../middleware/authMiddleware';
 
@@ -67,5 +70,10 @@ router.patch('/students/:nim/toggle-status',  verifyAdminToken, toggleStudentSta
 router.patch('/students/:nim/assign-lecturer', verifyAdminToken, assignLecturerToStudent);
 router.post('/semesters',                     verifyAdminToken, createSemester);
 router.patch('/semesters/:id/toggle-status',  verifyAdminToken, toggleSemesterStatus);
+
+// ─── Pengajuan KPPM ───────────────────────────────────────────────────────────
+router.get('/registrations',                          verifyAdminToken, getRegistrationsBySemester);
+router.get('/registrations/:id',                      verifyAdminToken, getRegistrationDetail);
+router.patch('/registrations/:id/semester',           verifyAdminToken, updateRegistrationSemester);
 
 export default router;
