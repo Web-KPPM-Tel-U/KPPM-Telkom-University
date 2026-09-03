@@ -1207,24 +1207,69 @@ export const getRegistrationDetail = async (
 
     const row = rows[0];
 
-    // Hitung nilai total dosen (rata-rata 6 komponen)
-    const paFields = [
-      row.pa_commitment, row.pa_planning, row.pa_guidance,
-      row.pa_presentation, row.pa_report, row.pa_identification,
-    ];
-    const paHasValue = paFields.some(v => v !== null && v !== undefined);
-    const paTotal = paHasValue
-      ? (paFields.reduce((s, v) => s + (parseFloat(v) || 0), 0) / paFields.length).toFixed(2)
-      : null;
+    // ── Nilai Dosen (Pembimbing Akademik) — Bobot × Nilai ──────────────────────
+    // Bobot: commitment=10, planning=5, guidance=5, presentation=15, report=10, identification=10
+    const PA_WEIGHTS = {
+      commitment:     10,
+      planning:        5,
+      guidance:        5,
+      presentation:   15,
+      report:         10,
+      identification: 10,
+    };
+    const paValues = {
+      commitment:     row.pa_commitment,
+      planning:       row.pa_planning,
+      guidance:       row.pa_guidance,
+      presentation:   row.pa_presentation,
+      report:         row.pa_report,
+      identification: row.pa_identification,
+    };
+    const paHasValue = Object.values(paValues).some(v => v !== null && v !== undefined);
+    let paTotal: string | null = null;
+    if (paHasValue) {
+      const sum = Object.entries(PA_WEIGHTS).reduce((acc, [key, bobot]) => {
+        const val = parseFloat(paValues[key as keyof typeof paValues] ?? 0) || 0;
+        return acc + (bobot / 100) * val;
+      }, 0);
+      paTotal = sum.toFixed(2);
+    }
 
-    // Hitung nilai total mentor (rata-rata 8 komponen)
-    const plFields = [
-      row.pl_attendance, row.pl_discipline, row.pl_commitment, row.pl_planning,
-      row.pl_teamwork, row.pl_guidance, row.pl_report, row.pl_problem_solving,
-    ];
-    const plHasValue = plFields.some(v => v !== null && v !== undefined);
-    const plTotal = plHasValue
-      ? (plFields.reduce((s, v) => s + (parseFloat(v) || 0), 0) / plFields.length).toFixed(2)
+    // ── Nilai Mentor (Pembimbing Lapangan) — Bobot × Nilai ─────────────────────
+    // Bobot: attendance=5, discipline=5, commitment=5, planning=5, teamwork=10, guidance=5, report=5, problem_solving=5
+    const PL_WEIGHTS = {
+      attendance:     5,
+      discipline:     5,
+      commitment:     5,
+      planning:       5,
+      teamwork:      10,
+      guidance:       5,
+      report:         5,
+      problem_solving:5,
+    };
+    const plValues = {
+      attendance:      row.pl_attendance,
+      discipline:      row.pl_discipline,
+      commitment:      row.pl_commitment,
+      planning:        row.pl_planning,
+      teamwork:        row.pl_teamwork,
+      guidance:        row.pl_guidance,
+      report:          row.pl_report,
+      problem_solving: row.pl_problem_solving,
+    };
+    const plHasValue = Object.values(plValues).some(v => v !== null && v !== undefined);
+    let plTotal: string | null = null;
+    if (plHasValue) {
+      const sum = Object.entries(PL_WEIGHTS).reduce((acc, [key, bobot]) => {
+        const val = parseFloat(plValues[key as keyof typeof plValues] ?? 0) || 0;
+        return acc + (bobot / 100) * val;
+      }, 0);
+      plTotal = sum.toFixed(2);
+    }
+
+    // Gabungan PA + PL
+    const combinedTotal = (paHasValue && plHasValue && paTotal && plTotal)
+      ? (parseFloat(paTotal) + parseFloat(plTotal)).toFixed(2)
       : null;
 
     res.status(200).json({
@@ -1250,8 +1295,9 @@ export const getRegistrationDetail = async (
         submitted_at:       row.submitted_at,
         lecturer_score_total: paTotal,
         mentor_score_total:   plTotal,
-        has_lecturer_score: paHasValue,
-        has_mentor_score:   plHasValue,
+        combined_total:       combinedTotal,
+        has_lecturer_score:   paHasValue,
+        has_mentor_score:     plHasValue,
       },
     });
   } catch (err: any) {
