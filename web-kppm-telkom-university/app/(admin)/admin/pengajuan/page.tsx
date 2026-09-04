@@ -19,6 +19,10 @@ interface RegistrationRow {
   status: string;
   company_name: string | null;
   submitted_at: string | null;
+  has_lecturer_score: number;
+  has_mentor_score: number;
+  pa_total: string | null;
+  pl_total: string | null;
 }
 
 interface RegistrationDetail {
@@ -72,6 +76,23 @@ function StatusBadge({ status }: { status: string }) {
       style={{ color: cfg.color, backgroundColor: cfg.bg }}
     >
       {cfg.label}
+    </span>
+  );
+}
+
+function ScoreBadge({ hasScore, score, small }: { hasScore: boolean; score?: string | null; small?: boolean }) {
+  if (hasScore && score) {
+    return (
+      <span className={`inline-flex items-center gap-1 font-bold rounded-lg ${
+        small ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-xs'
+      } bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 font-mono`}>
+        {score}
+      </span>
+    );
+  }
+  return (
+    <span className={`text-gray-500 dark:text-slate-400 font-mono font-bold select-none ${small ? 'text-[10px]' : 'text-base'}`}>
+      —
     </span>
   );
 }
@@ -321,6 +342,13 @@ export default function PengajuanKPPMPage() {
                     </span>
                     <span className="text-gray-200 dark:text-slate-700">·</span>
                     <StatusBadge status={row.status} />
+                    <span className="text-gray-200 dark:text-slate-700">·</span>
+                    <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-slate-500">
+                      PA: <ScoreBadge hasScore={!!row.has_lecturer_score} score={row.pa_total} small />
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-slate-500">
+                      PL: <ScoreBadge hasScore={!!row.has_mentor_score} score={row.pl_total} small />
+                    </span>
                     {row.submitted_at && (
                       <>
                         <span className="text-gray-200 dark:text-slate-700">·</span>
@@ -343,6 +371,8 @@ export default function PengajuanKPPMPage() {
                     <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Kelas</th>
                     <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Kode Semester</th>
                     <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Status</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Nilai PA</th>
+                    <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Nilai PL</th>
                     <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Tanggal Pengajuan</th>
                     <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Aksi</th>
                   </tr>
@@ -365,6 +395,12 @@ export default function PengajuanKPPMPage() {
                       </td>
                       <td className="px-4 py-3.5 whitespace-nowrap">
                         <StatusBadge status={row.status} />
+                      </td>
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <ScoreBadge hasScore={!!row.has_lecturer_score} score={row.pa_total} />
+                      </td>
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <ScoreBadge hasScore={!!row.has_mentor_score} score={row.pl_total} />
                       </td>
                       <td className="px-4 py-3.5 text-xs text-gray-400 dark:text-slate-500 whitespace-nowrap">
                         {formatDate(row.submitted_at)}
