@@ -1067,20 +1067,69 @@ export const getRegistrationsBySemester = async (
   try {
     const searchParam = `%${search}%`;
 
+    // ── Bobot PA & PL (sama dengan getRegistrationDetail) ────────────────────
+    const PA_WEIGHTS: Record<string, number> = {
+      commitment: 10, planning: 5, guidance: 5,
+      presentation: 15, report: 10, identification: 10,
+    };
+    const PL_WEIGHTS: Record<string, number> = {
+      attendance: 5, discipline: 5, commitment: 5, planning: 5,
+      teamwork: 10, guidance: 5, report: 5, problem_solving: 5,
+    };
+
+    const computePA = (row: any): string | null => {
+      const vals = {
+        commitment: row.pa_commitment, planning: row.pa_planning,
+        guidance: row.pa_guidance, presentation: row.pa_presentation,
+        report: row.pa_report, identification: row.pa_identification,
+      };
+      if (Object.values(vals).every(v => v === null || v === undefined)) return null;
+      const sum = Object.entries(PA_WEIGHTS).reduce((acc, [k, w]) =>
+        acc + (w / 100) * (parseFloat(vals[k as keyof typeof vals] ?? 0) || 0), 0);
+      return sum.toFixed(2);
+    };
+
+    const computePL = (row: any): string | null => {
+      const vals = {
+        attendance: row.pl_attendance, discipline: row.pl_discipline,
+        commitment: row.pl_commitment, planning: row.pl_planning,
+        teamwork: row.pl_teamwork, guidance: row.pl_guidance,
+        report: row.pl_report, problem_solving: row.pl_problem_solving,
+      };
+      if (Object.values(vals).every(v => v === null || v === undefined)) return null;
+      const sum = Object.entries(PL_WEIGHTS).reduce((acc, [k, w]) =>
+        acc + (w / 100) * (parseFloat(vals[k as keyof typeof vals] ?? 0) || 0), 0);
+      return sum.toFixed(2);
+    };
+
+    const SCORE_SELECT = `
+           ls.plo05_clo01_commitment   AS pa_commitment,
+           ls.plo07_clo02_planning     AS pa_planning,
+           ls.plo05_clo04_guidance     AS pa_guidance,
+           ls.plo05_clo04_presentation AS pa_presentation,
+           ls.plo05_clo04_report       AS pa_report,
+           ls.plo01_clo05_identification AS pa_identification,
+           ms.attendance    AS pl_attendance,
+           ms.discipline    AS pl_discipline,
+           ms.commitment    AS pl_commitment,
+           ms.planning      AS pl_planning,
+           ms.teamwork      AS pl_teamwork,
+           ms.guidance      AS pl_guidance,
+           ms.report        AS pl_report,
+           ms.problem_solving AS pl_problem_solving`;
+
     if (semesterCode) {
-      // Hanya tampilkan mahasiswa yang sudah mengajukan di semester ini (INNER JOIN)
       const [rows] = await pool.execute<any[]>(
         `SELECT
-           s.nim,
-           s.student_name,
-           s.class,
-           r.registration_id,
-           r.semester_code,
-           r.status,
-           r.company_name,
-           r.submitted_at
+           s.nim, s.student_name, s.class,
+           r.registration_id, r.semester_code, r.status, r.company_name, r.submitted_at,
+           CASE WHEN ls.registration_id IS NOT NULL THEN 1 ELSE 0 END AS has_lecturer_score,
+           CASE WHEN ms.registration_id IS NOT NULL THEN 1 ELSE 0 END AS has_mentor_score,
+           ${SCORE_SELECT}
          FROM internship_registrations r
          INNER JOIN students s ON r.nim = s.nim
+         LEFT JOIN lecturer_scores ls ON ls.registration_id = r.registration_id
+         LEFT JOIN mentor_scores   ms ON ms.registration_id = r.registration_id
          WHERE r.semester_code = ?
            AND (s.student_name LIKE ? OR s.nim LIKE ?)
          ORDER BY s.student_name ASC
@@ -1092,14 +1141,15 @@ export const getRegistrationsBySemester = async (
         `SELECT COUNT(*) AS total
          FROM internship_registrations r
          INNER JOIN students s ON r.nim = s.nim
-         WHERE r.semester_code = ?
-           AND (s.student_name LIKE ? OR s.nim LIKE ?)`,
+         WHERE r.semester_code = ? AND (s.student_name LIKE ? OR s.nim LIKE ?)`,
         [semesterCode, searchParam, searchParam]
       );
 
+      const mapped = rows.map(r => ({ ...r, pa_total: computePA(r), pl_total: computePL(r) }));
+
       res.status(200).json({
         success: true,
-        data: rows,
+        data: mapped,
         meta: { total: countRow?.total ?? 0, limit, offset },
       });
     } else {
@@ -1113,9 +1163,14 @@ export const getRegistrationsBySemester = async (
            r.semester_code,
            r.status,
            r.company_name,
-           r.submitted_at
+           r.submitted_at,
+           CASE WHEN ls.registration_id IS NOT NULL THEN 1 ELSE 0 END AS has_lecturer_score,
+           CASE WHEN ms.registration_id IS NOT NULL THEN 1 ELSE 0 END AS has_mentor_score,
+           ${SCORE_SELECT}
          FROM internship_registrations r
          JOIN students s ON r.nim = s.nim
+         LEFT JOIN lecturer_scores ls ON ls.registration_id = r.registration_id
+         LEFT JOIN mentor_scores   ms ON ms.registration_id = r.registration_id
          WHERE (s.student_name LIKE ? OR s.nim LIKE ?)
          ORDER BY r.submitted_at DESC
          LIMIT ? OFFSET ?`,
@@ -1129,14 +1184,80 @@ export const getRegistrationsBySemester = async (
         [searchParam, searchParam]
       );
 
+      const mapped = rows.map(r => ({ ...r, pa_total: computePA(r), pl_total: computePL(r) }));
+
       res.status(200).json({
         success: true,
-        data: rows,
+        data: mapped,
         meta: { total: countRow?.total ?? 0, limit, offset },
       });
     }
   } catch (err: any) {
     console.error('[Admin] getRegistrationsBySemester error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── Admin: Mahasiswa Belum Mengajukan di Semester Tertentu ───────────────────
+
+/**
+ * GET /admin/registrations/no-submission?semester_code=xxx&search=xxx&limit=xxx&offset=xxx
+ * Mengembalikan daftar mahasiswa aktif yang belum mengajukan KPPM di semester tertentu.
+ */
+export const getStudentsWithoutRegistration = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const semesterCode = (req.query.semester_code as string) || '';
+  const search       = (req.query.search as string) || '';
+  const limit        = Math.min(Number(req.query.limit)  || 50, 200);
+  const offset       = Number(req.query.offset) || 0;
+
+  if (!semesterCode) {
+    res.status(400).json({ success: false, message: 'semester_code wajib diisi untuk filter ini.' });
+    return;
+  }
+
+  try {
+    const searchParam = `%${search}%`;
+
+    const [rows] = await pool.execute<any[]>(
+      `SELECT
+         s.nim,
+         s.student_name,
+         s.class,
+         s.email
+       FROM students s
+       WHERE s.is_active = 1
+         AND (s.student_name LIKE ? OR s.nim LIKE ?)
+         AND NOT EXISTS (
+           SELECT 1 FROM internship_registrations r
+           WHERE r.nim = s.nim AND r.semester_code = ?
+         )
+       ORDER BY s.student_name ASC
+       LIMIT ? OFFSET ?`,
+      [searchParam, searchParam, semesterCode, limit, offset]
+    );
+
+    const [[countRow]] = await pool.execute<any[]>(
+      `SELECT COUNT(*) AS total
+       FROM students s
+       WHERE s.is_active = 1
+         AND (s.student_name LIKE ? OR s.nim LIKE ?)
+         AND NOT EXISTS (
+           SELECT 1 FROM internship_registrations r
+           WHERE r.nim = s.nim AND r.semester_code = ?
+         )`,
+      [searchParam, searchParam, semesterCode]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      meta: { total: countRow?.total ?? 0, limit, offset },
+    });
+  } catch (err: any) {
+    console.error('[Admin] getStudentsWithoutRegistration error:', err.message);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
 };

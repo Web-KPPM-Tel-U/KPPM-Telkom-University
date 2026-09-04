@@ -312,6 +312,10 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
     res.status(400).json({ success: false, message: 'Password baru minimal 8 karakter' });
     return;
   }
+  if (currentPassword === newPassword) {
+    res.status(400).json({ success: false, message: 'Password baru tidak boleh sama dengan password saat ini' });
+    return;
+  }
 
   try {
     const [rows] = await pool.execute<any[]>(
@@ -900,5 +904,72 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
   } catch (err: any) {
     console.error('[Auth Service] adminLogin error:', err.message);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server. Silakan coba lagi.' });
+  }
+};
+
+// ─── Admin: Ubah Password ────────────────────────────────────────────────────
+export const changeAdminPassword = async (req: Request, res: Response): Promise<void> => {
+  // Ambil admin_id dari Authorization header (JWT)
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ success: false, message: 'Token tidak ditemukan.' });
+    return;
+  }
+  const token = authHeader.split(' ')[1];
+
+  let adminId: number;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    if (!decoded.admin_id || (decoded.role !== 'admin' && decoded.role !== 'pic')) {
+      res.status(403).json({ success: false, message: 'Akses ditolak.' });
+      return;
+    }
+    adminId = decoded.admin_id;
+  } catch {
+    res.status(401).json({ success: false, message: 'Token tidak valid.' });
+    return;
+  }
+
+  const { old_password, new_password } = req.body;
+  if (!old_password || !new_password) {
+    res.status(400).json({ success: false, message: 'Password lama dan password baru wajib diisi.' });
+    return;
+  }
+  if (new_password.length < 8) {
+    res.status(400).json({ success: false, message: 'Password baru minimal 8 karakter.' });
+    return;
+  }
+  if (old_password === new_password) {
+    res.status(400).json({ success: false, message: 'Password baru tidak boleh sama dengan password lama.' });
+    return;
+  }
+
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT admin_id, password FROM admin_users WHERE admin_id = ?',
+      [adminId]
+    );
+    if (!rows || rows.length === 0) {
+      res.status(404).json({ success: false, message: 'Admin tidak ditemukan.' });
+      return;
+    }
+    const admin = rows[0];
+
+    const oldValid = await bcrypt.compare(old_password, admin.password);
+    if (!oldValid) {
+      res.status(400).json({ success: false, message: 'Password lama yang Anda masukkan salah.' });
+      return;
+    }
+
+    const hashedNew = await bcrypt.hash(new_password, 12);
+    await pool.execute(
+      'UPDATE admin_users SET password = ? WHERE admin_id = ?',
+      [hashedNew, adminId]
+    );
+
+    res.status(200).json({ success: true, message: 'Password berhasil diubah.' });
+  } catch (err: any) {
+    console.error('[Auth Service] changeAdminPassword error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
 };

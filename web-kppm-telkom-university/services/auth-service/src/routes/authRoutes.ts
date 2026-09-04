@@ -13,6 +13,7 @@ import {
   mentorVerifyOtp,
   logout,
   adminLogin,
+  changeAdminPassword,
 } from '../controllers/authController';
 import { forgotPasswordSendOtp, forgotPasswordVerifyReset } from '../controllers/forgotPasswordController';
 
@@ -73,5 +74,6 @@ router.post('/logout', logout);
 
 // ─── Admin / PIC ──────────────────────────────────────────────────────────────
 router.post('/admin/login', loginLimiter, adminLogin);
+router.patch('/admin/change-password', passwordLimiter, changeAdminPassword);
 
 export default router;
