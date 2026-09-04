@@ -1254,13 +1254,9 @@ export const changeAdminPassword = async (
   oldPassword: string,
   newPassword: string
 ): Promise<ApiResponse<any>> => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   const res = await fetch(`${API_BASE_URL}/auth/admin/change-password`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: adminAuthHeaders(),
     body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
   });
   return res.json();

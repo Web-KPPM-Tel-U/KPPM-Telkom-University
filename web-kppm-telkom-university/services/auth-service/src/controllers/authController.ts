@@ -312,6 +312,10 @@ export const changeStudentPassword = async (req: Request, res: Response): Promis
     res.status(400).json({ success: false, message: 'Password baru minimal 8 karakter' });
     return;
   }
+  if (currentPassword === newPassword) {
+    res.status(400).json({ success: false, message: 'Password baru tidak boleh sama dengan password saat ini' });
+    return;
+  }
 
   try {
     const [rows] = await pool.execute<any[]>(
