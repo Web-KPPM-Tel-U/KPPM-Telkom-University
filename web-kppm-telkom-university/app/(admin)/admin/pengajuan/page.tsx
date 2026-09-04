@@ -6,6 +6,7 @@ import {
   getAdminRegistrationDetail,
   updateAdminRegistrationSemester,
   getAdminSemesters,
+  getStudentsWithoutRegistration,
 } from '@/lib/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -23,6 +24,13 @@ interface RegistrationRow {
   has_mentor_score: number;
   pa_total: string | null;
   pl_total: string | null;
+}
+
+interface UnregisteredStudent {
+  nim: string;
+  student_name: string;
+  class: string;
+  email?: string;
 }
 
 interface RegistrationDetail {
@@ -111,6 +119,9 @@ export default function PengajuanKPPMPage() {
   const [rows, setRows]                         = useState<RegistrationRow[]>([]);
   const [total, setTotal]                       = useState(0);
   const [page, setPage]                         = useState(0);
+  const [filterScore, setFilterScore]           = useState<'all' | 'scored' | 'unscored' | 'unregistered'>('all');
+  const [unregisteredRows, setUnregisteredRows] = useState<UnregisteredStudent[]>([]);
+  const [unregisteredTotal, setUnregisteredTotal] = useState(0);
   const limit = 20;
 
   const [loading, setLoading]   = useState(false);
@@ -165,6 +176,40 @@ export default function PengajuanKPPMPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Load mahasiswa belum mengajukan
+  const loadUnregistered = useCallback(async () => {
+    if (!selectedSemester) { setUnregisteredRows([]); setUnregisteredTotal(0); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await getStudentsWithoutRegistration({
+        semester_code: selectedSemester,
+        search,
+        limit,
+        offset: page * limit,
+      });
+      if (res.success && Array.isArray(res.data)) {
+        setUnregisteredRows(res.data as UnregisteredStudent[]);
+        setUnregisteredTotal((res as any).meta?.total ?? res.data.length);
+      } else {
+        setError(res.message || 'Gagal memuat data.');
+      }
+    } catch {
+      setError('Terjadi kesalahan koneksi.');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedSemester, search, page]);
+
+  useEffect(() => {
+    if (filterScore === 'unregistered') {
+      loadUnregistered();
+    } else {
+      setUnregisteredRows([]);
+      setUnregisteredTotal(0);
+    }
+  }, [filterScore, loadUnregistered]);
+
   // Load detail
   const openDetail = async (id: number) => {
     setShowDetail(true);
@@ -208,6 +253,16 @@ export default function PengajuanKPPMPage() {
   // Objek semester yang sedang dipilih (untuk indikator status)
   const selectedSemesterObj = semesters.find(s => s.code === selectedSemester) ?? null;
 
+  // ── Filter skor (client-side) ───────────────────────────────────────────────
+  const filteredRows = rows.filter(r => {
+    if (filterScore === 'scored')   return !!r.has_lecturer_score && !!r.has_mentor_score;
+    if (filterScore === 'unscored') return !r.has_lecturer_score || !r.has_mentor_score;
+    return true;
+  });
+  const filteredTotal = filterScore === 'unregistered' ? unregisteredTotal
+    : filterScore === 'all' ? total
+    : filteredRows.length;
+
   return (
     <div className="p-4 sm:p-6 space-y-5 min-h-full">
       {/* ── Header ── */}
@@ -224,7 +279,7 @@ export default function PengajuanKPPMPage() {
           <span className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-widest">
             Total:
           </span>
-          <span className="text-sm font-bold text-[#CC0000]">{total} mahasiswa</span>
+          <span className="text-sm font-bold text-[#CC0000]">{filteredTotal} mahasiswa</span>
         </div>
       </div>
 
@@ -282,6 +337,39 @@ export default function PengajuanKPPMPage() {
             className="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000] placeholder-gray-400 dark:placeholder-slate-500"
           />
         </div>
+
+        {/* Status Nilai Filter */}
+        <div className="flex-1 sm:max-w-[220px]">
+          <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+            Filter Mahasiswa
+          </label>
+          <select
+            id="select-filter-score"
+            value={filterScore}
+            onChange={e => { setFilterScore(e.target.value as 'all' | 'scored' | 'unscored' | 'unregistered'); setPage(0); }}
+            className="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#CC0000]/30 focus:border-[#CC0000]"
+          >
+            <option value="all">Semua Pengajuan</option>
+            <option value="scored">Sudah Dinilai</option>
+            <option value="unscored">Belum Dinilai</option>
+            <option value="unregistered">Belum Pengajuan</option>
+          </select>
+          {/* Badge jumlah hasil filter */}
+          {filterScore !== 'all' && (
+            <div className="mt-2 flex items-center gap-1.5">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                filterScore === 'scored'       ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800'
+                : filterScore === 'unregistered' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
+                : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+              }`}>
+                {filteredTotal} mahasiswa
+              </span>
+              <span className="text-[10px] text-gray-400 dark:text-slate-500">
+                {filterScore === 'scored' ? 'sudah dinilai' : filterScore === 'unregistered' ? 'belum mengajukan' : 'belum dinilai'}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Content ── */}
@@ -297,24 +385,95 @@ export default function PengajuanKPPMPage() {
             <div className="w-8 h-8 border-2 border-[#CC0000]/30 border-t-[#CC0000] rounded-full animate-spin" />
             <span className="text-sm text-gray-400 dark:text-slate-500">Memuat data...</span>
           </div>
-        ) : rows.length === 0 ? (
+        ) : filterScore === 'unregistered' ? (
+          /* ── Tabel Belum Pengajuan ── */
+          unregisteredRows.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-16">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+              <p className="text-sm font-semibold text-gray-400 dark:text-slate-500">Semua mahasiswa sudah mengajukan</p>
+              <p className="text-xs text-gray-300 dark:text-slate-600">
+                {!selectedSemester ? 'Pilih semester terlebih dahulu' : 'Tidak ada mahasiswa yang belum mengajukan di semester ini'}
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Mobile card */}
+              <div className="lg:hidden divide-y divide-gray-100 dark:divide-slate-800">
+                {unregisteredRows.map((row, idx) => (
+                  <div key={`unreg-${row.nim}-${idx}`} className="p-4 hover:bg-gray-50/60 dark:hover:bg-slate-800/30 transition-colors">
+                    <div className="flex items-start gap-2.5">
+                      <span className="text-xs text-gray-400 dark:text-slate-500 font-mono mt-0.5 flex-shrink-0">{page * limit + idx + 1}.</span>
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-900 dark:text-white text-sm">{row.student_name}</p>
+                        <p className="text-xs text-gray-400 dark:text-slate-500 font-mono mt-0.5">{row.nim}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="text-xs text-gray-400 dark:text-slate-500">{row.class}</span>
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
+                            Belum Mengajukan
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop table */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 dark:bg-slate-800/60">
+                    <tr>
+                      <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap w-10">No</th>
+                      <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Nama Mahasiswa</th>
+                      <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">NIM</th>
+                      <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Kelas</th>
+                      <th className="text-left px-4 py-3.5 text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 dark:divide-slate-800/80">
+                    {unregisteredRows.map((row, idx) => (
+                      <tr key={`unreg-${row.nim}-${idx}`} className="hover:bg-gray-50/60 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="px-4 py-3.5 text-gray-400 dark:text-slate-500 text-xs font-mono">{page * limit + idx + 1}</td>
+                        <td className="px-4 py-3.5">
+                          <p className="font-semibold text-gray-900 dark:text-white text-sm">{row.student_name}</p>
+                        </td>
+                        <td className="px-4 py-3.5 font-mono text-xs text-gray-600 dark:text-slate-300 whitespace-nowrap">{row.nim}</td>
+                        <td className="px-4 py-3.5 text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">{row.class}</td>
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
+                            Belum Mengajukan
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )
+        ) : filteredRows.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-16">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <p className="text-sm font-semibold text-gray-400 dark:text-slate-500">Tidak ada data</p>
-            <p className="text-xs text-gray-300 dark:text-slate-600">Pilih semester atau ubah kata kunci pencarian</p>
+            <p className="text-xs text-gray-300 dark:text-slate-600">
+              {filterScore !== 'all'
+                ? `Tidak ada mahasiswa yang ${filterScore === 'scored' ? 'sudah dinilai' : 'belum dinilai'} pada semester ini`
+                : 'Pilih semester atau ubah kata kunci pencarian'}
+            </p>
           </div>
         ) : (
           <>
             {/* ── Mobile & Tablet Card View (hidden on lg+) ── */}
             <div className="lg:hidden divide-y divide-gray-100 dark:divide-slate-800">
-              {rows.map((row, idx) => (
+              {filteredRows.map((row, idx) => (
                 <div key={`${row.nim}-${idx}`} className="p-4 hover:bg-gray-50/60 dark:hover:bg-slate-800/30 transition-colors">
                   {/* Top: nomor + nama */}
                   <div className="flex items-start justify-between gap-3 mb-2.5">
                     <div className="flex items-start gap-2.5 min-w-0">
-                      <span className="text-xs text-gray-400 dark:text-slate-500 font-mono mt-0.5 flex-shrink-0">
+                      <span className="text-xs text-gray-400 dark:text-slate-500 font-mono mt-0.5 flex-shrink-0 whitespace-nowrap min-w-[1.5rem] text-right">
                         {page * limit + idx + 1}.
                       </span>
                       <div className="min-w-0">
@@ -378,7 +537,7 @@ export default function PengajuanKPPMPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-slate-800/80">
-                  {rows.map((row, idx) => (
+                  {filteredRows.map((row, idx) => (
                     <tr key={`${row.nim}-${idx}`} className="hover:bg-gray-50/60 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="px-4 py-3.5 text-gray-400 dark:text-slate-500 text-xs font-mono whitespace-nowrap">
                         {page * limit + idx + 1}

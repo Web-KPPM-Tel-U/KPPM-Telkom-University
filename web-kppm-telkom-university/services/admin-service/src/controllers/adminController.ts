@@ -1198,6 +1198,70 @@ export const getRegistrationsBySemester = async (
   }
 };
 
+// ─── Admin: Mahasiswa Belum Mengajukan di Semester Tertentu ───────────────────
+
+/**
+ * GET /admin/registrations/no-submission?semester_code=xxx&search=xxx&limit=xxx&offset=xxx
+ * Mengembalikan daftar mahasiswa aktif yang belum mengajukan KPPM di semester tertentu.
+ */
+export const getStudentsWithoutRegistration = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const semesterCode = (req.query.semester_code as string) || '';
+  const search       = (req.query.search as string) || '';
+  const limit        = Math.min(Number(req.query.limit)  || 50, 200);
+  const offset       = Number(req.query.offset) || 0;
+
+  if (!semesterCode) {
+    res.status(400).json({ success: false, message: 'semester_code wajib diisi untuk filter ini.' });
+    return;
+  }
+
+  try {
+    const searchParam = `%${search}%`;
+
+    const [rows] = await pool.execute<any[]>(
+      `SELECT
+         s.nim,
+         s.student_name,
+         s.class,
+         s.email
+       FROM students s
+       WHERE s.is_active = 1
+         AND (s.student_name LIKE ? OR s.nim LIKE ?)
+         AND NOT EXISTS (
+           SELECT 1 FROM internship_registrations r
+           WHERE r.nim = s.nim AND r.semester_code = ?
+         )
+       ORDER BY s.student_name ASC
+       LIMIT ? OFFSET ?`,
+      [searchParam, searchParam, semesterCode, limit, offset]
+    );
+
+    const [[countRow]] = await pool.execute<any[]>(
+      `SELECT COUNT(*) AS total
+       FROM students s
+       WHERE s.is_active = 1
+         AND (s.student_name LIKE ? OR s.nim LIKE ?)
+         AND NOT EXISTS (
+           SELECT 1 FROM internship_registrations r
+           WHERE r.nim = s.nim AND r.semester_code = ?
+         )`,
+      [searchParam, searchParam, semesterCode]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      meta: { total: countRow?.total ?? 0, limit, offset },
+    });
+  } catch (err: any) {
+    console.error('[Admin] getStudentsWithoutRegistration error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
 // ─── Admin: Get Registration Detail ──────────────────────────────────────────
 
 /**

@@ -21,6 +21,7 @@ import {
   getRegistrationsBySemester,
   getRegistrationDetail,
   updateRegistrationSemester,
+  getStudentsWithoutRegistration,
 } from '../controllers/adminController';
 import { verifyAdminToken } from '../middleware/authMiddleware';
 
@@ -73,6 +74,7 @@ router.patch('/semesters/:id/toggle-status',  verifyAdminToken, toggleSemesterSt
 
 // ─── Pengajuan KPPM ───────────────────────────────────────────────────────────
 router.get('/registrations',                          verifyAdminToken, getRegistrationsBySemester);
+router.get('/registrations/no-submission',            verifyAdminToken, getStudentsWithoutRegistration);
 router.get('/registrations/:id',                      verifyAdminToken, getRegistrationDetail);
 router.patch('/registrations/:id/semester',           verifyAdminToken, updateRegistrationSemester);
 

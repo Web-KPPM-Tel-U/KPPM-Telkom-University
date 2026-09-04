@@ -1203,6 +1203,26 @@ export const getAdminRegistrations = async (params: {
 };
 
 /**
+ * Mahasiswa belum mengajukan KPPM di semester tertentu
+ */
+export const getStudentsWithoutRegistration = async (params: {
+  semester_code: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<ApiResponse<any[]>> => {
+  const q = new URLSearchParams();
+  q.set('semester_code', params.semester_code);
+  if (params.search)  q.set('search', params.search);
+  if (params.limit)   q.set('limit', String(params.limit));
+  if (params.offset)  q.set('offset', String(params.offset));
+  const res = await fetch(`${API_BASE_URL}/admin/registrations/no-submission?${q.toString()}`, {
+    headers: adminAuthHeaders(),
+  });
+  return res.json();
+};
+
+/**
  * Detail satu pengajuan KPPM
  */
 export const getAdminRegistrationDetail = async (id: number): Promise<ApiResponse<any>> => {
@@ -1223,6 +1243,25 @@ export const updateAdminRegistrationSemester = async (
     method: 'PATCH',
     headers: adminAuthHeaders(),
     body: JSON.stringify({ semester_code: semesterCode }),
+  });
+  return res.json();
+};
+
+/**
+ * Ubah password admin (menggunakan token admin yang sedang login)
+ */
+export const changeAdminPassword = async (
+  oldPassword: string,
+  newPassword: string
+): Promise<ApiResponse<any>> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+  const res = await fetch(`${API_BASE_URL}/auth/admin/change-password`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
   });
   return res.json();
 };
