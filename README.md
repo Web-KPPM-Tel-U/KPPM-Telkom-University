@@ -518,7 +518,7 @@ admin_users (tabel terpisah untuk admin)
 
 > **Untuk membuat ERD interaktif:** Copy seluruh isi file `database/migration.sql` dan paste ke Visual Paradigm AI atau tool ERD lainnya.
 
-![Entity Relationship Diagram Sistem KPPM](/home/dexter/Documents/KPPM-Telkom-University/KPPM-Telkom-University/Entity Relationship Diagram KPPM.png)
+![Entity Relationship Diagram Sistem KPPM](./Entity%20Relationship%20Diagram%20KPPM.png)
 ---
 
 ## Alur Pengguna
