@@ -1,7 +1,7 @@
 <div align="center">
 
 # Sistem Manajemen KPPM
-### Telkom University — Jurusan Teknik Informatika
+### Telkom University Jakarta
 
 **Platform terpadu untuk manajemen Kerja Praktik dan Proyek Mahasiswa (KPPM)**  
 yang menghubungkan mahasiswa, dosen pembimbing, pembimbing lapangan, dan administrasi.
