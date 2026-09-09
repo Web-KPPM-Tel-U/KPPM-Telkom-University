@@ -42,11 +42,17 @@ const CheckCircleIcon = () => (
 
 function getProdiFromClass(classCode: string): string {
   const code = classCode?.toUpperCase() || '';
-  if (code.startsWith('IF'))  return 'S1 Informatika';
-  if (code.startsWith('SI'))  return 'S1 Sistem Informasi';
-  if (code.startsWith('IK'))  return 'S1 Ilmu Komputasi';
-  if (code.startsWith('TI'))  return 'D3 Teknologi Informasi';
-  if (code.startsWith('RPL')) return 'D3 Rekayasa Perangkat Lunak';
+  // Format kelas Telkom University Jakarta (produksi)
+  if (code.startsWith('S1SI'))  return 'S1 Sistem Informasi';
+  if (code.startsWith('S1TI'))  return 'S1 Teknologi Informasi';
+  if (code.startsWith('S1TT'))  return 'S1 Teknik Telekomunikasi';
+  if (code.startsWith('S1DKV')) return 'S1 Desain Komunikasi Visual';
+  // Format kelas lama / Bandung (fallback untuk data development)
+  if (code.startsWith('IF'))    return 'S1 Informatika';
+  if (code.startsWith('SI'))    return 'S1 Sistem Informasi';
+  if (code.startsWith('IK'))    return 'S1 Ilmu Komputasi';
+  if (code.startsWith('TI'))    return 'D3 Teknologi Informasi';
+  if (code.startsWith('RPL'))   return 'D3 Rekayasa Perangkat Lunak';
   return 'Program Studi Lainnya';
 }
 
