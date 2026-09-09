@@ -516,8 +516,9 @@ admin_users (tabel terpisah untuk admin)
 | `lecturer_otps` | OTP untuk verifikasi email dosen |
 | `mentor_otps` | OTP untuk login mentor |
 
-> **Untuk membuat ERD:** Copy seluruh isi file `database/migration.sql` dan paste ke Visual Paradigm AI atau tool ERD lainnya.
+> **Untuk membuat ERD interaktif:** Copy seluruh isi file `database/migration.sql` dan paste ke Visual Paradigm AI atau tool ERD lainnya.
 
+![Entity Relationship Diagram Sistem KPPM](/home/dexter/Documents/KPPM-Telkom-University/KPPM-Telkom-University/Entity Relationship Diagram KPPM.png)
 ---
 
 ## Alur Pengguna
