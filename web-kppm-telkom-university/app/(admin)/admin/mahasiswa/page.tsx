@@ -77,11 +77,17 @@ interface LecturerOption {
 
 function getProdi(kelas: string): string {
   const k = kelas?.toUpperCase() || '';
-  if (k.startsWith('IF')) return 'S1 Informatika';
-  if (k.startsWith('SI')) return 'S1 Sistem Informasi';
-  if (k.startsWith('IK')) return 'S1 Ilmu Komputasi';
-  if (k.startsWith('TI')) return 'D3 Teknologi Informasi';
-  if (k.startsWith('RPL')) return 'D3 Rekayasa Perangkat Lunak';
+  // Format kelas Telkom University Jakarta (produksi)
+  if (k.startsWith('S1SI'))  return 'S1 Sistem Informasi';
+  if (k.startsWith('S1TI'))  return 'S1 Teknologi Informasi';
+  if (k.startsWith('S1TT'))  return 'S1 Teknik Telekomunikasi';
+  if (k.startsWith('S1DKV')) return 'S1 Desain Komunikasi Visual';
+  // Format kelas lama / Bandung (fallback untuk data development)
+  if (k.startsWith('IF'))    return 'S1 Informatika';
+  if (k.startsWith('SI'))    return 'S1 Sistem Informasi';
+  if (k.startsWith('IK'))    return 'S1 Ilmu Komputasi';
+  if (k.startsWith('TI'))    return 'D3 Teknologi Informasi';
+  if (k.startsWith('RPL'))   return 'D3 Rekayasa Perangkat Lunak';
   return 'Lainnya';
 }
 
