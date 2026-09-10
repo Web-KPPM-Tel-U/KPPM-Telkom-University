@@ -32,9 +32,9 @@ export const forgotPasswordSendOtp = async (req: Request, res: Response): Promis
       [email]
     );
 
-    // Jika tidak ditemukan di kedua tabel → respons generik (anti email enumeration)
+    // Jika tidak ditemukan di kedua tabel → beritahu bahwa email tidak terdaftar
     if ((!students || students.length === 0) && (!lecturers || lecturers.length === 0)) {
-      res.status(200).json({ success: true, message: `Jika email terdaftar, OTP telah dikirim ke ${email}.` });
+      res.status(404).json({ success: false, message: `Email tidak terdaftar di sistem.` });
       return;
     }
 
