@@ -706,6 +706,7 @@ export const getKpResults = async (req: AuthenticatedRequest, res: Response): Pr
       field_supervisor_score_file:   docRows[0].field_supervisor_score_file,
       academic_supervisor_score_file:docRows[0].academic_supervisor_score_file,
       implementation_agreement_file: docRows[0].implementation_agreement_file,
+      final_report_file:             docRows[0].final_report_file ?? null,
       created_at:                    docRows[0].created_at,
       updated_at:                    docRows[0].updated_at,
     } : null;
@@ -788,6 +789,7 @@ const revokeMentorAccess = async (registrationId: number): Promise<void> => {
  *   - field_supervisor_score_file   : File (PDF/JPG/PNG, max 5MB) — Wajib
  *   - academic_supervisor_score_file: File (PDF/JPG/PNG, max 5MB) — Wajib
  *   - implementation_agreement_file : File (PDF/JPG/PNG, max 5MB) — Opsional
+ *   - final_report_file             : File (PDF/JPG/PNG, max 5MB) — Opsional
  */
 export const uploadKpResults = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const nim = req.user?.nim || String(req.user?.sub || '');
@@ -833,10 +835,11 @@ export const uploadKpResults = async (req: AuthenticatedRequest, res: Response):
     // Ambil file yang diupload
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-    const certificateFile            = files?.certificate_file?.[0];
-    const fieldSupervisorScoreFile   = files?.field_supervisor_score_file?.[0];
+    const certificateFile             = files?.certificate_file?.[0];
+    const fieldSupervisorScoreFile    = files?.field_supervisor_score_file?.[0];
     const academicSupervisorScoreFile = files?.academic_supervisor_score_file?.[0];
     const implementationAgreementFile = files?.implementation_agreement_file?.[0];
+    const finalReportFile             = files?.final_report_file?.[0];
 
     // Validasi file wajib
     if (!certificateFile) {
@@ -851,12 +854,19 @@ export const uploadKpResults = async (req: AuthenticatedRequest, res: Response):
       res.status(400).json({ success: false, message: 'Scan penilaian pembimbing akademik wajib diupload.' });
       return;
     }
+    if (!finalReportFile) {
+      res.status(400).json({ success: false, message: 'Laporan akhir KP wajib diupload.' });
+      return;
+    }
 
     const certPath     = `kp-results/${certificateFile.filename}`;
     const fieldPath    = `kp-results/${fieldSupervisorScoreFile.filename}`;
     const acadPath     = `kp-results/${academicSupervisorScoreFile.filename}`;
     const iaPath       = implementationAgreementFile
       ? `kp-results/${implementationAgreementFile.filename}`
+      : null;
+    const finalPath    = finalReportFile
+      ? `kp-results/${finalReportFile.filename}`
       : null;
 
     // Cek apakah sudah ada dokumen sebelumnya
@@ -872,9 +882,10 @@ export const uploadKpResults = async (req: AuthenticatedRequest, res: Response):
          SET certificate_file = ?,
              field_supervisor_score_file = ?,
              academic_supervisor_score_file = ?,
-             implementation_agreement_file = ?
+             implementation_agreement_file = ?,
+             final_report_file = ?
          WHERE registration_id = ?`,
-        [certPath, fieldPath, acadPath, iaPath, registrationId]
+        [certPath, fieldPath, acadPath, iaPath, finalPath, registrationId]
       );
 
       // Cabut akses mentor (update dokumen berarti proses selesai)
@@ -885,9 +896,9 @@ export const uploadKpResults = async (req: AuthenticatedRequest, res: Response):
       // Insert dokumen baru
       await pool.execute(
         `INSERT INTO internship_documents
-         (registration_id, certificate_file, field_supervisor_score_file, academic_supervisor_score_file, implementation_agreement_file)
-         VALUES (?, ?, ?, ?, ?)`,
-        [registrationId, certPath, fieldPath, acadPath, iaPath]
+         (registration_id, certificate_file, field_supervisor_score_file, academic_supervisor_score_file, implementation_agreement_file, final_report_file)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [registrationId, certPath, fieldPath, acadPath, iaPath, finalPath]
       );
 
       // Cabut akses mentor setelah mahasiswa upload pertama kali

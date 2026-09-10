@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS internship_documents (
     academic_supervisor_score_file VARCHAR(255) NOT NULL,
     certificate_file VARCHAR(255) NOT NULL,
     implementation_agreement_file VARCHAR(255) NULL DEFAULT NULL, -- Opsional
+    final_report_file VARCHAR(255) NULL DEFAULT NULL, -- Opsional: Laporan Akhir KP
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

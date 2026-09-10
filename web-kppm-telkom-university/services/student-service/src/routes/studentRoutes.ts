@@ -28,12 +28,30 @@ router.get('/semesters/active',          verifyToken, getActiveSemesters);
 
 // ─── KP Results Routes ──────────────────────────────────────────────────────────
 router.get('/kppm/results',  verifyToken, getKpResults);
-router.post('/kppm/results', verifyToken, uploadKpDocuments.fields([
-  { name: 'certificate_file',               maxCount: 1 },
-  { name: 'field_supervisor_score_file',    maxCount: 1 },
-  { name: 'academic_supervisor_score_file', maxCount: 1 },
-  { name: 'implementation_agreement_file',  maxCount: 1 },
-]), uploadKpResults);
+router.post('/kppm/results', verifyToken, (req, res, next) => {
+  const multerHandler = uploadKpDocuments.fields([
+    { name: 'certificate_file',               maxCount: 1 },
+    { name: 'field_supervisor_score_file',    maxCount: 1 },
+    { name: 'academic_supervisor_score_file', maxCount: 1 },
+    { name: 'implementation_agreement_file',  maxCount: 1 },
+    { name: 'final_report_file',              maxCount: 1 },
+  ]);
+  multerHandler(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({
+          success: false,
+          message: 'Ukuran file melebihi batas maksimum 5 MB. Kompres file Anda lalu coba lagi.',
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: `Gagal memproses file: ${err.message}`,
+      });
+    }
+    next();
+  });
+}, uploadKpResults);
 
 // ─── Lecturer Routes ──────────────────────────────────────────────────────────
 // GET   /student/lecturer/students              — daftar mahasiswa bimbingan + status pengajuan
