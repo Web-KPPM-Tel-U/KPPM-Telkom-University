@@ -3,7 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "Sistem Manajemen KPPM — Telkom University",
+  title: "SIKAP — Sistem Informasi Kerja Praktik — Telkom University",
   description: "Sistem informasi manajemen Kerja Praktik dan Magang (KPPM) Telkom University untuk mahasiswa, dosen pembimbing, dan mentor perusahaan.",
   keywords: "KPPM, Telkom University, Kerja Praktik, Magang, Sistem Manajemen",
 };

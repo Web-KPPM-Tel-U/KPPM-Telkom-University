@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -7,62 +7,6 @@ import { getUser, logout, getToken } from '@/lib/api';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import StudentOnboardingWizard from '@/components/StudentOnboardingWizard';
 
-// ─── Language Config ──────────────────────────────────────────────────────────
-
-type Lang = 'id' | 'en';
-
-const LANG_LABELS: Record<Lang, { label: string; flag: React.ReactNode }> = {
-  id: {
-    label: 'Indonesia',
-    flag: (
-      // Bendera Indonesia
-      <svg width="20" height="14" viewBox="0 0 20 14" className="rounded-sm shadow-sm">
-        <rect width="20" height="7" fill="#CC0000" />
-        <rect y="7" width="20" height="7" fill="#FFFFFF" />
-      </svg>
-    ),
-  },
-  en: {
-    label: 'English',
-    flag: (
-      // Bendera UK
-      <svg width="20" height="14" viewBox="0 0 60 40" className="rounded-sm shadow-sm">
-        <rect width="60" height="40" fill="#012169" />
-        <path d="M0,0 L60,40 M60,0 L0,40" stroke="white" strokeWidth="8" />
-        <path d="M0,0 L60,40 M60,0 L0,40" stroke="#C8102E" strokeWidth="5" />
-        <path d="M30,0 V40 M0,20 H60" stroke="white" strokeWidth="13" />
-        <path d="M30,0 V40 M0,20 H60" stroke="#C8102E" strokeWidth="8" />
-      </svg>
-    ),
-  },
-};
-
-// ─── Translation Map ──────────────────────────────────────────────────────────
-
-const T: Record<Lang, Record<string, string>> = {
-  id: {
-    dashboard: 'Dashboard',
-    isiData: 'Isi Data KPPM',
-    upload: 'Upload Hasil KP',
-    nilai: 'Lihat Nilai',
-    pengaturan: 'Pengaturan',
-    keluar: 'Keluar',
-    menuUtama: 'Menu Utama',
-    loggingOut: 'Keluar...',
-    nim: 'NIM',
-  },
-  en: {
-    dashboard: 'Dashboard',
-    isiData: 'Fill KPPM Data',
-    upload: 'Upload KP Results',
-    nilai: 'View Grades',
-    pengaturan: 'Settings',
-    keluar: 'Sign Out',
-    menuUtama: 'Main Menu',
-    loggingOut: 'Signing out...',
-    nim: 'SID',
-  },
-};
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -86,13 +30,7 @@ const LogoutIcon = () => (
   </svg>
 );
 
-const GlobeIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <line x1="2" y1="12" x2="22" y2="12" />
-    <path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" />
-  </svg>
-);
+
 
 // ─── Nav Icons ────────────────────────────────────────────────────────────────
 
@@ -131,10 +69,8 @@ const SettingsIcon = () => (
 // ─── KPPM Logo Mark ───────────────────────────────────────────────────────────
 
 const KPPMLogoMark = () => (
-  <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#CC0000" width="20" height="20">
-      <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
-    </svg>
+  <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden p-0">
+    <img src="/logo-sikap.png" alt="SIKAP Logo" className="w-full h-full object-contain" />
   </div>
 );
 
@@ -150,13 +86,8 @@ export default function StudentDashboardLayout({ children }: { children: React.R
   // Sidebar mobile: drawer open/close
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Language state — default Indonesia
-  const [lang, setLang] = useState<Lang>('id');
-
-  const langRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
 
   // Tutup mobile drawer saat pindah halaman
@@ -181,7 +112,6 @@ export default function StudentDashboardLayout({ children }: { children: React.R
   // Tutup semua dropdown saat klik di luar
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangMenuOpen(false);
       if (userRef.current && !userRef.current.contains(e.target as Node)) setUserMenuOpen(false);
     };
     document.addEventListener('mousedown', handler);
@@ -197,7 +127,17 @@ export default function StudentDashboardLayout({ children }: { children: React.R
   const getInitials = (name: string) =>
     name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
 
-  const t = T[lang];
+  const t = {
+    dashboard: 'Dashboard',
+    isiData: 'Isi Data KPPM',
+    upload: 'Upload Hasil KP',
+    nilai: 'Lihat Nilai',
+    pengaturan: 'Pengaturan',
+    keluar: 'Keluar',
+    menuUtama: 'Menu Utama',
+    loggingOut: 'Keluar...',
+    nim: 'NIM',
+  };
 
   const navItems = [
     { href: '/dashboard',       label: t.dashboard, icon: <DashboardIcon /> },
@@ -339,13 +279,11 @@ export default function StudentDashboardLayout({ children }: { children: React.R
         {/* Header drawer mobile */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-[#CC0000] rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="17" height="17">
-                <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
-              </svg>
-            </div>
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden p-0 shadow-sm border border-gray-100">
+                <img src="/logo-sikap.png" alt="SIKAP Logo" className="w-full h-full object-contain" />
+              </div>
             <div>
-              <p className="font-black text-[13px] text-gray-900 dark:text-white leading-tight tracking-wide">SISTEM MANAJEMEN KPPM</p>
+              <p className="font-black text-[13px] text-gray-900 dark:text-white leading-tight tracking-wide">SIKAP</p>
               <p className="text-[10px] text-gray-500 dark:text-slate-400 font-semibold uppercase leading-tight mt-0.5">Telkom University</p>
             </div>
           </div>
@@ -431,8 +369,8 @@ export default function StudentDashboardLayout({ children }: { children: React.R
             <div className="hidden md:flex items-center gap-3 flex-shrink-0">
               <KPPMLogoMark />
               <div className="hidden sm:block">
-                <p className="text-white font-black text-[17px] leading-tight tracking-wide">SISTEM MANAJEMEN KPPM</p>
-                <p className="text-red-200 text-[12px] font-bold leading-tight tracking-wider uppercase mt-0.5">Telkom University</p>
+                <p className="text-white font-black text-[17px] leading-tight tracking-wide">SIKAP</p>
+                <p className="text-red-200 text-[12px] font-bold leading-tight tracking-wider uppercase mt-0.5">Sistem Informasi Kerja Praktik</p>
               </div>
             </div>
 
@@ -444,46 +382,6 @@ export default function StudentDashboardLayout({ children }: { children: React.R
               <ThemeToggle />
             </div>
 
-            {/* ── Language Selector ── */}
-            <div className="relative flex-shrink-0" ref={langRef}>
-              <button
-                id="btn-lang-selector"
-                onClick={() => { setLangMenuOpen((v) => !v); setUserMenuOpen(false); }}
-                className="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-white/10 transition-colors"
-                title={lang === 'id' ? 'Bahasa Indonesia' : 'English'}
-              >
-                <span className="text-white/70"><GlobeIcon /></span>
-                <span className="hidden sm:flex items-center">{LANG_LABELS[lang].flag}</span>
-                <span className="text-white text-xs font-bold uppercase hidden sm:block">{lang}</span>
-                <span className="text-white/60"><ChevronDownIcon size={12} /></span>
-              </button>
-
-              {langMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-50 transition-colors duration-300">
-                  <p className="px-4 py-2 text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700 mb-1">
-                    Bahasa / Language
-                  </p>
-                  {(['id', 'en'] as Lang[]).map((l) => (
-                    <button
-                      key={l}
-                      id={`lang-${l}`}
-                      onClick={() => { setLang(l); setLangMenuOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 ${
-                        lang === l ? 'text-[#CC0000] dark:text-red-400 font-semibold' : 'text-gray-700 dark:text-slate-300'
-                      }`}
-                    >
-                      {LANG_LABELS[l].flag}
-                      <span>{LANG_LABELS[l].label}</span>
-                      {lang === l && (
-                        <svg className="ml-auto" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#CC0000" strokeWidth="3">
-                          <polyline points="20,6 9,17 4,12" />
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
 
 
           </header>

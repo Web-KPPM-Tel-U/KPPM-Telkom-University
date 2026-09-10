@@ -247,7 +247,7 @@ export default function MentorDashboardPage() {
         </div>
 
         <div className="relative mt-4 pt-3 border-t border-white/10">
-          <p className="text-red-100/60 text-[11px] leading-relaxed">Portal Mentor — Sistem Manajemen KPPM Telkom University</p>
+          <p className="text-red-100/60 text-[11px] leading-relaxed">Portal Mentor — SIKAP — Sistem Informasi Kerja Praktik Telkom University</p>
         </div>
       </div>
 

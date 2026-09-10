@@ -440,17 +440,11 @@ export default function LoginPage() {
           {/* Logo + title */}
           <div className="mb-5 sm:mb-6">
             <div className="flex items-center gap-3 sm:gap-5 mb-4 sm:mb-6">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[20px] bg-gradient-to-tr from-[#CC0000] to-[#E60000] flex items-center justify-center flex-shrink-0 relative overflow-hidden group shadow-[0_8px_24px_-6px_rgba(204,0,0,0.5)] border border-[#ff3333]/30">
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-                <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-[20px]"></div>
-                <div className="relative z-10 drop-shadow-md">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="26" height="26" className="sm:w-8 sm:h-8">
-                    <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z" />
-                  </svg>
-                </div>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[16px] sm:rounded-[20px] bg-white flex items-center justify-center flex-shrink-0 overflow-hidden shadow-[0_8px_24px_-6px_rgba(204,0,0,0.25)] border border-gray-100 p-0 sm:p-0">
+                <img src="/logo-sikap.png" alt="SIKAP Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col justify-center min-w-0">
-                <h2 className="font-black text-gray-900 text-[16px] sm:text-[22px] leading-tight tracking-tight uppercase break-words" style={{ letterSpacing: '0.01em' }}>Sistem Manajemen KPPM</h2>
+                <h2 className="font-black text-gray-900 text-[16px] sm:text-[22px] leading-tight tracking-tight uppercase break-words" style={{ letterSpacing: '0.01em' }}>SIKAP — Sistem Informasi Kerja Praktik</h2>
                 <p className="text-[#CC0000] text-[11px] sm:text-[14px] font-extrabold tracking-widest mt-0.5 uppercase" style={{ letterSpacing: '0.08em' }}>Telkom University</p>
               </div>
             </div>
@@ -707,7 +701,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <p className="text-center text-xs text-gray-300 mt-auto pt-6">
-            &copy; {new Date().getFullYear()} Telkom University &mdash; Sistem Manajemen KPPM
+            &copy; {new Date().getFullYear()} Telkom University &mdash; SIKAP — Sistem Informasi Kerja Praktik
           </p>
         </div>
       </div>
