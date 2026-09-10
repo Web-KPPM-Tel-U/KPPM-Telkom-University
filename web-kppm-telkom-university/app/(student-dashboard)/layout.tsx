@@ -69,10 +69,8 @@ const SettingsIcon = () => (
 // ─── KPPM Logo Mark ───────────────────────────────────────────────────────────
 
 const KPPMLogoMark = () => (
-  <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#CC0000" width="20" height="20">
-      <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
-    </svg>
+  <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden p-0">
+    <img src="/logo-sikap.png" alt="SIKAP Logo" className="w-full h-full object-contain" />
   </div>
 );
 
@@ -281,13 +279,11 @@ export default function StudentDashboardLayout({ children }: { children: React.R
         {/* Header drawer mobile */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-[#CC0000] rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="17" height="17">
-                <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
-              </svg>
-            </div>
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden p-0 shadow-sm border border-gray-100">
+                <img src="/logo-sikap.png" alt="SIKAP Logo" className="w-full h-full object-contain" />
+              </div>
             <div>
-              <p className="font-black text-[13px] text-gray-900 dark:text-white leading-tight tracking-wide">SISTEM MANAJEMEN KPPM</p>
+              <p className="font-black text-[13px] text-gray-900 dark:text-white leading-tight tracking-wide">SIKAP</p>
               <p className="text-[10px] text-gray-500 dark:text-slate-400 font-semibold uppercase leading-tight mt-0.5">Telkom University</p>
             </div>
           </div>
@@ -373,8 +369,8 @@ export default function StudentDashboardLayout({ children }: { children: React.R
             <div className="hidden md:flex items-center gap-3 flex-shrink-0">
               <KPPMLogoMark />
               <div className="hidden sm:block">
-                <p className="text-white font-black text-[17px] leading-tight tracking-wide">SISTEM MANAJEMEN KPPM</p>
-                <p className="text-red-200 text-[12px] font-bold leading-tight tracking-wider uppercase mt-0.5">Telkom University</p>
+                <p className="text-white font-black text-[17px] leading-tight tracking-wide">SIKAP</p>
+                <p className="text-red-200 text-[12px] font-bold leading-tight tracking-wider uppercase mt-0.5">Sistem Informasi Kerja Praktik</p>
               </div>
             </div>
 

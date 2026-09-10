@@ -235,7 +235,7 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="relative mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
-          <p className="text-red-100/60 text-xs">Panel Admin — Sistem Manajemen KPPM Telkom University</p>
+          <p className="text-red-100/60 text-xs">Panel Admin — SIKAP — Sistem Informasi Kerja Praktik Telkom University</p>
         </div>
       </div>
 

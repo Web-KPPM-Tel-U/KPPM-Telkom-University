@@ -263,7 +263,7 @@ export default function DosenDashboardPage() {
 
         {/* Bottom bar */}
         <div className="relative mt-4 pt-3 border-t border-white/10">
-          <p className="text-red-100/60 text-[11px] leading-relaxed">Portal Dosen PA — Sistem Manajemen KPPM Telkom University</p>
+          <p className="text-red-100/60 text-[11px] leading-relaxed">Portal Dosen PA — SIKAP — Sistem Informasi Kerja Praktik Telkom University</p>
         </div>
       </div>
 

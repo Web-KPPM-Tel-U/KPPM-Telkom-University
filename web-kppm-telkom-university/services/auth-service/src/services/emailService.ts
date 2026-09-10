@@ -58,7 +58,7 @@ export const sendOtpEmail = async (toEmail: string, otp: string): Promise<void> 
                     
                     <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.6;">
                       Halo, Anda menerima email ini karena ada permintaan login ke portal Mentor 
-                      Sistem Manajemen KPPM Telkom University. Gunakan kode OTP berikut untuk masuk:
+                      SIKAP — Sistem Informasi Kerja Praktik Telkom University. Gunakan kode OTP berikut untuk masuk:
                     </p>
 
                     <!-- OTP Box -->
@@ -112,7 +112,7 @@ export const sendOtpEmail = async (toEmail: string, otp: string): Promise<void> 
                 <tr>
                   <td style="background:#f9fafb;border-top:1px solid #f0f0f0;padding:20px 40px;text-align:center;">
                     <p style="margin:0;font-size:12px;color:#9ca3af;">
-                      © ${new Date().getFullYear()} Sistem Manajemen KPPM — Telkom University<br/>
+                      © ${new Date().getFullYear()} SIKAP — Sistem Informasi Kerja Praktik — Telkom University<br/>
                       Email ini dikirim secara otomatis, mohon tidak membalas email ini.
                     </p>
                   </td>
@@ -180,7 +180,7 @@ export const sendStudentVerifyOtpEmail = async (toEmail: string, otp: string): P
                     
                     <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.6;">
                       Halo, Anda menerima email ini karena telah meminta verifikasi email 
-                      untuk akun mahasiswa di Sistem Manajemen KPPM Telkom University. 
+                      untuk akun mahasiswa di SIKAP — Sistem Informasi Kerja Praktik Telkom University. 
                       Gunakan kode berikut untuk menyelesaikan verifikasi:
                     </p>
 
@@ -235,7 +235,7 @@ export const sendStudentVerifyOtpEmail = async (toEmail: string, otp: string): P
                 <tr>
                   <td style="background:#f9fafb;border-top:1px solid #f0f0f0;padding:20px 40px;text-align:center;">
                     <p style="margin:0;font-size:12px;color:#9ca3af;">
-                      &copy; ${new Date().getFullYear()} Sistem Manajemen KPPM — Telkom University<br/>
+                      &copy; ${new Date().getFullYear()} SIKAP — Sistem Informasi Kerja Praktik — Telkom University<br/>
                       Email ini dikirim secara otomatis, mohon tidak membalas email ini.
                     </p>
                   </td>
@@ -303,7 +303,7 @@ export const sendLecturerVerifyOtpEmail = async (toEmail: string, otp: string): 
 
                     <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.6;">
                       Halo, Anda menerima email ini karena telah meminta verifikasi email
-                      untuk akun Pembimbing Akademik di Sistem Manajemen KPPM Telkom University.
+                      untuk akun Pembimbing Akademik di SIKAP — Sistem Informasi Kerja Praktik Telkom University.
                       Gunakan kode berikut untuk menyelesaikan verifikasi:
                     </p>
 
@@ -358,7 +358,7 @@ export const sendLecturerVerifyOtpEmail = async (toEmail: string, otp: string): 
                 <tr>
                   <td style="background:#f9fafb;border-top:1px solid #f0f0f0;padding:20px 40px;text-align:center;">
                     <p style="margin:0;font-size:12px;color:#9ca3af;">
-                      &copy; ${new Date().getFullYear()} Sistem Manajemen KPPM — Telkom University<br/>
+                      &copy; ${new Date().getFullYear()} SIKAP — Sistem Informasi Kerja Praktik — Telkom University<br/>
                       Email ini dikirim secara otomatis, mohon tidak membalas email ini.
                     </p>
                   </td>
@@ -427,7 +427,7 @@ export const sendForgotPasswordOtpEmail = async (toEmail: string, otp: string): 
                     
                     <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.6;">
                       Halo, Anda menerima email ini karena ada permintaan untuk mengatur ulang password 
-                      akun Anda di Sistem Manajemen KPPM Telkom University. 
+                      akun Anda di SIKAP — Sistem Informasi Kerja Praktik Telkom University. 
                       Gunakan kode berikut untuk memulihkan akun Anda:
                     </p>
 
@@ -482,7 +482,7 @@ export const sendForgotPasswordOtpEmail = async (toEmail: string, otp: string): 
                 <tr>
                   <td style="background:#f9fafb;border-top:1px solid #f0f0f0;padding:20px 40px;text-align:center;">
                     <p style="margin:0;font-size:12px;color:#9ca3af;">
-                      &copy; ${new Date().getFullYear()} Sistem Manajemen KPPM — Telkom University<br/>
+                      &copy; ${new Date().getFullYear()} SIKAP — Sistem Informasi Kerja Praktik — Telkom University<br/>
                       Email ini dikirim secara otomatis, mohon tidak membalas email ini.
                     </p>
                   </td>
