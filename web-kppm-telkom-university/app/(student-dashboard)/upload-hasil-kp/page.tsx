@@ -300,6 +300,7 @@ const SLOT_DEFS: Omit<FileSlot, 'file' | 'error'>[] = [
   { fieldName: 'field_supervisor_score_file', label: 'Scan Penilaian Pembimbing Lapang', required: true, description: 'Scan lembar penilaian yang ditandatangani pembimbing lapang perusahaan.' },
   { fieldName: 'academic_supervisor_score_file', label: 'Scan Penilaian Pembimbing Akademik', required: true, description: 'Scan lembar penilaian yang ditandatangani dosen pembimbing akademik.' },
   { fieldName: 'implementation_agreement_file', label: 'Dokumen IA (Implementation Agreement)', required: false, description: 'Implementation Agreement antara mahasiswa dan perusahaan. Bersifat opsional.' },
+  { fieldName: 'final_report_file', label: 'Laporan Akhir KP', required: true, description: 'Laporan akhir Kerja Praktik dalam format PDF.' },
 ];
 
 const makeSlots = (): FileSlot[] => SLOT_DEFS.map(s => ({ ...s, file: null, error: '' }));
@@ -374,17 +375,17 @@ export default function UploadHasilKpPage() {
       slots.forEach(s => { if (s.file) fd.append(s.fieldName, s.file); });
       const res = await uploadKpResults(fd);
       clearInterval(iv);
-      setUploadProgress(100);
       if (res.success) {
+        setUploadProgress(100);
         setTimeout(() => { setSlots(makeSlots()); fetchData(); setView('done'); }, 500);
       } else {
-        setSubmitError(res.message || 'Gagal mengupload dokumen.');
         setUploadProgress(0);
+        setSubmitError(res.message || 'Gagal mengupload dokumen.');
       }
     } catch {
       clearInterval(iv);
-      setSubmitError('Tidak dapat terhubung ke server.');
       setUploadProgress(0);
+      setSubmitError('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
     } finally {
       setUploading(false);
     }
@@ -651,6 +652,7 @@ export default function UploadHasilKpPage() {
           <UploadedDocCard label="Scan Penilaian Pembimbing Lapang"   filePath={docs.field_supervisor_score_file} onView={(url, lbl) => { setFileError(false); setActiveDoc({ url, label: lbl }); }} />
           <UploadedDocCard label="Scan Penilaian Pembimbing Akademik" filePath={docs.academic_supervisor_score_file} onView={(url, lbl) => { setFileError(false); setActiveDoc({ url, label: lbl }); }} />
           <UploadedDocCard label="Dokumen IA" filePath={docs.implementation_agreement_file} optional onView={(url, lbl) => { setFileError(false); setActiveDoc({ url, label: lbl }); }} />
+          <UploadedDocCard label="Laporan Akhir KP" filePath={docs.final_report_file} optional onView={(url, lbl) => { setFileError(false); setActiveDoc({ url, label: lbl }); }} />
         </div>
         <div className="flex gap-2 mt-4">
           <button

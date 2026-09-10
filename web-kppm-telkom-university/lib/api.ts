@@ -1045,6 +1045,7 @@ export interface KpResultsDocuments {
   field_supervisor_score_file: string;
   academic_supervisor_score_file: string;
   implementation_agreement_file: string | null;
+  final_report_file: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -1081,12 +1082,26 @@ export const uploadKpResults = async (
   formData: FormData
 ): Promise<ApiResponse<null>> => {
   const token = getToken();
-  const res = await fetch(`${API_BASE_URL}/student/kppm/results`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData,
-  });
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE_URL}/student/kppm/results`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    // Selalu coba parse JSON — server mengembalikan JSON bahkan untuk error 4xx/5xx
+    try {
+      return await res.json();
+    } catch {
+      return {
+        success: false,
+        message: res.status === 413
+          ? 'Ukuran file melebihi batas maksimum 5 MB. Kompres file Anda lalu coba lagi.'
+          : `Server mengembalikan error ${res.status}.`,
+      };
+    }
+  } catch {
+    return { success: false, message: 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.' };
+  }
 };
 
 /**

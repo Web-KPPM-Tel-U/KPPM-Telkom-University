@@ -299,6 +299,15 @@ const MIGRATIONS = [
     ) ENGINE=InnoDB;`,
   },
 
+  // ── v7: Add final_report_file column to internship_documents ─────────────────
+  {
+    description: 'Add final_report_file column to internship_documents (if missing)',
+    sql: `ALTER TABLE internship_management.internship_documents
+          ADD COLUMN final_report_file VARCHAR(255) NULL DEFAULT NULL
+          AFTER implementation_agreement_file;`,
+    ignoreErrorCode: 1060, // ER_DUP_FIELDNAME — kolom sudah ada
+  },
+
 ];
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
