@@ -326,27 +326,13 @@ Setelah migrasi berhasil, akun-akun berikut tersedia untuk pengujian:
 
 ### Admin
 
-| Email | Password | Role |
-|---|---|---|
-| `admin@telkomuniversity.ac.id` | `Kp@Admin#IA0KN42025!` | Administrator |
+Untuk keamanan, kredensial admin default tidak dicantumkan di repositori publik. Silakan periksa file konfigurasi internal atau hubungi administrator sistem.
 
-### Mahasiswa (Password = NIM masing-masing)
+### Mahasiswa & Dosen
 
-| NIM | Nama | Kelas | Password |
-|---|---|---|---|
-| `1301213001` | Reynaldy Pratama | IF-46-01 | `1301213001` |
-| `1301213002` | Budi Santoso | IF-46-02 | `1301213002` |
-| `1301213003` | Siti Rahayu | SI-46-01 | `1301213003` |
+Sebagai *seed data* awal, password default diset menggunakan NIM (untuk mahasiswa) dan NIP (untuk dosen).
 
-### Dosen (Password = NIP masing-masing)
-
-| NIP | Nama | Kode |
-|---|---|---|
-| `198001012005011001` | Dr. Bambang Supriyanto, M.T. | BBS |
-| `198205152009121002` | Dra. Siti Aminah, M.Kom. | STA |
-| `197803232003121003` | Ir. Hendra Kusuma, M.T., Ph.D. | HNK |
-
-> **Keamanan:** Ganti semua password default ini segera setelah pertama kali masuk, terutama password admin.
+> **Keamanan:** Ganti semua password default ini segera setelah pertama kali masuk melalui menu pengaturan.
 
 ---
 
