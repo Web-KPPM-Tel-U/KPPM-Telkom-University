@@ -440,7 +440,7 @@ export default function LoginPage() {
           {/* Logo + title */}
           <div className="mb-5 sm:mb-6">
             <div className="flex items-center gap-3 sm:gap-5 mb-4 sm:mb-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[16px] sm:rounded-[20px] bg-white flex items-center justify-center flex-shrink-0 overflow-hidden shadow-[0_8px_24px_-6px_rgba(204,0,0,0.25)] border border-gray-100 p-0 sm:p-0">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[20px] bg-white flex items-center justify-center flex-shrink-0 overflow-hidden shadow-[0_8px_24px_-6px_rgba(204,0,0,0.25)] border border-gray-100 p-1 sm:p-1.5">
                 <img src="/logo-sikap.png" alt="SIKAP Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col justify-center min-w-0">

@@ -124,15 +124,15 @@ const LeftIllustration = () => (
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail]               = useState('');
-  const [password, setPassword]         = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading]           = useState(false);
-  const [error, setError]               = useState('');
-  const [success, setSuccess]           = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Vanta.js background
-  const vantaRef    = useRef<HTMLDivElement>(null);
+  const vantaRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const vantaEffect = useRef<any>(null);
 
@@ -229,7 +229,7 @@ export default function AdminLoginPage() {
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center gap-3 sm:gap-5 mb-4 sm:mb-6">
               {/* Logo icon */}
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[16px] sm:rounded-[20px] bg-white flex items-center justify-center flex-shrink-0 overflow-hidden shadow-[0_8px_24px_-6px_rgba(204,0,0,0.25)] border border-gray-100 p-0 sm:p-0">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[20px] bg-white flex items-center justify-center flex-shrink-0 overflow-hidden shadow-[0_8px_24px_-6px_rgba(204,0,0,0.25)] border border-gray-100 p-1 sm:p-1.5">
                 <img src="/logo-sikap.png" alt="SIKAP Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col justify-center min-w-0">
