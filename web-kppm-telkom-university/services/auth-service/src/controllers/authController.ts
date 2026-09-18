@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 import pool from '../config/db';
 import { sendOtpEmail, sendStudentVerifyOtpEmail, sendLecturerVerifyOtpEmail } from '../services/emailService';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'kppm-telkom-secret-dev-2024';
+const JWT_SECRET = process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET env variable is required'); })();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
