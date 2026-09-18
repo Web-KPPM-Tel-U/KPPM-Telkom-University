@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import pool from '../config/db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'kppm-telkom-secret-dev-2024';
+const JWT_SECRET = process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET env variable is required'); })();
 
 export interface AuthenticatedRequest extends Request {
   user?: {
