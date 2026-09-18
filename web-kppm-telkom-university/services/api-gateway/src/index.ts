@@ -6,9 +6,9 @@ import rateLimit from 'express-rate-limit';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-const AUTH_SERVICE = 'http://localhost:4001';
-const STUDENT_SERVICE = 'http://localhost:4002';
-const ADMIN_SERVICE = 'http://localhost:4003';
+const AUTH_SERVICE = process.env.AUTH_SERVICE_URL || 'http://localhost:4001';
+const STUDENT_SERVICE = process.env.STUDENT_SERVICE_URL || 'http://localhost:4002';
+const ADMIN_SERVICE = process.env.ADMIN_SERVICE_URL || 'http://localhost:4003';
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 const corsOptions = {
