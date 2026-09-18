@@ -52,4 +52,9 @@ router.patch('/students/:nim/toggle-status', authMiddleware_1.verifyAdminToken, 
 router.patch('/students/:nim/assign-lecturer', authMiddleware_1.verifyAdminToken, adminController_1.assignLecturerToStudent);
 router.post('/semesters', authMiddleware_1.verifyAdminToken, adminController_1.createSemester);
 router.patch('/semesters/:id/toggle-status', authMiddleware_1.verifyAdminToken, adminController_1.toggleSemesterStatus);
+// ─── Pengajuan KPPM ───────────────────────────────────────────────────────────
+router.get('/registrations', authMiddleware_1.verifyAdminToken, adminController_1.getRegistrationsBySemester);
+router.get('/registrations/no-submission', authMiddleware_1.verifyAdminToken, adminController_1.getStudentsWithoutRegistration);
+router.get('/registrations/:id', authMiddleware_1.verifyAdminToken, adminController_1.getRegistrationDetail);
+router.patch('/registrations/:id/semester', authMiddleware_1.verifyAdminToken, adminController_1.updateRegistrationSemester);
 exports.default = router;

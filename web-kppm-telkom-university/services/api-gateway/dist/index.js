@@ -9,9 +9,9 @@ const morgan_1 = __importDefault(require("morgan"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 4000;
-const AUTH_SERVICE = 'http://localhost:4001';
-const STUDENT_SERVICE = 'http://localhost:4002';
-const ADMIN_SERVICE = 'http://localhost:4003';
+const AUTH_SERVICE = process.env.AUTH_SERVICE_URL || 'http://localhost:4001';
+const STUDENT_SERVICE = process.env.STUDENT_SERVICE_URL || 'http://localhost:4002';
+const ADMIN_SERVICE = process.env.ADMIN_SERVICE_URL || 'http://localhost:4003';
 // ─── Middleware ───────────────────────────────────────────────────────────────
 const corsOptions = {
     origin: true,
